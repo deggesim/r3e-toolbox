@@ -1,6 +1,5 @@
 import type { Database, ProcessedDatabase } from '../types';
-import { fit } from './fit';
-import { computeTime } from './timeUtils';
+import { fitLinear, fitParabola, computeTime } from './fitting';
 
 const CFG = {
   fitAll: false,
@@ -25,7 +24,7 @@ function trackGenerator(_classid: string, _trackid: string, track: any): ((t: nu
     }
   } else {
     for (let i = track.minAI; i <= track.maxAI; i++) {
-      const [num, time] = computeTime(track.ailevels[i] || []);
+      const { num, avg: time } = computeTime(track.ailevels[i] || []);
       if (num > 0) {
         x.push(i);
         y.push(time);
@@ -33,12 +32,12 @@ function trackGenerator(_classid: string, _trackid: string, track: any): ((t: nu
     }
   }
 
-  const [a, b] = fit.linear(x, y);
+  const { a, b } = fitLinear(x, y);
   const c = 0;
 
   const generator = (t: number) => a + b * t + (c || 0) * (t * t);
 
-  const [, minTime] = computeTime(track.ailevels[track.minAI] || []);
+  const { avg: minTime } = computeTime(track.ailevels[track.minAI] || []);
   const threshold = minTime * CFG.testMaxTimePct;
 
   let tested = 0;
@@ -48,7 +47,7 @@ function trackGenerator(_classid: string, _trackid: string, track: any): ((t: nu
     let lasttime: number | undefined;
     for (let i = track.minAI; i <= track.maxAI; i++) {
       const base = generator(i);
-      const [num, time] = computeTime(track.ailevels[i] || []);
+      const { num, avg: time } = computeTime(track.ailevels[i] || []);
       if (num > 0) {
         tested++;
         const diff = Math.abs(base - time);

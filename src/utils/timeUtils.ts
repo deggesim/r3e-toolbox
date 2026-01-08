@@ -17,7 +17,11 @@ export function makeTime(s: number, sep: string = ':', fmt: string = '%#07.4f'):
   const m = Math.floor(s / 60);
   s = s - m * 60;
 
-  return (h > 0 ? h.toString() + sep : '') + m.toString() + sep + fmt.replace('%#07.4f', s.toFixed(4));
+  const secInt = Math.floor(s);
+  const secDec = (s - secInt).toFixed(4).substring(1); // ".8510"
+  const secStr = (secInt < 10 ? '0' : '') + secInt + secDec;
+
+  return (h > 0 ? h.toString() + sep : '') + m.toString() + sep + secStr;
 }
 
 export function computeTime(times: number[]): [number, number, number] {
