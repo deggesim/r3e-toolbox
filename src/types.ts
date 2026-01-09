@@ -81,6 +81,7 @@ export interface DatabaseTrack {
   minAI?: number;
   maxAI?: number;
   ailevels: Record<number, number[]>;
+  samplesCount?: Record<number, number>;
 }
 
 export interface Database {

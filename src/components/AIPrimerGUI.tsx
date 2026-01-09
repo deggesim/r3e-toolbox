@@ -8,14 +8,13 @@ interface AIPrimerGUIProps {
   assets: Assets | null;
   processed: ProcessedDatabase | null;
   playertimes: PlayerTimes | null;
-  database?: Database;
   onApplyModification: (
     classid: string,
     trackid: string,
     aifrom: number,
     aito: number,
     aiSpacing: number
-  ) => void;
+  ) => Database;
   onRemoveGenerated: () => void;
   onResetAll: () => void;
 }
@@ -24,7 +23,6 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
   assets,
   processed,
   playertimes,
-  database,
   onApplyModification,
   onRemoveGenerated,
   onResetAll,
@@ -120,14 +118,14 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
   const aito = Math.min(120, aifrom + aiNumLevels - 1);
 
   const handleApply = () => {
-    if (selectedClassId && selectedTrackId && selectedAILevel) {
+    if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
       const shouldApply = confirm(
         `Apply modification:\n\n${assets!.classes[selectedClassId].name} - ${assets!.tracks[selectedTrackId].name}\nAI Range: ${aifrom} - ${aito}\n\nThis will download the modified aiadaptation.xml file.`
       );
 
       if (shouldApply) {
         // Call the callback to apply modifications to database
-        onApplyModification(
+        const updatedDb = onApplyModification(
           selectedClassId,
           selectedTrackId,
           aifrom,
@@ -135,10 +133,10 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
           aiSpacing
         );
 
-        // Download the XML file
-        if (assets && database) {
+        // Download the XML file using the updated database from callback
+        if (assets && updatedDb) {
           try {
-            const xmlContent = buildXML(database, playertimes || { classes: {} }, assets);
+            const xmlContent = buildXML(updatedDb, playertimes || { classes: {} }, assets);
             const blob = new Blob([xmlContent], { type: "application/xml" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -157,14 +155,15 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
     }
   };
 
+  const isApplyDisabled =
+    !selectedClassId || !selectedTrackId || selectedAILevel === null;
+
   if (!assets) {
     return <div>Please upload RaceRoom Data JSON file first.</div>;
   }
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>R3E Adaptive AI Primer</h1>
-
       <div style={{ marginBottom: "20px" }}>
         <button onClick={onRemoveGenerated} style={{ marginRight: "10px" }}>
           Remove likely generated
@@ -286,7 +285,8 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
         </p>
         <button
           onClick={handleApply}
-          disabled={!selectedClassId || !selectedTrackId || !selectedAILevel}
+          disabled={isApplyDisabled}
+          style={{ cursor: isApplyDisabled ? "default" : "pointer" }}
         >
           Apply Selected Modification
         </button>

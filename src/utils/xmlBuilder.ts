@@ -1,14 +1,12 @@
 import type { Assets, Database, PlayerTimes } from '../types';
 
 function formatNumber(value: number): string {
-  // Format with 4 decimal places then remove trailing zeros
   const formatted = value.toFixed(4);
-  // Remove trailing zeros but keep at least one decimal
   return formatted.replace(/\.?0+$/, '').replace(/\.0+$/, '');
 }
 
-function buildEmptyMatrix(assets: Assets): Map<string, Map<string, { aiData: Record<number, number[]>, playerTimes: number[] }>> {
-  const trackMap = new Map<string, Map<string, { aiData: Record<number, number[]>, playerTimes: number[] }>>();
+function buildEmptyMatrix(assets: Assets): Map<string, Map<string, { aiData: Record<number, number[]>, samplesCount: Record<number, number>, playerTimes: number[] }>> {
+  const trackMap = new Map<string, Map<string, { aiData: Record<number, number[]>, samplesCount: Record<number, number>, playerTimes: number[] }>>();
 
   // Sort tracks by ID numerically
   const sortedTracks = [...assets.tracksSorted].sort((a, b) => parseInt(a.id) - parseInt(b.id));
@@ -16,9 +14,9 @@ function buildEmptyMatrix(assets: Assets): Map<string, Map<string, { aiData: Rec
   const sortedClasses = [...assets.classesSorted].sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
   for (const track of sortedTracks) {
-    const classMap = new Map<string, { aiData: Record<number, number[]>, playerTimes: number[] }>();
+    const classMap = new Map<string, { aiData: Record<number, number[]>, samplesCount: Record<number, number>, playerTimes: number[] }>();
     for (const cls of sortedClasses) {
-      classMap.set(cls.id, { aiData: {}, playerTimes: [] });
+      classMap.set(cls.id, { aiData: {}, samplesCount: {}, playerTimes: [] });
     }
     trackMap.set(track.id, classMap);
   }
@@ -43,6 +41,7 @@ export function buildXML(database: Database, playerTimes: PlayerTimes, assets: A
       const entry = classMap.get(classId);
       if (!entry) continue;
       entry.aiData = trackData.ailevels || {};
+      entry.samplesCount = trackData.samplesCount || {};
     }
   }
 
@@ -99,11 +98,12 @@ export function buildXML(database: Database, playerTimes: PlayerTimes, assets: A
         const times = data.aiData[aiLevel];
         if (times && times.length > 0) {
           const avgTime = times.reduce((sum, t) => sum + t, 0) / times.length;
+          const samples = data.samplesCount?.[aiLevel] ?? 1;
           lines.push(`          <!-- Index:${aiIndex} -->`);
           lines.push(`          <aiSkill type="uint32">${aiLevel}</aiSkill>`);
           lines.push('          <aiData>');
           lines.push(`            <averagedLapTime type="float32">${formatNumber(avgTime)}</averagedLapTime>`);
-          lines.push(`            <numberOfSampledRaces type="uint32">${times.length}</numberOfSampledRaces>`);
+          lines.push(`            <numberOfSampledRaces type="uint32">${samples}</numberOfSampledRaces>`);
           lines.push('          </aiData>');
           aiIndex++;
         }

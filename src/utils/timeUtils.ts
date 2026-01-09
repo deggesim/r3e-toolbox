@@ -11,7 +11,7 @@ export function parseTime(str: string): number | undefined {
   return undefined;
 }
 
-export function makeTime(s: number, sep: string = ':', fmt: string = '%#07.4f'): string {
+export function makeTime(s: number, sep: string = ':'): string {
   const h = Math.floor(s / 3600);
   s = s - h * 3600;
   const m = Math.floor(s / 60);

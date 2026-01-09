@@ -1,5 +1,5 @@
 import type { Database, ProcessedDatabase } from '../types';
-import { fitLinear, fitParabola, computeTime } from './fitting';
+import { fitLinear, computeTime } from './fitting';
 
 const CFG = {
   fitAll: false,
@@ -105,6 +105,7 @@ export function processDatabase(database: Database): ProcessedDatabase {
           minAI: 80,
           maxAI: 120,
           ailevels,
+          samplesCount: {},
         };
         classf.tracks[trackid] = trackf;
       }

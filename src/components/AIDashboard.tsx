@@ -54,10 +54,11 @@ const AIDashboard: React.FC = () => {
     reader.readAsText(file);
   }, [database, playerTimes]);
 
-  const handleApplyModification = useCallback((classid: string, trackid: string, aifrom: number, aito: number, aiSpacing: number) => {
+  const handleApplyModification = useCallback((classid: string, trackid: string, aifrom: number, aito: number, aiSpacing: number): Database => {
     if (!processed.classes[classid]?.tracks[trackid]) {
       alert('No processed data available for this class/track combination');
-      return;
+      // Return current database unchanged to keep deterministic return type
+      return database;
     }
 
     const newDatabase = JSON.parse(JSON.stringify(database)) as Database;
@@ -67,21 +68,22 @@ const AIDashboard: React.FC = () => {
       newDatabase.classes[classid] = { tracks: {} };
     }
     if (!newDatabase.classes[classid].tracks[trackid]) {
-      newDatabase.classes[classid].tracks[trackid] = { ailevels: {} };
+      newDatabase.classes[classid].tracks[trackid] = { ailevels: {}, samplesCount: {} };
     }
 
     const track = newDatabase.classes[classid].tracks[trackid];
+    track.samplesCount = track.samplesCount || {};
     const processedTrack = processed.classes[classid].tracks[trackid];
 
-    // Add AI levels from aifrom to aito with aiSpacing step
+    // Replace AI levels from aifrom to aito with aiSpacing step
     let addedCount = 0;
     for (let ai = aifrom; ai <= aito; ai += aiSpacing) {
       const generatedTime = processedTrack.ailevels[ai]?.[0];
       if (generatedTime) {
-        if (!track.ailevels[ai]) {
-          track.ailevels[ai] = [];
-        }
-        track.ailevels[ai].push(generatedTime);
+        // Replace existing times with the generated one
+        track.ailevels[ai] = [generatedTime];
+        // Overwrite samples count to 1 for generated entries
+        track.samplesCount[ai] = 1;
         addedCount++;
       }
     }
@@ -101,21 +103,26 @@ const AIDashboard: React.FC = () => {
 
     setDatabase(newDatabase);
     setProcessed(processDatabase(newDatabase));
-    
-    alert(`Added ${addedCount} AI levels to the database`);
+    return newDatabase;
   }, [database, processed]);
 
   const handleRemoveGenerated = useCallback(() => {
     const newDatabase = JSON.parse(JSON.stringify(database)) as Database;
     let removedCount = 0;
+    const perClassTrackCount: Record<string, Record<string, number>> = {};
 
-    for (const classData of Object.values(newDatabase.classes)) {
-      for (const track of Object.values(classData.tracks)) {
-        for (const [aiLevel, times] of Object.entries(track.ailevels)) {
-          // Remove AI levels with only 1 sample (likely generated)
-          if (times.length === 1) {
-            delete track.ailevels[Number(aiLevel)];
+    for (const [classId, classData] of Object.entries(newDatabase.classes)) {
+      for (const [trackId, track] of Object.entries(classData.tracks)) {
+        track.samplesCount = track.samplesCount || {};
+        for (const aiLevelStr of Object.keys(track.ailevels)) {
+          const aiLevel = Number(aiLevelStr);
+          // Remove AI levels explicitly marked as generated (samplesCount === 1)
+          if (track.samplesCount[aiLevel] === 1) {
+            delete track.ailevels[aiLevel];
+            delete track.samplesCount[aiLevel];
             removedCount++;
+            perClassTrackCount[classId] = perClassTrackCount[classId] || {};
+            perClassTrackCount[classId][trackId] = (perClassTrackCount[classId][trackId] || 0) + 1;
           }
         }
 
@@ -145,9 +152,23 @@ const AIDashboard: React.FC = () => {
 
     setDatabase(newDatabase);
     setProcessed(processDatabase(newDatabase));
-    
-    alert(`Removed ${removedCount} likely generated AI levels`);
-  }, [database]);
+
+    if (removedCount === 0) {
+      alert('No generated AI levels found to remove');
+      return;
+    }
+
+    const lines: string[] = [];
+    for (const [classId, tracks] of Object.entries(perClassTrackCount)) {
+      for (const [trackId, count] of Object.entries(tracks)) {
+        const classLabel = assets?.classes?.[classId]?.name || classId;
+        const trackLabel = assets?.tracks?.[trackId]?.name || trackId;
+        lines.push(`${classLabel} - ${trackLabel}: ${count}`);
+      }
+    }
+
+    alert(`Removed ${removedCount} generated AI levels` + (lines.length ? `\n\nDetails:\n${lines.join('\n')}` : ''));
+  }, [database, assets]);
 
   const handleResetAll = useCallback(() => {
     if (!confirm('Are you sure you want to reset all AI times? This action cannot be undone.')) {
@@ -165,7 +186,7 @@ const AIDashboard: React.FC = () => {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>R3E Adaptive AI Dashboard v2</h1>
+      <h1>R3E Adaptive AI Management</h1>
       <p>Upload RaceRoom data files to analyze and configure AI parameters</p>
 
       <div style={{ marginTop: '20px' }}>
@@ -193,7 +214,6 @@ const AIDashboard: React.FC = () => {
         assets={assets}
         processed={processed}
         playertimes={playerTimes}
-        database={database}
         onApplyModification={handleApplyModification}
         onRemoveGenerated={handleRemoveGenerated}
         onResetAll={handleResetAll}
