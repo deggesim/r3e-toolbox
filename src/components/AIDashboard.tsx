@@ -72,18 +72,18 @@ const AIDashboard: React.FC = () => {
     }
 
     const track = newDatabase.classes[classid].tracks[trackid];
-    track.samplesCount = track.samplesCount || {};
-    const processedTrack = processed.classes[classid].tracks[trackid];
+  const processedTrack = processed.classes[classid].tracks[trackid];
 
-    // Replace AI levels from aifrom to aito with aiSpacing step
-    let addedCount = 0;
-    for (let ai = aifrom; ai <= aito; ai += aiSpacing) {
-      const generatedTime = processedTrack.ailevels[ai]?.[0];
-      if (generatedTime) {
-        // Replace existing times with the generated one
-        track.ailevels[ai] = [generatedTime];
-        // Overwrite samples count to 1 for generated entries
-        track.samplesCount[ai] = 1;
+  // Clear all existing AI levels for this class/track - we're replacing them completely
+  track.ailevels = {};
+  track.samplesCount = {};
+
+  // Add only the generated AI levels from aifrom to aito with aiSpacing step
+  let addedCount = 0;
+  for (let ai = aifrom; ai <= aito; ai += aiSpacing) {
+    const generatedTime = processedTrack.ailevels[ai]?.[0];
+    if (generatedTime) {
+      track.ailevels[ai] = [generatedTime];
         addedCount++;
       }
     }
