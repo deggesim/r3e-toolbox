@@ -185,20 +185,24 @@ const AIDashboard: React.FC = () => {
 
 
   return (
+    <>
+    <div style={{textAlign: "center", padding: "20px"}}>
+      <img src="/logo.png" alt="R3E Adaptive AI Logo"/>
+    </div>
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>R3E Adaptive AI Management</h1>
+      <h1>Adaptive AI Management</h1>
       <p>Upload RaceRoom data files to analyze and configure AI parameters</p>
 
       <div style={{ marginTop: '20px' }}>
         <h2>File Upload</h2>
         <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
           <div>
-            <label>RaceRoom Data JSON: </label>
-            <input type="file" accept=".json" onChange={handleJsonUpload} />
+            <label htmlFor="r3e-data">RaceRoom Data JSON: </label>
+            <input id="r3e-data" type="file" accept=".json" onChange={handleJsonUpload} />
           </div>
           <div>
-            <label>AI Adaptation XML: </label>
-            <input type="file" accept=".xml" onChange={handleXmlUpload} />
+            <label htmlFor="ai-adaptation-xml">AI Adaptation XML: </label>
+            <input id="ai-adaptation-xml" type="file" accept=".xml" onChange={handleXmlUpload} />
           </div>
         </div>
 
@@ -219,6 +223,7 @@ const AIDashboard: React.FC = () => {
         onResetAll={handleResetAll}
       />
     </div>
+    </>
   );
 };
 

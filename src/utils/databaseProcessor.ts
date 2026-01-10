@@ -1,5 +1,5 @@
-import type { Database, ProcessedDatabase } from '../types';
-import { fitLinear, computeTime } from './fitting';
+import type { Database, ProcessedDatabase } from "../types";
+import { fitLinear, computeTime } from "./fitting";
 
 const CFG = {
   fitAll: false,
@@ -8,8 +8,13 @@ const CFG = {
   testMaxFailsPct: 0.1,
 };
 
-function trackGenerator(_classid: string, _trackid: string, track: any): ((t: number) => number) | undefined {
-  if (!track.maxAI || (track.maxAI - track.minAI < CFG.testMinAIdiffs)) return undefined;
+function trackGenerator(
+  _classid: string,
+  _trackid: string,
+  track: any
+): ((t: number) => number) | undefined {
+  if (!track.maxAI || track.maxAI - track.minAI < CFG.testMinAIdiffs)
+    return undefined;
 
   const x: number[] = [];
   const y: number[] = [];
