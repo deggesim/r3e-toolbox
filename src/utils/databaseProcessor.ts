@@ -5,10 +5,10 @@ import { fitLinear, computeTime } from "./fitting";
 const CFG = {
   minAI: 80, // Minimum AI level for generated predictions
   maxAI: 120, // Maximum AI level for generated predictions
-  fitAll: false, // If true, fit all individual lap times; if false, fit averaged times per AI level
-  testMinAIdiffs: 2, // Minimum difference between min and max AI levels required to attempt fitting
-  testMaxTimePct: 0.1, // Maximum deviation tolerance (as percentage of minimum lap time)
-  testMaxFailsPct: 0.1, // Maximum allowed failure rate (10% of tested points)
+  fitAll: true, // If true, fit all individual lap times; if false, fit averaged times per AI level
+  testMinAIdiffs: 4, // Minimum difference between min and max AI levels required to attempt fitting
+  testMaxTimePct: 0.05, // Maximum deviation tolerance (as percentage of minimum lap time)
+  testMaxFailsPct: 0.2, // Maximum allowed failure rate (10% of tested points)
 };
 
 /**
