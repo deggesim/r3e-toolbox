@@ -3,6 +3,7 @@ import type { Assets, ProcessedDatabase, PlayerTimes, Database } from "../types"
 import { makeTime } from "../utils/timeUtils";
 import { computeTime } from "../utils/timeUtils";
 import { buildXML } from "../utils/xmlBuilder";
+import { CFG } from "../config";
 
 interface AIPrimerGUIProps {
   assets: Assets | null;
@@ -31,8 +32,8 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
   const [selectedTrackId, setSelectedTrackId] = useState<string>("");
   const [selectedAILevel, setSelectedAILevel] = useState<number | null>(null);
 
-  const aiNumLevels = 5; // from config
-  const aiSpacing = 1; // from config
+  const aiNumLevels = CFG.aiNumLevels;
+  const aiSpacing = CFG.aiSpacing;
 
   const availableClasses = useMemo(
     () =>
@@ -113,9 +114,9 @@ const AIPrimerGUI: React.FC<AIPrimerGUIProps> = ({
   }, [selectedTrackId, processed, selectedClassId]);
 
   const aifrom = selectedAILevel
-    ? Math.max(80, selectedAILevel - Math.floor(aiNumLevels / 2))
-    : 80;
-  const aito = Math.min(120, aifrom + aiNumLevels - 1);
+    ? Math.max(CFG.minAI, selectedAILevel - Math.floor(aiNumLevels / 2))
+    : CFG.minAI;
+  const aito = Math.min(CFG.maxAI, aifrom + aiNumLevels - 1);
 
   const handleApply = () => {
     if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
