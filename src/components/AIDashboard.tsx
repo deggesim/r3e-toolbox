@@ -354,15 +354,13 @@ const AIDashboard: React.FC = () => {
       return;
     }
 
-    // Clear all state: database, processed predictions, and player times
+    // Clear only AI data: database and processed predictions, keep player times
     const emptyDb: Database = { classes: {} };
-    const emptyPt: PlayerTimes = { classes: {} };
     setDatabase(emptyDb);
     setProcessed({ classes: {} });
-    setPlayerTimes(emptyPt);
 
-    downloadXml(emptyDb, emptyPt);
-    alert("All AI times and player times have been reset");
+    downloadXml(emptyDb, playerTimes);
+    alert("All AI times have been reset");
 
     // Reset XML file input
     if (xmlInputRef.current) {
