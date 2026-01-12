@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useMemo } from "react";
 import type { Assets, ProcessedDatabase, PlayerTimes } from "../types";
-import { makeTime } from "../utils/timeUtils";
-import { computeTime } from "../utils/timeUtils";
+import { makeTime, computeTime } from "../utils/timeUtils";
 import { CFG } from "../config";
 
 interface AIManagementGUIProps {
   assets: Assets | null;
   processed: ProcessedDatabase | null;
   playertimes: PlayerTimes | null;
-  onApplyClick: (classid: string, trackid: string, aifrom: number, aito: number, aiSpacing: number) => void;
+  onApplyClick: (
+    classid: string,
+    trackid: string,
+    aifrom: number,
+    aito: number,
+    aiSpacing: number
+  ) => void;
   onRemoveGenerated: () => void;
   onResetAll: () => void;
 }
@@ -26,7 +31,8 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
   const [selectedAILevel, setSelectedAILevel] = useState<number | null>(null);
 
   const aiNumLevels = CFG.aiNumLevels;
-  const aiSpacing = CFG.aiSpacing;
+  // User-defined spacing between AI levels (1-5), default 1
+  const [spacing, setSpacing] = useState<number>(CFG.aiSpacing);
 
   const availableClasses = useMemo(
     () =>
@@ -107,18 +113,23 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
   }, [selectedTrackId, processed, selectedClassId]);
 
   const aifrom = selectedAILevel
-    ? Math.max(CFG.minAI, selectedAILevel - Math.floor(aiNumLevels / 2))
+    ? Math.max(
+        CFG.minAI,
+        selectedAILevel - Math.floor(aiNumLevels / 2) * spacing
+      )
     : CFG.minAI;
-  const aito = Math.min(CFG.maxAI, aifrom + aiNumLevels - 1);
+  const aito = Math.min(CFG.maxAI, aifrom + (aiNumLevels - 1) * spacing);
 
   const handleApply = () => {
     if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
       const shouldApply = confirm(
-        `Apply modification:\n\n${assets!.classes[selectedClassId].name} - ${assets!.tracks[selectedTrackId].name}\nAI Range: ${aifrom} - ${aito}\n\nThis will download the modified aiadaptation.xml file.`
+        `Apply modification:\n\n${assets!.classes[selectedClassId].name} - ${
+          assets!.tracks[selectedTrackId].name
+        }\nAI Range: ${aifrom} - ${aito} (step: ${spacing})\n\nThis will download the modified aiadaptation.xml file.`
       );
 
       if (shouldApply) {
-        onApplyClick(selectedClassId, selectedTrackId, aifrom, aito, aiSpacing);
+        onApplyClick(selectedClassId, selectedTrackId, aifrom, aito, spacing);
       }
     }
   };
@@ -142,11 +153,34 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
       <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
         <div style={{ flex: 1 }}>
           <h3>Classes</h3>
-          <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ccc" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "14px" }}>
+          <div
+            style={{
+              maxHeight: "300px",
+              overflowY: "auto",
+              border: "1px solid #ccc",
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                fontSize: "14px",
+              }}
+            >
               <thead>
                 <tr>
-                  <th style={{ border: "1px solid #ccc", padding: "8px", backgroundColor: "#f0f0f0", position: "sticky", top: 0, color: "#333" }}>Class</th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      backgroundColor: "#f0f0f0",
+                      position: "sticky",
+                      top: 0,
+                      color: "#333",
+                    }}
+                  >
+                    Class
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -160,7 +194,8 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                     }}
                     style={{
                       cursor: "pointer",
-                      backgroundColor: selectedClassId === cls.id ? "#b8b8b8" : "transparent",
+                      backgroundColor:
+                        selectedClassId === cls.id ? "#b8b8b8" : "transparent",
                       border: "1px solid #ccc",
                     }}
                   >
@@ -174,12 +209,46 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
 
         <div style={{ flex: 2 }}>
           <h3>Tracks</h3>
-          <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ccc" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "14px" }}>
+          <div
+            style={{
+              maxHeight: "300px",
+              overflowY: "auto",
+              border: "1px solid #ccc",
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                fontSize: "14px",
+              }}
+            >
               <thead>
                 <tr>
-                  <th style={{ border: "1px solid #ccc", padding: "8px", backgroundColor: "#f0f0f0", position: "sticky", top: 0, color: "#333" }}>Track</th>
-                  <th style={{ border: "1px solid #ccc", padding: "8px", backgroundColor: "#f0f0f0", position: "sticky", top: 0, color: "#333" }}>Player Best</th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      backgroundColor: "#f0f0f0",
+                      position: "sticky",
+                      top: 0,
+                      color: "#333",
+                    }}
+                  >
+                    Track
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      backgroundColor: "#f0f0f0",
+                      position: "sticky",
+                      top: 0,
+                      color: "#333",
+                    }}
+                  >
+                    Player Best
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -198,7 +267,10 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                       }}
                       style={{
                         cursor: "pointer",
-                        backgroundColor: selectedTrackId === track.id ? "#b8b8b8" : "transparent",
+                        backgroundColor:
+                          selectedTrackId === track.id
+                            ? "#b8b8b8"
+                            : "transparent",
                         border: "1px solid #ccc",
                       }}
                     >
@@ -214,12 +286,46 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
 
         <div style={{ flex: 1 }}>
           <h3>AI Levels</h3>
-          <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ccc" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "14px" }}>
+          <div
+            style={{
+              maxHeight: "300px",
+              overflowY: "auto",
+              border: "1px solid #ccc",
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                fontSize: "14px",
+              }}
+            >
               <thead>
                 <tr>
-                  <th style={{ border: "1px solid #ccc", padding: "8px", backgroundColor: "#f0f0f0", position: "sticky", top: 0, color: "#333" }}>AI</th>
-                  <th style={{ border: "1px solid #ccc", padding: "8px", backgroundColor: "#f0f0f0", position: "sticky", top: 0, color: "#333" }}>Time</th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      backgroundColor: "#f0f0f0",
+                      position: "sticky",
+                      top: 0,
+                      color: "#333",
+                    }}
+                  >
+                    AI
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      backgroundColor: "#f0f0f0",
+                      position: "sticky",
+                      top: 0,
+                      color: "#333",
+                    }}
+                  >
+                    Time
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -229,7 +335,8 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                     onClick={() => setSelectedAILevel(ai)}
                     style={{
                       cursor: "pointer",
-                      backgroundColor: selectedAILevel === ai ? "#b8b8b8" : "transparent",
+                      backgroundColor:
+                        selectedAILevel === ai ? "#b8b8b8" : "transparent",
                       border: "1px solid #ccc",
                       fontWeight: selectedAILevel === ai ? "bold" : "normal",
                     }}
@@ -248,9 +355,31 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
         <h3>Modification</h3>
         <p>
           {selectedClassId && selectedTrackId && selectedAILevel
-            ? `${assets.classes[selectedClassId].name} - ${assets.tracks[selectedTrackId].name} : ${aifrom} - ${aito} step: ${aiSpacing}`
+            ? `${assets.classes[selectedClassId].name} - ${assets.tracks[selectedTrackId].name} : ${aifrom} - ${aito} step: ${spacing}`
             : "Select class, track, and AI level"}
         </p>
+        <div style={{ marginBottom: "10px" }}>
+          <label htmlFor="ai-step" style={{ marginRight: "8px" }}>
+            Step between AI levels (1-5):
+          </label>
+          <input
+            id="ai-step"
+            type="number"
+            min={1}
+            max={5}
+            step={1}
+            value={spacing}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              // Clamp to 1..5 and default to 1 if invalid
+              setSpacing(
+                Number.isFinite(val)
+                  ? Math.min(5, Math.max(1, Math.floor(val)))
+                  : 1
+              );
+            }}
+          />
+        </div>
         <button
           onClick={handleApply}
           disabled={isApplyDisabled}
