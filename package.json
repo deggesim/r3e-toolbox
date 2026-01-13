@@ -10,9 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@types/lodash": "^4.17.21",
     "fast-xml-parser": "^5.3.3",
-    "lodash": "^4.17.21",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -30,5 +28,9 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
+  },
+  "engines": {
+    "node": "24.x",
+    "npm": "11.x"
   }
 }
