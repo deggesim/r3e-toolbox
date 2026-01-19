@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import type { Config } from "../config";
 import { CFG } from "../config";
