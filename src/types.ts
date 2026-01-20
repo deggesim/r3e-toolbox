@@ -39,6 +39,19 @@ export interface Assets {
   numTracks: number;
 }
 
+export interface LeaderboardAsset {
+  id: string;
+  name: string;
+  iconUrl?: string;
+}
+
+export interface LeaderboardAssets {
+  sourceUrl: string;
+  fetchedAt: string;
+  classes: LeaderboardAsset[];
+  tracks: LeaderboardAsset[];
+}
+
 export interface AITimeEntry {
   aiSkill: number;
   averagedLapTime: number;
