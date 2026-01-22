@@ -12,7 +12,7 @@ function addOption(
   if (!id || id.toLowerCase() === "all") return;
 
   const name = option.textContent?.trim() || id;
-  const iconUrl = option.getAttribute("data-image") || undefined;
+  const iconUrl = option.dataset.image || undefined;
 
   if (!target.has(id)) {
     target.set(id, { id, name, iconUrl });
@@ -39,7 +39,7 @@ function collectOptions(
 
 function detectBucket(option: HTMLOptionElement): Bucket | undefined {
   const parentWithType = option.closest("[data-type]");
-  const dataType = parentWithType?.getAttribute("data-type") || "";
+  const dataType = (parentWithType as HTMLElement)?.dataset.type || "";
 
   if (dataType.includes("car_class")) return "classes";
   if (dataType.includes("track")) return "tracks";
@@ -48,7 +48,7 @@ function detectBucket(option: HTMLOptionElement): Bucket | undefined {
 
 function ensureDomParser(): DOMParser {
   if (typeof DOMParser === "undefined") {
-    throw new Error("DOMParser not available in this environment");
+    throw new TypeError("DOMParser not available in this environment");
   }
   return new DOMParser();
 }
@@ -76,10 +76,10 @@ function parseHtml(html: string): LeaderboardAssets {
   );
 
   doc.querySelectorAll("option[data-image]").forEach((opt) => {
-    const bucket = detectBucket(opt);
+    const bucket = detectBucket(opt as HTMLOptionElement);
     if (!bucket) return;
     const target = bucket === "classes" ? acc.classes : acc.tracks;
-    addOption(target, opt);
+    addOption(target, opt as HTMLOptionElement);
   });
 
   const toSortedArray = (
