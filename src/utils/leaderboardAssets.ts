@@ -1,4 +1,5 @@
 import type { LeaderboardAsset, LeaderboardAssets } from "../types";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 
 const LEADERBOARD_URL = "https://game.raceroom.com/leaderboard";
 
@@ -114,3 +115,56 @@ export async function fetchLeaderboardAssets(options?: {
   const html = await response.text();
   return parseHtml(html);
 }
+
+/**
+ * Fetch leaderboard assets with automatic caching via Zustand store.
+ * Returns cached assets if available, otherwise fetches from the leaderboard
+ * and caches the result in localStorage.
+ *
+ * @param options - Optional configuration
+ * @param options.forceRefresh - Force refresh from leaderboard, bypassing cache
+ * @param options.signal - AbortSignal for request cancellation
+ * @returns Cached or freshly fetched leaderboard assets
+ */
+export async function fetchLeaderboardAssetsWithCache(options?: {
+  forceRefresh?: boolean;
+  signal?: AbortSignal;
+}): Promise<LeaderboardAssets> {
+  const { forceRefresh = false, signal } = options || {};
+  const store = useLeaderboardAssetsStore.getState();
+
+  // Return cached assets if available and not forcing refresh
+  if (!forceRefresh && store.assets) {
+    return store.assets;
+  }
+
+  try {
+    useLeaderboardAssetsStore.getState().setLoading(true);
+    const assets = await fetchLeaderboardAssets({ signal });
+    
+    // Save to store
+    useLeaderboardAssetsStore.getState().setAssets(assets);
+    
+    // // Force localStorage persistence immediately
+    // try {
+    //   const storageData = {
+    //     state: { assets },
+    //     version: 1,
+    //   };
+    //   localStorage.setItem(
+    //     "r3e-toolbox-leaderboard-assets",
+    //     JSON.stringify(storageData),
+    //   );
+    // } catch (storageError) {
+    //   console.warn("Failed to save to localStorage:", storageError);
+    // }
+    
+    return assets;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Errore sconosciuto";
+    useLeaderboardAssetsStore.getState().setError(message);
+    throw error;
+  }
+}
+

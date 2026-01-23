@@ -13,7 +13,11 @@ import {
 } from "react-bootstrap";
 import type { LeaderboardAssets, RaceRoomData } from "../types";
 import type { ParsedRace } from "../types/raceResults";
-import { fetchLeaderboardAssets } from "../utils/leaderboardAssets";
+import {
+  fetchLeaderboardAssets,
+  fetchLeaderboardAssetsWithCache,
+} from "../utils/leaderboardAssets";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { parseResultFiles } from "../utils/raceResultParser";
 import { generateStandingsHTML, downloadHTML } from "../utils/htmlGenerator";
 
@@ -162,6 +166,10 @@ export default function BuildResultsDatabase() {
   const [isParsingRaces, setIsParsingRaces] = useState(false);
   const [gameData, setGameData] = useState<RaceRoomData | null>(null);
 
+  // Use store to read cached assets
+  const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
+  const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
+
   const resultsSummary = useMemo(() => {
     if (resultFiles.length === 0) return "No files selected";
     return `${resultFiles.length} result file${resultFiles.length > 1 ? "s" : ""} selected`;
@@ -183,14 +191,32 @@ export default function BuildResultsDatabase() {
     loadGameData();
   }, []);
 
+  // Initialize assets from cache on component mount
+  useEffect(() => {
+    if (cachedAssets) {
+      setAssets(cachedAssets);
+    }
+  }, [cachedAssets]);
+
   const handleAssetsDownload = useCallback(async () => {
     setIsLoadingAssets(true);
     setAssetsError(null);
     try {
-      const data = await fetchLeaderboardAssets(
-        htmlOverride.trim() ? { htmlOverride: htmlOverride.trim() } : undefined,
-      );
-      setAssets(data);
+      // If HTML override is provided, always fetch directly
+      if (htmlOverride.trim()) {
+        const data = await fetchLeaderboardAssets({
+          htmlOverride: htmlOverride.trim(),
+        });
+        setAssets(data);
+        // Manually save to store when using HTML override
+        useLeaderboardAssetsStore.getState().setAssets(data);
+      } else {
+        // Use cache-aware fetch (already saves to store)
+        const data = await fetchLeaderboardAssetsWithCache({
+          forceRefresh: false,
+        });
+        setAssets(data);
+      }
     } catch (error) {
       setAssets(null);
       setAssetsError(
@@ -268,10 +294,11 @@ export default function BuildResultsDatabase() {
                     setHtmlOverride("");
                     setAssets(null);
                     setAssetsError(null);
+                    clearAssets();
                   }}
                   disabled={isLoadingAssets}
                 >
-                  Reset
+                  Clear cache
                 </Button>
               </div>
               <Form.Group className="mb-3" controlId="htmlOverride">
@@ -303,6 +330,14 @@ export default function BuildResultsDatabase() {
                           Last updated:{" "}
                           {new Date(assets.fetchedAt).toLocaleString("en-US")}
                         </small>
+                      </div>
+                      <div className="mb-2">
+                        <Badge
+                          bg={cachedAssets ? "success" : "info"}
+                          className="py-1 px-2"
+                        >
+                          {cachedAssets ? "💾 Cached in localStorage" : "Fresh"}
+                        </Badge>
                       </div>
                       <div className="d-flex gap-3 mb-2">
                         <Badge bg="light" text="dark" className="py-2 px-3">

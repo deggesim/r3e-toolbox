@@ -23,7 +23,40 @@ A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience**. T
 
 ### 3. Build Results Database
 
-🚧 **In Development** - Tool to build and analyze a database from RaceRoom race results
+- **Leaderboard Icon Download**: Fetches car class and track icons from the official RaceRoom leaderboard
+- **Asset Caching**: Automatically caches downloaded icons in localStorage to avoid repeated network requests
+- **Smart Cache Management**: Shows cache status (💾 Cached) and provides "Clear cache" button to reset on demand
+- **Standings HTML Export**: Generates formatted HTML with race standings and cached icons
+
+#### Asset Caching System
+
+The toolbox implements automatic localStorage caching for leaderboard assets (icons and metadata):
+
+**How it works:**
+1. First load: `fetchLeaderboardAssetsWithCache()` downloads icons from the leaderboard
+2. Assets stored: All car class and track URLs saved to localStorage via Zustand store
+3. Subsequent loads: Data retrieved from cache instantly without network request
+4. Cache indicator: UI shows "💾 Cached in localStorage" badge when data is from cache
+5. Manual clear: "Clear cache" button removes all cached assets from localStorage
+
+**Technical implementation** (`src/store/leaderboardAssetsStore.ts`):
+- Zustand store with persist middleware for localStorage persistence
+- Stores: asset URLs, icons, metadata, and fetch timestamps
+- Methods: `getClassIconUrl()`, `getTrackIconUrl()` for direct lookups
+- State: `assets`, `isLoading`, `error` for UI feedback
+
+**Usage in components**:
+```typescript
+// Automatically use cache (or fetch if not available)
+const assets = await fetchLeaderboardAssetsWithCache();
+
+// Or force refresh from leaderboard
+const freshAssets = await fetchLeaderboardAssetsWithCache({ forceRefresh: true });
+
+// Direct store access in React components
+const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
+const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
+```
 
 ## Getting Started
 
