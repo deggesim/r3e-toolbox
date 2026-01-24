@@ -21,6 +21,11 @@ const menuItems: MenuItemData[] = [
     label: "Build Results Database",
     icon: "📊",
   },
+  {
+    path: "/results-database",
+    label: "Results Database Viewer",
+    icon: "📂",
+  },
   { path: "/settings", label: "Settings", icon: "⚙️" },
 ];
 

@@ -1,0 +1,175 @@
+.results-detail-page {
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+.results-header {
+  background: #242424;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.results-title {
+  color: #ffffff;
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.results-subtitle {
+  color: #999;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+.results-table-wrapper {
+  background: #242424;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #242424;
+  margin: 0;
+}
+
+.results-table caption {
+  font-size: 1.3em;
+  font-weight: bold;
+  padding: 15px;
+  background: #2c3e50;
+  color: white;
+  text-align: left;
+  caption-side: top;
+}
+
+.results-table thead {
+  background-color: #34495e;
+  color: white;
+}
+
+.results-table th {
+  border: 1px solid #3a3a3a;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+}
+
+.results-table td {
+  border: 1px solid #3a3a3a;
+  padding: 10px 8px;
+  text-align: center;
+  color: #e0e0e0;
+}
+
+.results-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+.results-table tbody tr:nth-child(even) {
+  background-color: #1f1f1f;
+}
+
+.results-table .points-cell {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.results-table .pos1 {
+  background-color: #ffd700 !important;
+  color: #000 !important;
+}
+
+.results-table .pos2 {
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+}
+
+.results-table .pos3 {
+  background-color: #cd7f32 !important;
+  color: #000 !important;
+}
+
+.track-header {
+  font-size: 0.9em;
+  padding: 5px;
+}
+
+.track-header img {
+  display: block;
+  margin: 5px auto;
+  max-width: 80px;
+  height: auto;
+}
+
+.track-time {
+  font-size: 0.8em;
+  color: #95a5a6;
+  display: block;
+}
+
+.driver-name-cell {
+  text-align: left !important;
+  font-weight: 600;
+}
+
+.vehicle-name-cell,
+.team-name-cell {
+  text-align: left !important;
+  font-size: 0.9em;
+}
+
+.vehicle-icon {
+  height: 24px;
+  width: auto;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.human-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #16a085;
+  color: white;
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.time-diff {
+  color: #e74c3c;
+  font-size: 0.85em;
+  display: block;
+}
+
+.race-position-cell {
+  font-size: 0.9em;
+}
+
+.race-position-value {
+  font-weight: bold;
+  display: block;
+}
+
+.race-points-value {
+  font-size: 0.8em;
+  opacity: 0.7;
+  display: block;
+}
+
+.back-button {
+  margin-bottom: 20px;
+}

@@ -561,6 +561,7 @@ export default function BuildResultsDatabase() {
                       generatedAt: new Date().toISOString(),
                       carName,
                       carIcon,
+                      raceData: parsedRaces,
                     });
                   }
                 }}

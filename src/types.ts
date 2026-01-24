@@ -66,6 +66,7 @@ export interface ChampionshipEntry {
   generatedAt: string;
   carName?: string;
   carIcon?: string;
+  raceData?: any[]; // Store parsed races for later viewing
 }
 
 export interface AITimeEntry {
