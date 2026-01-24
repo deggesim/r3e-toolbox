@@ -1,16 +1,38 @@
+:root {
+  --bg-dark: #1a1a1a;
+  --bg-card: #242424;
+  --bg-header: #34495e;
+  --bg-caption: #2c3e50;
+  --border-color: #3a3a3a;
+  --text-light: #e0e0e0;
+  --text-muted: #95a5a6;
+  --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  --border-radius: 8px;
+}
+
 .results-detail-page {
   font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #1a1a1a;
-  color: #e0e0e0;
+  background: var(--bg-dark);
+  color: var(--text-light);
   min-height: 100vh;
 }
 
+/* Headers and wrappers - shared card styling */
+.results-header,
+.results-table-wrapper {
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
 .results-header {
-  background: #242424;
   padding: 20px;
   margin-bottom: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.results-table-wrapper {
+  overflow: hidden;
+  margin-bottom: 30px;
 }
 
 .results-title {
@@ -26,18 +48,10 @@
   margin-bottom: 0;
 }
 
-.results-table-wrapper {
-  background: #242424;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  background: #242424;
+  background: var(--bg-card);
   margin: 0;
 }
 
@@ -45,30 +59,33 @@
   font-size: 1.3em;
   font-weight: bold;
   padding: 15px;
-  background: #2c3e50;
+  background: var(--bg-caption);
   color: white;
   text-align: left;
   caption-side: top;
 }
 
 .results-table thead {
-  background-color: #34495e;
+  background-color: var(--bg-header);
   color: white;
 }
 
-.results-table th {
-  border: 1px solid #3a3a3a;
-  padding: 12px 8px;
+/* Table cells - shared border and padding */
+.results-table th,
+.results-table td {
+  border: 1px solid var(--border-color);
+  padding: 10px 8px;
   text-align: center;
+}
+
+.results-table th {
   font-weight: 600;
   color: #fff;
+  padding: 12px 8px;
 }
 
 .results-table td {
-  border: 1px solid #3a3a3a;
-  padding: 10px 8px;
-  text-align: center;
-  color: #e0e0e0;
+  color: var(--text-light);
 }
 
 .results-table tbody tr:hover {
@@ -99,8 +116,15 @@
   color: #000 !important;
 }
 
-.track-header {
+/* Font size 0.9em - shared for similar content cells */
+.track-header,
+.vehicle-name-cell,
+.team-name-cell,
+.race-position-cell {
   font-size: 0.9em;
+}
+
+.track-header {
   padding: 5px;
 }
 
@@ -113,19 +137,19 @@
 
 .track-time {
   font-size: 0.8em;
-  color: #95a5a6;
+  color: var(--text-muted);
   display: block;
 }
 
-.driver-name-cell {
-  text-align: left !important;
-  font-weight: 600;
-}
-
+/* Left-aligned cells */
+.driver-name-cell,
 .vehicle-name-cell,
 .team-name-cell {
   text-align: left !important;
-  font-size: 0.9em;
+}
+
+.driver-name-cell {
+  font-weight: 600;
 }
 
 .vehicle-icon {
@@ -148,67 +172,46 @@
   text-transform: uppercase;
 }
 
-.time-diff {
-  color: #e74c3c;
-  font-size: 0.85em;
+/* Display blocks with font styling */
+.time-diff,
+.race-position-value,
+.race-points-value {
   display: block;
 }
 
-.race-position-cell {
-  font-size: 0.9em;
+.time-diff {
+  color: #e74c3c;
+  font-size: 0.85em;
 }
 
 .race-position-value {
   font-weight: bold;
-  display: block;
 }
 
 .race-points-value {
   font-size: 0.8em;
   opacity: 0.7;
-  display: block;
 }
 
 .back-button {
   margin-bottom: 20px;
 }
 
+/* Shared container and layout styles */
 .race-header {
   font-size: 0.85em;
   min-width: 150px;
 }
 
-.time-cell {
-  padding: 8px 4px !important;
-  text-align: center;
-}
-
-.time-entry {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-}
-
-.time-driver {
-  font-weight: 600;
-  font-size: 0.85em;
-  color: #fff;
-}
-
-.time-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8em;
-  color: #95a5a6;
-}
-
+/* Cell styling - shared for time and race result cells */
+.time-cell,
 .race-result-cell {
   padding: 8px 4px !important;
   text-align: center;
 }
 
+/* Entry container - shared for time and race result entries */
+.time-entry,
 .race-result-entry {
   display: flex;
   flex-direction: column;
@@ -217,16 +220,21 @@
   font-size: 0.8em;
 }
 
+/* Driver name styling - shared for time and result drivers */
+.time-driver,
 .result-driver {
   font-weight: 600;
   color: #fff;
 }
 
+/* Info sections - shared for time info and result vehicle */
+.time-info,
 .result-vehicle {
   display: flex;
   align-items: center;
   gap: 3px;
-  color: #95a5a6;
+  font-size: 0.8em;
+  color: var(--text-muted);
 }
 
 .result-time {
@@ -237,34 +245,4 @@
   font-weight: 700;
   font-size: 0.95em;
   color: #fff;
-}
-
-.race-header {
-  font-size: 0.85em;
-  min-width: 150px;
-}
-
-.time-cell {
-  padding: 8px 4px !important;
-  text-align: center;
-}
-
-.time-entry {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-}
-
-.time-driver {
-  font-weight: 600;
-  color: #fff;
-}
-
-.time-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8em;
-  color: #95a5a6;
 }
