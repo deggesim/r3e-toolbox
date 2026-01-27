@@ -11,14 +11,15 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { useChampionshipStore } from "../store/championshipStore";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import type { LeaderboardAssets, RaceRoomData } from "../types";
 import type { ParsedRace } from "../types/raceResults";
 import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
-import { useChampionshipStore } from "../store/championshipStore";
-import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { parseResultFiles } from "../utils/raceResultParser";
 
 function SectionTitle({ label }: { readonly label: string }) {
@@ -61,7 +62,7 @@ function buildRaceKey(race: ParsedRace): string {
   const classPart =
     classInfo?.ClassId !== undefined
       ? String(classInfo.ClassId)
-      : (classInfo?.ClassName || "unknown-class");
+      : classInfo?.ClassName || "unknown-class";
   const trackPart = race.trackid ? String(race.trackid) : race.trackname;
   return `${trackPart}::${classPart}`;
 }
@@ -367,7 +368,13 @@ export default function BuildResultsDatabase() {
         ? "Championship updated in the local database."
         : "Championship created in the local database.",
     );
-  }, [addOrUpdateChampionship, championships, championshipAlias, parsedRaces, resolveCarInfo]);
+  }, [
+    addOrUpdateChampionship,
+    championships,
+    championshipAlias,
+    parsedRaces,
+    resolveCarInfo,
+  ]);
 
   return (
     <Container className="py-4">
@@ -387,18 +394,18 @@ export default function BuildResultsDatabase() {
           <Row className="g-3 align-items-start">
             <Col lg={7}>
               <p className="text-white-50 mb-3">
-                Downloads the leaderboard page from{" "}
-                <a
-                  href="https://game.raceroom.com/leaderboard"
+                Downloads the leaderboard page from
+                <Link
+                  to="https://game.raceroom.com/leaderboard"
                   target="_blank"
                   rel="noreferrer"
                   className="text-white ms-1"
                 >
                   https://game.raceroom.com/leaderboard
-                </a>
-                , parses it to collect the latest class and track icon URLs, and stores
-                them for reuse. If the request is blocked by CORS, paste the page HTML
-                below and run the analysis again.
+                </Link>
+                , parses it to collect the latest class and track icon URLs, and
+                stores them for reuse. If the request is blocked by CORS, paste
+                the page HTML below and run the analysis again.
               </p>
               <div className="d-flex gap-2 mb-3">
                 <Button
@@ -416,7 +423,7 @@ export default function BuildResultsDatabase() {
                   )}
                 </Button>
                 <Button
-                  variant="outline-secondary"
+                  variant="warning"
                   onClick={() => {
                     setHtmlOverride("");
                     setAssets(null);
@@ -545,8 +552,8 @@ export default function BuildResultsDatabase() {
           <Row className="g-3">
             <Col lg={8}>
               <p className="text-white-50 mb-3">
-                Save or update the championship in your local database using
-                the selected RaceRoom result files and the provided alias. If a
+                Save or update the championship in your local database using the
+                selected RaceRoom result files and the provided alias. If a
                 championship with the same alias already exists, new races will
                 be merged without duplicating events on the same track and car
                 class.

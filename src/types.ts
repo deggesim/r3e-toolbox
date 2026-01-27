@@ -1,3 +1,5 @@
+import type { ParsedRace } from "./types/raceResults";
+
 export interface RaceRoomClass {
   Id: number;
   Name: string;
@@ -67,7 +69,7 @@ export interface ChampionshipEntry {
   generatedAt: string;
   carName?: string;
   carIcon?: string;
-  raceData?: any[]; // Store parsed races for later viewing
+  raceData?: ParsedRace[]; // Store parsed races for later viewing
 }
 
 export interface AITimeEntry {

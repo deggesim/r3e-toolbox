@@ -165,9 +165,7 @@ export default function Settings() {
           </Row>
 
           <div className="d-flex justify-content-end mt-4 gap-2">
-            <Button variant="outline-light" onClick={resetConfig}>
-              Reset to defaults
-            </Button>
+            <Button onClick={resetConfig}>Reset to defaults</Button>
           </div>
         </Card.Body>
       </Card>

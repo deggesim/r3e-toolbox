@@ -276,7 +276,8 @@ function calculateVehicleStandings(races: any[]): VehicleStanding[] {
 function getBestLapTimesPerRace(races: any[]): BestTime[][] {
   return races.map((race) => {
     const raceLapTimes: BestTime[] = [];
-    const humanDriver = race.slots && race.slots.length > 0 ? race.slots[0].Driver : null;
+    const humanDriver =
+      race.slots && race.slots.length > 0 ? race.slots[0].Driver : null;
 
     race.slots.forEach((slot: any) => {
       if (slot.BestLap) {
@@ -294,7 +295,9 @@ function getBestLapTimesPerRace(races: any[]): BestTime[][] {
       }
     });
 
-    const sorted = [...raceLapTimes].sort((a: BestTime, b: BestTime) => a.timeMs - b.timeMs);
+    const sorted = [...raceLapTimes].sort(
+      (a: BestTime, b: BestTime) => a.timeMs - b.timeMs,
+    );
     return sorted;
   });
 }
@@ -302,7 +305,8 @@ function getBestLapTimesPerRace(races: any[]): BestTime[][] {
 function getBestQualifyingTimesPerRace(races: any[]): BestTime[][] {
   return races.map((race) => {
     const raceQualTimes: BestTime[] = [];
-    const humanDriver = race.slots && race.slots.length > 0 ? race.slots[0].Driver : null;
+    const humanDriver =
+      race.slots && race.slots.length > 0 ? race.slots[0].Driver : null;
 
     race.slots.forEach((slot: any) => {
       if (slot.QualTime) {
@@ -320,7 +324,9 @@ function getBestQualifyingTimesPerRace(races: any[]): BestTime[][] {
       }
     });
 
-    const sorted = [...raceQualTimes].sort((a: BestTime, b: BestTime) => a.timeMs - b.timeMs);
+    const sorted = [...raceQualTimes].sort(
+      (a: BestTime, b: BestTime) => a.timeMs - b.timeMs,
+    );
     return sorted;
   });
 }
@@ -335,7 +341,14 @@ export default function ResultsDatabaseDetail() {
     return championships.find((c) => c.alias === alias);
   }, [championships, alias]);
 
-  const { driverStandings, teamStandings, vehicleStandings, bestLapTimes, bestQualTimes, raceHeaders } = useMemo(() => {
+  const {
+    driverStandings,
+    teamStandings,
+    vehicleStandings,
+    bestLapTimes,
+    bestQualTimes,
+    raceHeaders,
+  } = useMemo(() => {
     if (!championship?.raceData || championship.raceData.length === 0) {
       return {
         driverStandings: [],
@@ -363,13 +376,17 @@ export default function ResultsDatabaseDetail() {
 
   const getVehicleIcon = (vehicleId?: string) => {
     if (!vehicleId || !leaderboardAssets) return null;
-    const icon = leaderboardAssets.classes.find((c) => c.id === vehicleId)?.iconUrl;
+    const icon = leaderboardAssets.classes.find(
+      (c) => c.id === vehicleId,
+    )?.iconUrl;
     return icon || null;
   };
 
   const getTrackIcon = (trackName: string) => {
     if (!trackName || !leaderboardAssets) return null;
-    const icon = leaderboardAssets.tracks.find((t) => t.name === trackName)?.iconUrl;
+    const icon = leaderboardAssets.tracks.find(
+      (t) => t.name === trackName,
+    )?.iconUrl;
     return icon || null;
   };
 
@@ -378,7 +395,9 @@ export default function ResultsDatabaseDetail() {
     if (!vehicleId) return vehicleName || "";
     // Try to get the name from leaderboard assets
     if (leaderboardAssets) {
-      const classData = leaderboardAssets.classes.find((c) => c.id === vehicleId);
+      const classData = leaderboardAssets.classes.find(
+        (c) => c.id === vehicleId,
+      );
       if (classData?.name) {
         return classData.name;
       }
@@ -391,10 +410,11 @@ export default function ResultsDatabaseDetail() {
       <Container fluid className="py-4">
         <Alert variant="danger">
           <Alert.Heading>Championship Not Found</Alert.Heading>
-          <p>
-            The championship "{alias}" was not found in the database.
-          </p>
-          <Button variant="outline-danger" onClick={() => navigate("/results-database")}>
+          <p>The championship "{alias}" was not found in the database.</p>
+          <Button
+            variant="outline-danger"
+            onClick={() => navigate("/results-database")}
+          >
             Back to Database
           </Button>
         </Alert>
@@ -408,9 +428,13 @@ export default function ResultsDatabaseDetail() {
         <Alert variant="warning">
           <Alert.Heading>No Race Data Available</Alert.Heading>
           <p>
-            This championship was created before race data storage was implemented.
+            This championship was created before race data storage was
+            implemented.
           </p>
-          <Button variant="outline-warning" onClick={() => navigate("/results-database")}>
+          <Button
+            variant="outline-warning"
+            onClick={() => navigate("/results-database")}
+          >
             Back to Database
           </Button>
         </Alert>
@@ -419,12 +443,12 @@ export default function ResultsDatabaseDetail() {
   }
 
   const generatedDate = new Date(championship.generatedAt);
-  const day = String(generatedDate.getDate()).padStart(2, '0');
-  const month = String(generatedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(generatedDate.getDate()).padStart(2, "0");
+  const month = String(generatedDate.getMonth() + 1).padStart(2, "0");
   const year = generatedDate.getFullYear();
-  const hours = String(generatedDate.getHours()).padStart(2, '0');
-  const minutes = String(generatedDate.getMinutes()).padStart(2, '0');
-  const seconds = String(generatedDate.getSeconds()).padStart(2, '0');
+  const hours = String(generatedDate.getHours()).padStart(2, "0");
+  const minutes = String(generatedDate.getMinutes()).padStart(2, "0");
+  const seconds = String(generatedDate.getSeconds()).padStart(2, "0");
   const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 
   const getPositionClass = (pos: number) => {
@@ -438,13 +462,13 @@ export default function ResultsDatabaseDetail() {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
           classes: Object.fromEntries(
-            leaderboardAssets.classes.map((c) => [c.id, c.iconUrl || ""])
+            leaderboardAssets.classes.map((c) => [c.id, c.iconUrl || ""]),
           ),
           tracks: Object.fromEntries(
-            leaderboardAssets.tracks.map((t) => [t.name, t.iconUrl || ""])
+            leaderboardAssets.tracks.map((t) => [t.name, t.iconUrl || ""]),
           ),
           classNames: Object.fromEntries(
-            leaderboardAssets.classes.map((c) => [c.id, c.name])
+            leaderboardAssets.classes.map((c) => [c.id, c.name]),
           ),
         }
       : undefined;
@@ -458,220 +482,297 @@ export default function ResultsDatabaseDetail() {
   };
 
   return (
-    <div className="results-detail-page">
-      <Container fluid className="py-4">
-        <Button variant="outline-secondary" onClick={() => navigate("/results-database")} className="back-button">
-          ← Back to Database
-        </Button>
+    <Container fluid className="py-4">
+      <Button
+        variant="outline-secondary"
+        onClick={() => navigate("/results-database")}
+        className="back-button"
+      >
+        ← Back to Database
+      </Button>
 
-        <div className="results-header">
-          <div className="d-flex align-items-center gap-3 mb-2">
-            {championship.carIcon && (
-              <img
-                src={championship.carIcon}
-                alt={championship.carName || championship.alias}
-                style={{ width: 48, height: 48, objectFit: "contain" }}
-              />
-            )}
-            <h1 className="results-title mb-0">{championship.alias}</h1>
-          </div>
-          <p className="results-subtitle">
-            {championship.carName && <span>{championship.carName} • </span>}
-            <span>Championship Standings</span>
-          </p>
-          <p className="results-subtitle mb-0">
-            Generated from R3E Toolbox • {formattedDate}
-          </p>
-          <div className="mt-3">
-            <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
-              ⬇️ Download as HTML
-            </Button>
-          </div>
+      <div className="results-header">
+        <div className="d-flex align-items-center gap-3 mb-2">
+          {championship.carIcon && (
+            <img
+              src={championship.carIcon}
+              alt={championship.carName || championship.alias}
+              style={{ width: 48, height: 48, objectFit: "contain" }}
+            />
+          )}
+          <h1 className="results-title mb-0">{championship.alias}</h1>
         </div>
+        <p className="results-subtitle">
+          {championship.carName && <span>{championship.carName} • </span>}
+          <span>Championship Standings</span>
+        </p>
+        <p className="results-subtitle mb-0">
+          Generated from R3E Toolbox • {formattedDate}
+        </p>
+        <div className="mt-3">
+          <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
+            ⬇️ Download as HTML
+          </Button>
+        </div>
+      </div>
 
-        {/* Driver Standings */}
-        <div className="results-table-wrapper">
-          <table className="results-table">
-            <caption>Driver Standings</caption>
-            <thead>
-              <tr>
-                <th rowSpan={2}>Pos</th>
-                <th rowSpan={2}>Driver</th>
-                <th rowSpan={2}>Vehicle</th>
-                <th rowSpan={2}>Team</th>
-                <th rowSpan={2}>Points</th>
-                {raceHeaders.map((header, idx) => {
-                  const trackIcon = getTrackIcon(header.name);
-                  return (
-                    <th key={`race-${idx}-${header.name}`} colSpan={2} className="track-header">
-                      {trackIcon && <img src={trackIcon} alt={header.name} />}
-                      <div>{header.name}</div>
-                      {header.time && <span className="track-time">{header.time}</span>}
-                    </th>
-                  );
-                })}
-              </tr>
-              <tr>
-                {raceHeaders.map((header, idx) => (
-                  <Fragment key={`header-${idx}-${header.name}`}>
-                    <th>Pts</th>
-                    <th>Pos</th>
-                  </Fragment>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {driverStandings.map((standing) => {
-                const vehicleIcon = getVehicleIcon(standing.vehicleId);
-                const vehicleName = getVehicleName(standing.vehicleId, standing.vehicle);
+      {/* Driver Standings */}
+      <div className="results-table-wrapper">
+        <table className="results-table">
+          <caption>Driver Standings</caption>
+          <thead>
+            <tr>
+              <th rowSpan={2}>Pos</th>
+              <th rowSpan={2}>Driver</th>
+              <th rowSpan={2}>Vehicle</th>
+              <th rowSpan={2}>Team</th>
+              <th rowSpan={2}>Points</th>
+              {raceHeaders.map((header, idx) => {
+                const trackIcon = getTrackIcon(header.name);
                 return (
-                  <tr key={standing.driver} className={standing.isHuman ? "human-driver" : ""}>
-                    <td>{standing.position}</td>
-                    <td className="driver-name-cell">
-                      {standing.driver}
-                    </td>
-                    <td>
-                      {vehicleIcon && <img src={vehicleIcon} className="vehicle-icon" alt={vehicleName} />}
-                      {vehicleName}
-                    </td>
-                    <td>{standing.team}</td>
-                    <td className="points-cell">{standing.points}</td>
-                    {raceHeaders.map((_, idx) => {
-                      const pts = standing.racePoints[idx];
-                      const result = standing.raceResults[idx];
-                      const posClass = result !== null && result <= 3 ? getPositionClass(result) : "";
-                      return (
-                        <Fragment key={`race-${standing.driver}-${idx}`}>
-                          <td className="points-cell">{pts ?? "-"}</td>
-                          <td className={posClass}>{result ?? "-"}</td>
-                        </Fragment>
-                      );
-                    })}
-                  </tr>
+                  <th
+                    key={`race-${idx}-${header.name}`}
+                    colSpan={2}
+                    className="track-header"
+                  >
+                    {trackIcon && <img src={trackIcon} alt={header.name} />}
+                    <div>{header.name}</div>
+                    {header.time && (
+                      <span className="track-time">{header.time}</span>
+                    )}
+                  </th>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Team Standings */}
-        {teamStandings.length > 1 && (
-          <div className="results-table-wrapper">
-            <table className="results-table">
-              <caption>Team Standings</caption>
-              <thead>
-                <tr>
-                  <th rowSpan={2}>Pos</th>
-                  <th rowSpan={2}>Team</th>
-                  <th rowSpan={2}>Entries</th>
-                  <th rowSpan={2}>Points</th>
-                  {raceHeaders.map((header, idx) => (
-                    <th key={`team-race-${header.name}-${idx}`}>
-                      {header.name}
-                      {header.time && <span className="track-time">{header.time}</span>}
-                    </th>
-                  ))}
+            </tr>
+            <tr>
+              {raceHeaders.map((header, idx) => (
+                <Fragment key={`header-${idx}-${header.name}`}>
+                  <th>Pts</th>
+                  <th>Pos</th>
+                </Fragment>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {driverStandings.map((standing) => {
+              const vehicleIcon = getVehicleIcon(standing.vehicleId);
+              const vehicleName = getVehicleName(
+                standing.vehicleId,
+                standing.vehicle,
+              );
+              return (
+                <tr
+                  key={standing.driver}
+                  className={standing.isHuman ? "human-driver" : ""}
+                >
+                  <td>{standing.position}</td>
+                  <td className="driver-name-cell">{standing.driver}</td>
+                  <td>
+                    {vehicleIcon && (
+                      <img
+                        src={vehicleIcon}
+                        className="vehicle-icon"
+                        alt={vehicleName}
+                      />
+                    )}
+                    {vehicleName}
+                  </td>
+                  <td>{standing.team}</td>
+                  <td className="points-cell">{standing.points}</td>
+                  {raceHeaders.map((_, idx) => {
+                    const pts = standing.racePoints[idx];
+                    const result = standing.raceResults[idx];
+                    const posClass =
+                      result !== null && result <= 3
+                        ? getPositionClass(result)
+                        : "";
+                    return (
+                      <Fragment key={`race-${standing.driver}-${idx}`}>
+                        <td className="points-cell">{pts ?? "-"}</td>
+                        <td className={posClass}>{result ?? "-"}</td>
+                      </Fragment>
+                    );
+                  })}
                 </tr>
-              </thead>
-              <tbody>
-                {teamStandings.map((standing) => (
-                  <tr key={standing.team}>
-                    <td>{standing.position}</td>
-                    <td>{standing.team}</td>
-                    <td>{standing.entries}</td>
-                    <td className="points-cell">{standing.points}</td>
-                    {standing.racePoints.map((pts, idx) => (
-                      <td key={`team-pts-${standing.team}-${idx}`} className="points-cell">
-                        {pts ?? "-"}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Vehicle Standings */}
+      {/* Team Standings */}
+      {teamStandings.length > 1 && (
         <div className="results-table-wrapper">
           <table className="results-table">
-            <caption>Vehicle Standings</caption>
+            <caption>Team Standings</caption>
             <thead>
               <tr>
                 <th rowSpan={2}>Pos</th>
-                <th rowSpan={2}>Vehicle</th>
+                <th rowSpan={2}>Team</th>
                 <th rowSpan={2}>Entries</th>
                 <th rowSpan={2}>Points</th>
                 {raceHeaders.map((header, idx) => (
-                  <th key={`vehicle-race-${header.name}-${idx}`}>
+                  <th key={`team-race-${header.name}-${idx}`}>
                     {header.name}
-                    {header.time && <span className="track-time">{header.time}</span>}
+                    {header.time && (
+                      <span className="track-time">{header.time}</span>
+                    )}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {vehicleStandings.map((standing) => {
-                const vehicleIcon = getVehicleIcon(standing.vehicleId);
-                const vehicleName = getVehicleName(standing.vehicleId, standing.vehicle);
-                return (
-                  <tr key={standing.vehicle}>
-                    <td>{standing.position}</td>
-                    <td>
-                      {vehicleIcon && <img src={vehicleIcon} className="vehicle-icon" alt={vehicleName} />}
-                      {vehicleName}
+              {teamStandings.map((standing) => (
+                <tr key={standing.team}>
+                  <td>{standing.position}</td>
+                  <td>{standing.team}</td>
+                  <td>{standing.entries}</td>
+                  <td className="points-cell">{standing.points}</td>
+                  {standing.racePoints.map((pts, idx) => (
+                    <td
+                      key={`team-pts-${standing.team}-${idx}`}
+                      className="points-cell"
+                    >
+                      {pts ?? "-"}
                     </td>
-                    <td>{standing.entries}</td>
-                    <td className="points-cell">{standing.points}</td>
-                    {standing.racePoints.map((pts, idx) => (
-                      <td key={`vehicle-pts-${standing.vehicle}-${idx}`} className="points-cell">
-                        {pts ?? "-"}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+      )}
 
-        {/* Best Lap Times Per Race */}
-        {bestLapTimes.some((race) => race.length > 0) && (
-          <div className="results-table-wrapper">
-            <table className="results-table">
-              <caption>Best Race Lap Times</caption>
-              <thead>
-                <tr>
-                  <th>Pos</th>
-                  {raceHeaders.map((header) => (
-                    <th key={`${header.name}-${header.time}`} className="race-header">
-                      {header.name}
-                    </th>
+      {/* Vehicle Standings */}
+      <div className="results-table-wrapper">
+        <table className="results-table">
+          <caption>Vehicle Standings</caption>
+          <thead>
+            <tr>
+              <th rowSpan={2}>Pos</th>
+              <th rowSpan={2}>Vehicle</th>
+              <th rowSpan={2}>Entries</th>
+              <th rowSpan={2}>Points</th>
+              {raceHeaders.map((header, idx) => (
+                <th key={`vehicle-race-${header.name}-${idx}`}>
+                  {header.name}
+                  {header.time && (
+                    <span className="track-time">{header.time}</span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {vehicleStandings.map((standing) => {
+              const vehicleIcon = getVehicleIcon(standing.vehicleId);
+              const vehicleName = getVehicleName(
+                standing.vehicleId,
+                standing.vehicle,
+              );
+              return (
+                <tr key={standing.vehicle}>
+                  <td>{standing.position}</td>
+                  <td>
+                    {vehicleIcon && (
+                      <img
+                        src={vehicleIcon}
+                        className="vehicle-icon"
+                        alt={vehicleName}
+                      />
+                    )}
+                    {vehicleName}
+                  </td>
+                  <td>{standing.entries}</td>
+                  <td className="points-cell">{standing.points}</td>
+                  {standing.racePoints.map((pts, idx) => (
+                    <td
+                      key={`vehicle-pts-${standing.vehicle}-${idx}`}
+                      className="points-cell"
+                    >
+                      {pts ?? "-"}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {new Array(Math.max(...bestLapTimes.map((r) => r.length).filter(l => l > 0), 0)).fill(undefined).map((_, posIdx) => (
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Best Lap Times Per Race */}
+      {bestLapTimes.some((race) => race.length > 0) && (
+        <div className="results-table-wrapper">
+          <table className="results-table">
+            <caption>Best Race Lap Times</caption>
+            <thead>
+              <tr>
+                <th>Pos</th>
+                {raceHeaders.map((header) => (
+                  <th
+                    key={`${header.name}-${header.time}`}
+                    className="race-header"
+                  >
+                    {header.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {new Array(
+                Math.max(
+                  ...bestLapTimes.map((r) => r.length).filter((l) => l > 0),
+                  0,
+                ),
+              )
+                .fill(undefined)
+                .map((_, posIdx) => (
                   <tr key={`best-lap-pos-${championship.alias}-${posIdx}`}>
                     <td>{posIdx + 1}</td>
                     {bestLapTimes.map((raceTimesArray, raceIdx) => {
                       const time = raceTimesArray[posIdx];
                       if (!time) {
-                        return <td key={`lap-${championship.alias}-${raceIdx}-${posIdx}`}>-</td>;
+                        return (
+                          <td
+                            key={`lap-${championship.alias}-${raceIdx}-${posIdx}`}
+                          >
+                            -
+                          </td>
+                        );
                       }
                       const vehicleIcon = getVehicleIcon(time.vehicleId);
-                      const vehicleName = getVehicleName(time.vehicleId, time.vehicle);
-                      const diff = posIdx > 0 ? formatTimeDiff(raceTimesArray[0].timeMs, time.timeMs) : "";
+                      const vehicleName = getVehicleName(
+                        time.vehicleId,
+                        time.vehicle,
+                      );
+                      const diff =
+                        posIdx > 0
+                          ? formatTimeDiff(
+                              raceTimesArray[0].timeMs,
+                              time.timeMs,
+                            )
+                          : "";
                       return (
-                        <td key={`lap-${championship.alias}-${raceIdx}-${posIdx}`} className="time-cell">
-                          <div className={`time-entry${time.isHuman ? " human-driver" : ""}`}>
-                            <div className="time-driver">
-                              {time.driver}
-                            </div>
+                        <td
+                          key={`lap-${championship.alias}-${raceIdx}-${posIdx}`}
+                          className="time-cell"
+                        >
+                          <div
+                            className={`time-entry${time.isHuman ? " human-driver" : ""}`}
+                          >
+                            <div className="time-driver">{time.driver}</div>
                             <div className="time-info">
-                              {vehicleIcon && <img src={vehicleIcon} className="vehicle-icon" alt={vehicleName} />}
+                              {vehicleIcon && (
+                                <img
+                                  src={vehicleIcon}
+                                  className="vehicle-icon"
+                                  alt={vehicleName}
+                                />
+                              )}
                               <span className="time-value">{time.time}</span>
-                              {diff && <span className="time-diff">{diff}</span>}
+                              {diff && (
+                                <span className="time-diff">{diff}</span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -679,107 +780,175 @@ export default function ResultsDatabaseDetail() {
                     })}
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        {/* Best Qualifying Times Per Race */}
-        {bestQualTimes.some((race) => race.length > 0) && (
-          <div className="results-table-wrapper">
-            <table className="results-table">
-              <caption>Best Qualification Times</caption>
-              <thead>
-                <tr>
-                  <th>Pos</th>
-                  {raceHeaders.map((header) => (
-                    <th key={`${header.name}-${header.time}`} className="race-header">
-                      {header.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {new Array(Math.max(...bestQualTimes.map((r) => r.length).filter(l => l > 0), 0)).fill(undefined).map((_, posIdx) => (
-                  <tr key={`best-qual-pos-${championship.alias}-${posIdx}`}>
-                    <td>{posIdx + 1}</td>
-                    {bestQualTimes.map((raceTimesArray, raceIdx) => {
-                      const time = raceTimesArray[posIdx];
-                      if (!time) {
-                        return <td key={`qual-${championship.alias}-${raceIdx}-${posIdx}`}>-</td>;
-                      }
-                      const vehicleIcon = getVehicleIcon(time.vehicleId);
-                      const vehicleName = getVehicleName(time.vehicleId, time.vehicle);
-                      const diff = posIdx > 0 ? formatTimeDiff(raceTimesArray[0].timeMs, time.timeMs) : "";
-                      return (
-                        <td key={`qual-${championship.alias}-${raceIdx}-${posIdx}`} className="time-cell">
-                          <div className={`time-entry${time.isHuman ? " human-driver" : ""}`}>
-                            <div className="time-driver">
-                              {time.driver}
-                            </div>
-                            <div className="time-info">
-                              {vehicleIcon && <img src={vehicleIcon} className="vehicle-icon" alt={vehicleName} />}
-                              <span className="time-value">{time.time}</span>
-                              {diff && <span className="time-diff">{diff}</span>}
-                            </div>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Race Results */}
+      {/* Best Qualifying Times Per Race */}
+      {bestQualTimes.some((race) => race.length > 0) && (
         <div className="results-table-wrapper">
           <table className="results-table">
-            <caption>Race Results</caption>
+            <caption>Best Qualification Times</caption>
             <thead>
               <tr>
                 <th>Pos</th>
                 {raceHeaders.map((header) => (
-                  <th key={`race-result-${header.name}-${header.time}`} className="race-header">
+                  <th
+                    key={`${header.name}-${header.time}`}
+                    className="race-header"
+                  >
                     {header.name}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {Array.from({ length: Math.max(...(championship.raceData?.map(race => race.slots.length) || [0])) }, (_, posIdx) => (
+              {new Array(
+                Math.max(
+                  ...bestQualTimes.map((r) => r.length).filter((l) => l > 0),
+                  0,
+                ),
+              )
+                .fill(undefined)
+                .map((_, posIdx) => (
+                  <tr key={`best-qual-pos-${championship.alias}-${posIdx}`}>
+                    <td>{posIdx + 1}</td>
+                    {bestQualTimes.map((raceTimesArray, raceIdx) => {
+                      const time = raceTimesArray[posIdx];
+                      if (!time) {
+                        return (
+                          <td
+                            key={`qual-${championship.alias}-${raceIdx}-${posIdx}`}
+                          >
+                            -
+                          </td>
+                        );
+                      }
+                      const vehicleIcon = getVehicleIcon(time.vehicleId);
+                      const vehicleName = getVehicleName(
+                        time.vehicleId,
+                        time.vehicle,
+                      );
+                      const diff =
+                        posIdx > 0
+                          ? formatTimeDiff(
+                              raceTimesArray[0].timeMs,
+                              time.timeMs,
+                            )
+                          : "";
+                      return (
+                        <td
+                          key={`qual-${championship.alias}-${raceIdx}-${posIdx}`}
+                          className="time-cell"
+                        >
+                          <div
+                            className={`time-entry${time.isHuman ? " human-driver" : ""}`}
+                          >
+                            <div className="time-driver">{time.driver}</div>
+                            <div className="time-info">
+                              {vehicleIcon && (
+                                <img
+                                  src={vehicleIcon}
+                                  className="vehicle-icon"
+                                  alt={vehicleName}
+                                />
+                              )}
+                              <span className="time-value">{time.time}</span>
+                              {diff && (
+                                <span className="time-diff">{diff}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Race Results */}
+      <div className="results-table-wrapper">
+        <table className="results-table">
+          <caption>Race Results</caption>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              {raceHeaders.map((header) => (
+                <th
+                  key={`race-result-${header.name}-${header.time}`}
+                  className="race-header"
+                >
+                  {header.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(
+              {
+                length: Math.max(
+                  ...(championship.raceData?.map(
+                    (race) => race.slots.length,
+                  ) || [0]),
+                ),
+              },
+              (_, posIdx) => (
                 <tr key={`race-result-pos-${posIdx}`}>
                   <td>{posIdx + 1}</td>
                   {championship.raceData?.map((race, raceIdx) => {
                     const sortedSlots = [...race.slots].sort((a, b) => {
-                      const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
-                      const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
+                      const aFinished =
+                        a.FinishStatus === "Finished" || !!a.TotalTime;
+                      const bFinished =
+                        b.FinishStatus === "Finished" || !!b.TotalTime;
                       if (aFinished !== bFinished) return bFinished ? 1 : -1;
                       const aTime = parseTime(a.TotalTime);
                       const bTime = parseTime(b.TotalTime);
                       return aTime - bTime;
                     });
-                    
+
                     const slot = sortedSlots[posIdx];
                     if (!slot?.TotalTime) {
-                      return <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>;
+                      return (
+                        <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
+                      );
                     }
-                    
+
                     const totalTimeSeconds = parseTime(slot.TotalTime);
-                    const formattedTime = Number.isFinite(totalTimeSeconds) ? makeTime(totalTimeSeconds) : slot.TotalTime;
+                    const formattedTime = Number.isFinite(totalTimeSeconds)
+                      ? makeTime(totalTimeSeconds)
+                      : slot.TotalTime;
                     const vehicleIcon = getVehicleIcon(slot.VehicleId);
-                    const vehicleName = getVehicleName(slot.VehicleId, slot.Vehicle);
-                    const isHuman = race.slots && race.slots.length > 0 && race.slots[0].Driver === slot.Driver;
-                    
+                    const vehicleName = getVehicleName(
+                      slot.VehicleId,
+                      slot.Vehicle,
+                    );
+                    const isHuman =
+                      race.slots &&
+                      race.slots.length > 0 &&
+                      race.slots[0].Driver === slot.Driver;
+
                     return (
-                      <td key={`race-result-${raceIdx}-${posIdx}`} className="race-result-cell">
-                        <div className={`race-result-entry${isHuman ? " human-driver" : ""}`}>
-                          <div className="result-driver">
-                            {slot.Driver}
-                          </div>
+                      <td
+                        key={`race-result-${raceIdx}-${posIdx}`}
+                        className="race-result-cell"
+                      >
+                        <div
+                          className={`race-result-entry${isHuman ? " human-driver" : ""}`}
+                        >
+                          <div className="result-driver">{slot.Driver}</div>
                           <div className="result-vehicle">
-                            {vehicleIcon && <img src={vehicleIcon} className="vehicle-icon" alt={vehicleName} />}
+                            {vehicleIcon && (
+                              <img
+                                src={vehicleIcon}
+                                className="vehicle-icon"
+                                alt={vehicleName}
+                              />
+                            )}
                             <span>{vehicleName}</span>
                           </div>
                           <div className="result-time">{formattedTime}</div>
@@ -788,11 +957,11 @@ export default function ResultsDatabaseDetail() {
                     );
                   })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Container>
-    </div>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
+    </Container>
   );
 }

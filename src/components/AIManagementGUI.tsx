@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Form, Row, Table } from "react-bootstrap";
+import { useConfigStore } from "../store/configStore";
 import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
 import { computeTime, makeTime } from "../utils/timeUtils";
-import { useConfigStore } from "../store/configStore";
 
 interface AIManagementGUIProps {
   assets: Assets | null;
@@ -155,10 +155,10 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
     <Card bg="dark" text="white" className="border-secondary">
       <Card.Body>
         <div className="d-flex flex-wrap gap-2 mb-3">
-          <Button variant="outline-warning" onClick={onRemoveGenerated}>
+          <Button variant="warning" onClick={onRemoveGenerated}>
             Remove likely generated
           </Button>
-          <Button variant="outline-danger" onClick={onResetAll}>
+          <Button variant="danger" onClick={onResetAll}>
             Reset all AI times
           </Button>
         </div>
@@ -169,7 +169,12 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
               <Card.Header className="fw-semibold">Classes</Card.Header>
               <Card.Body className="p-0">
                 <div className="table-responsive" style={{ maxHeight: 320 }}>
-                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                  <Table
+                    hover
+                    size="sm"
+                    variant="dark"
+                    className="mb-0 align-middle"
+                  >
                     <thead className="table-dark position-sticky top-0">
                       <tr>
                         <th>Class</th>
@@ -184,7 +189,9 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                             setSelectedTrackId("");
                             setSelectedAILevel(null);
                           }}
-                          className={selectedClassId === cls.id ? "table-active" : ""}
+                          className={
+                            selectedClassId === cls.id ? "table-active" : ""
+                          }
                           style={{ cursor: "pointer" }}
                         >
                           <td>{cls.name}</td>
@@ -202,7 +209,12 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
               <Card.Header className="fw-semibold">Tracks</Card.Header>
               <Card.Body className="p-0">
                 <div className="table-responsive" style={{ maxHeight: 320 }}>
-                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                  <Table
+                    hover
+                    size="sm"
+                    variant="dark"
+                    className="mb-0 align-middle"
+                  >
                     <thead className="table-dark position-sticky top-0">
                       <tr>
                         <th>Track</th>
@@ -211,7 +223,8 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                     </thead>
                     <tbody>
                       {availableTracks.map((track) => {
-                        const playerClass = playertimes?.classes[selectedClassId];
+                        const playerClass =
+                          playertimes?.classes[selectedClassId];
                         const playerTrack = playerClass?.tracks[track.id];
                         const playerTime = playerTrack?.playertime
                           ? makeTime(playerTrack.playertime, ":")
@@ -223,7 +236,9 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                               setSelectedTrackId(track.id);
                               setSelectedAILevel(null);
                             }}
-                            className={selectedTrackId === track.id ? "table-active" : ""}
+                            className={
+                              selectedTrackId === track.id ? "table-active" : ""
+                            }
                             style={{ cursor: "pointer" }}
                           >
                             <td>{track.name}</td>
@@ -243,7 +258,12 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
               <Card.Header className="fw-semibold">AI Levels</Card.Header>
               <Card.Body className="p-0">
                 <div className="table-responsive" style={{ maxHeight: 320 }}>
-                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                  <Table
+                    hover
+                    size="sm"
+                    variant="dark"
+                    className="mb-0 align-middle"
+                  >
                     <thead className="table-dark position-sticky top-0">
                       <tr>
                         <th>AI</th>
@@ -255,7 +275,11 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
                         <tr
                           key={ai}
                           onClick={() => setSelectedAILevel(ai)}
-                          className={selectedAILevel === ai ? "table-active fw-semibold" : ""}
+                          className={
+                            selectedAILevel === ai
+                              ? "table-active fw-semibold"
+                              : ""
+                          }
                           style={{ cursor: "pointer" }}
                         >
                           <td>{ai}</td>

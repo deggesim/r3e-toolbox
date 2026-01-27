@@ -24,13 +24,13 @@
 }
 
 .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #3a3f5c !important;
   color: #ffffff !important;
 }
 
 .menu-item.active {
-  background-color: rgba(100, 108, 255, 0.2) !important;
-  color: #8b92ff !important;
+  background-color: #3a3f5c !important;
+  color: #ffffff !important;
   border-left-color: #8b92ff;
 }
 
