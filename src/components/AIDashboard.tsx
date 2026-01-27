@@ -385,7 +385,7 @@ const AIDashboard: React.FC = () => {
           🤖 AI Management
         </Card.Header>
         <Card.Body>
-          <Card.Text className="text-muted mb-4">
+          <Card.Text className="text-white-50 mb-4">
             Upload RaceRoom data files to analyze and configure AI parameters
           </Card.Text>
 
@@ -418,7 +418,7 @@ const AIDashboard: React.FC = () => {
             {assets && (
               <Card bg="dark" className="border-secondary mb-4">
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex justify-content-between align-items-center text-white-50">
                     <div>
                       <strong>Loaded:</strong> {assets.numClasses} classes and{" "}
                       {assets.numTracks} tracks

@@ -101,7 +101,7 @@ export default function Settings() {
           ⚙️ Settings
         </Card.Header>
         <Card.Body>
-          <Card.Text className="text-muted mb-4">
+          <Card.Text className="text-white-50 mb-4">
             Configure fitting and UI defaults. Values persist in your browser
             localStorage and can be reset to the built-in defaults from
             config.ts.
@@ -113,7 +113,7 @@ export default function Settings() {
                 <Form.Group>
                   <Form.Label className="d-flex justify-content-between">
                     <span>{field.label}</span>
-                    <small className="text-muted">
+                    <small className="text-white-50">
                       Default: {CFG[field.key]}
                     </small>
                   </Form.Label>
@@ -128,7 +128,9 @@ export default function Settings() {
                     }
                   />
                   {field.helper && (
-                    <Form.Text className="text-muted">{field.helper}</Form.Text>
+                    <Form.Text className="text-white-50">
+                      {field.helper}
+                    </Form.Text>
                   )}
                 </Form.Group>
               </Col>
@@ -142,7 +144,7 @@ export default function Settings() {
                   <div>
                     <div>{field.label}</div>
                     {field.helper && (
-                      <Form.Text className="text-muted">
+                      <Form.Text className="text-white-50">
                         {field.helper}
                       </Form.Text>
                     )}

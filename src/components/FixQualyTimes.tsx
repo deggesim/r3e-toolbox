@@ -49,7 +49,7 @@ export default function FixQualyTimes() {
       // Validation 1: event equality
       if (!eventsAreEqual(qual.event, race.event)) {
         throw new TypeError(
-          "❌ ERROR: 'event' attributes differ between qualification and race file."
+          "❌ ERROR: 'event' attributes differ between qualification and race file.",
         );
       }
       addLog("success", "✔ 'event' attribute is identical.");
@@ -58,18 +58,18 @@ export default function FixQualyTimes() {
       qual.drivers.forEach((d: any) => {
         if (typeof d.bestLapTimeMs !== "number") {
           throw new TypeError(
-            `❌ ERROR: Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`
+            `❌ ERROR: Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
           );
         }
       });
       addLog(
         "success",
-        "✔ All qualification drivers have valid bestLapTimeMs."
+        "✔ All qualification drivers have valid bestLapTimeMs.",
       );
 
       // Build map from name → bestLapTimeMs
       const qualTimesMap = new Map(
-        qual.drivers.map((d: any) => [d.name, d.bestLapTimeMs])
+        qual.drivers.map((d: any) => [d.name, d.bestLapTimeMs]),
       );
 
       // Patch race file
@@ -80,7 +80,7 @@ export default function FixQualyTimes() {
         if (qualTime === undefined) {
           addLog(
             "warning",
-            `⚠ WARNING: Driver '${driver.name}' is not present in qualification file.`
+            `⚠ WARNING: Driver '${driver.name}' is not present in qualification file.`,
           );
         } else if (driver.qualTimeMs === -1 || driver.qualTimeMs !== qualTime) {
           driver.qualTimeMs = qualTime;
@@ -101,7 +101,7 @@ export default function FixQualyTimes() {
 
       // Ask for confirmation before download
       const shouldDownload = window.confirm(
-        `File processed successfully!\n\nUpdated ${updatedCount} driver(s).\n\nDownload the fixed file:\n${outputFileName}?`
+        `File processed successfully!\n\nUpdated ${updatedCount} driver(s).\n\nDownload the fixed file:\n${outputFileName}?`,
       );
 
       if (shouldDownload) {
@@ -164,7 +164,7 @@ export default function FixQualyTimes() {
           ⏱️ Fix Qualy Times
         </Card.Header>
         <Card.Body>
-          <Card.Text className="text-muted mb-4">
+          <Card.Text className="text-white-50 mb-4">
             This tool adds missing qualification times to race result files by
             extracting them from the qualification session file.
           </Card.Text>
@@ -251,9 +251,9 @@ export default function FixQualyTimes() {
                   <div
                     key={log.timestamp}
                     className={`mb-2 p-2 rounded bg-${getLogVariant(
-                      log.type
+                      log.type,
                     )} bg-opacity-10 border border-${getLogVariant(
-                      log.type
+                      log.type,
                     )} border-opacity-25`}
                     style={{ color: "#ffffff" }}
                   >

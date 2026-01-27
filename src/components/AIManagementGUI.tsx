@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
-import type { Assets, ProcessedDatabase, PlayerTimes } from "../types";
-import { makeTime, computeTime } from "../utils/timeUtils";
+import React, { useEffect, useMemo, useState } from "react";
+import { Button, Card, Col, Form, Row, Table } from "react-bootstrap";
+import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
+import { computeTime, makeTime } from "../utils/timeUtils";
 import { useConfigStore } from "../store/configStore";
 
 interface AIManagementGUIProps {
@@ -143,257 +144,176 @@ const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
     !selectedClassId || !selectedTrackId || selectedAILevel === null;
 
   if (!assets) {
-    return <div>Please upload RaceRoom Data JSON file first.</div>;
+    return (
+      <Card bg="dark" text="white" className="border-secondary">
+        <Card.Body>Please upload RaceRoom Data JSON file first.</Card.Body>
+      </Card>
+    );
   }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={onRemoveGenerated} style={{ marginRight: "10px" }}>
-          Remove likely generated
-        </button>
-        <button onClick={onResetAll}>Reset all AI times</button>
-      </div>
-
-      <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
-        <div style={{ flex: 1 }}>
-          <h3>Classes</h3>
-          <div
-            style={{
-              maxHeight: "300px",
-              overflowY: "auto",
-              border: "1px solid #ccc",
-            }}
-          >
-            <table
-              style={{
-                borderCollapse: "collapse",
-                width: "100%",
-                fontSize: "14px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      backgroundColor: "#f0f0f0",
-                      position: "sticky",
-                      top: 0,
-                      color: "#333",
-                    }}
-                  >
-                    Class
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {availableClasses.map((cls) => (
-                  <tr
-                    key={cls.id}
-                    onClick={() => {
-                      setSelectedClassId(cls.id);
-                      setSelectedTrackId("");
-                      setSelectedAILevel(null);
-                    }}
-                    style={{
-                      cursor: "pointer",
-                      backgroundColor:
-                        selectedClassId === cls.id ? "#b8b8b8" : "transparent",
-                      border: "1px solid #ccc",
-                    }}
-                  >
-                    <td style={{ padding: "8px" }}>{cls.name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <Card bg="dark" text="white" className="border-secondary">
+      <Card.Body>
+        <div className="d-flex flex-wrap gap-2 mb-3">
+          <Button variant="outline-warning" onClick={onRemoveGenerated}>
+            Remove likely generated
+          </Button>
+          <Button variant="outline-danger" onClick={onResetAll}>
+            Reset all AI times
+          </Button>
         </div>
 
-        <div style={{ flex: 2 }}>
-          <h3>Tracks</h3>
-          <div
-            style={{
-              maxHeight: "300px",
-              overflowY: "auto",
-              border: "1px solid #ccc",
-            }}
-          >
-            <table
-              style={{
-                borderCollapse: "collapse",
-                width: "100%",
-                fontSize: "14px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      backgroundColor: "#f0f0f0",
-                      position: "sticky",
-                      top: 0,
-                      color: "#333",
-                    }}
-                  >
-                    Track
-                  </th>
-                  <th
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      backgroundColor: "#f0f0f0",
-                      position: "sticky",
-                      top: 0,
-                      color: "#333",
-                    }}
-                  >
-                    Player Best
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {availableTracks.map((track) => {
-                  const playerClass = playertimes?.classes[selectedClassId];
-                  const playerTrack = playerClass?.tracks[track.id];
-                  const playerTime = playerTrack?.playertime
-                    ? makeTime(playerTrack.playertime, ":")
-                    : "";
-                  return (
-                    <tr
-                      key={track.id}
-                      onClick={() => {
-                        setSelectedTrackId(track.id);
-                        setSelectedAILevel(null);
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor:
-                          selectedTrackId === track.id
-                            ? "#b8b8b8"
-                            : "transparent",
-                        border: "1px solid #ccc",
-                      }}
-                    >
-                      <td style={{ padding: "8px" }}>{track.name}</td>
-                      <td style={{ padding: "8px" }}>{playerTime}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Row className="g-3 mb-4">
+          <Col lg={4}>
+            <Card bg="secondary" text="white" className="h-100">
+              <Card.Header className="fw-semibold">Classes</Card.Header>
+              <Card.Body className="p-0">
+                <div className="table-responsive" style={{ maxHeight: 320 }}>
+                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                    <thead className="table-dark position-sticky top-0">
+                      <tr>
+                        <th>Class</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {availableClasses.map((cls) => (
+                        <tr
+                          key={cls.id}
+                          onClick={() => {
+                            setSelectedClassId(cls.id);
+                            setSelectedTrackId("");
+                            setSelectedAILevel(null);
+                          }}
+                          className={selectedClassId === cls.id ? "table-active" : ""}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <td>{cls.name}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        <div style={{ flex: 1 }}>
-          <h3>AI Levels</h3>
-          <div
-            style={{
-              maxHeight: "300px",
-              overflowY: "auto",
-              border: "1px solid #ccc",
-            }}
-          >
-            <table
-              style={{
-                borderCollapse: "collapse",
-                width: "100%",
-                fontSize: "14px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      backgroundColor: "#f0f0f0",
-                      position: "sticky",
-                      top: 0,
-                      color: "#333",
-                    }}
-                  >
-                    AI
-                  </th>
-                  <th
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "8px",
-                      backgroundColor: "#f0f0f0",
-                      position: "sticky",
-                      top: 0,
-                      color: "#333",
-                    }}
-                  >
-                    Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {aiLevels.map(({ ai, time }) => (
-                  <tr
-                    key={ai}
-                    onClick={() => setSelectedAILevel(ai)}
-                    style={{
-                      cursor: "pointer",
-                      backgroundColor:
-                        selectedAILevel === ai ? "#b8b8b8" : "transparent",
-                      border: "1px solid #ccc",
-                      fontWeight: selectedAILevel === ai ? "bold" : "normal",
-                    }}
-                  >
-                    <td style={{ padding: "8px" }}>{ai}</td>
-                    <td style={{ padding: "8px" }}>{makeTime(time, ":")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+          <Col lg={5}>
+            <Card bg="secondary" text="white" className="h-100">
+              <Card.Header className="fw-semibold">Tracks</Card.Header>
+              <Card.Body className="p-0">
+                <div className="table-responsive" style={{ maxHeight: 320 }}>
+                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                    <thead className="table-dark position-sticky top-0">
+                      <tr>
+                        <th>Track</th>
+                        <th className="text-end">Player Best</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {availableTracks.map((track) => {
+                        const playerClass = playertimes?.classes[selectedClassId];
+                        const playerTrack = playerClass?.tracks[track.id];
+                        const playerTime = playerTrack?.playertime
+                          ? makeTime(playerTrack.playertime, ":")
+                          : "";
+                        return (
+                          <tr
+                            key={track.id}
+                            onClick={() => {
+                              setSelectedTrackId(track.id);
+                              setSelectedAILevel(null);
+                            }}
+                            className={selectedTrackId === track.id ? "table-active" : ""}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <td>{track.name}</td>
+                            <td className="text-end">{playerTime}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
 
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Modification</h3>
-        <p>
-          {selectedClassId && selectedTrackId && selectedAILevel
-            ? `${assets.classes[selectedClassId].name} - ${assets.tracks[selectedTrackId].name} : ${aifrom} - ${aito} step: ${spacing}`
-            : "Select class, track, and AI level"}
-        </p>
-        <div style={{ marginBottom: "10px" }}>
-          <label htmlFor="ai-step" style={{ marginRight: "8px" }}>
-            Step between AI levels (1-5):
-          </label>
-          <input
-            id="ai-step"
-            type="number"
-            min={1}
-            max={5}
-            step={1}
-            value={spacing}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              // Clamp to 1..5 and default to 1 if invalid
-              setSpacing(
-                Number.isFinite(val)
-                  ? Math.min(5, Math.max(1, Math.floor(val)))
-                  : 1,
-              );
-            }}
-          />
-        </div>
-        <button
-          onClick={handleApply}
-          disabled={isApplyDisabled}
-          style={{ cursor: isApplyDisabled ? "default" : "pointer" }}
-        >
-          Apply Selected Modification
-        </button>
-      </div>
-    </div>
+          <Col lg={3}>
+            <Card bg="secondary" text="white" className="h-100">
+              <Card.Header className="fw-semibold">AI Levels</Card.Header>
+              <Card.Body className="p-0">
+                <div className="table-responsive" style={{ maxHeight: 320 }}>
+                  <Table hover size="sm" variant="dark" className="mb-0 align-middle">
+                    <thead className="table-dark position-sticky top-0">
+                      <tr>
+                        <th>AI</th>
+                        <th className="text-end">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aiLevels.map(({ ai, time }) => (
+                        <tr
+                          key={ai}
+                          onClick={() => setSelectedAILevel(ai)}
+                          className={selectedAILevel === ai ? "table-active fw-semibold" : ""}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <td>{ai}</td>
+                          <td className="text-end">{makeTime(time, ":")}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        <Card bg="dark" text="white" className="border-secondary">
+          <Card.Body>
+            <Card.Title className="h5">Modification</Card.Title>
+            <Card.Text className="text-white-50">
+              {selectedClassId && selectedTrackId && selectedAILevel
+                ? `${assets.classes[selectedClassId].name} - ${assets.tracks[selectedTrackId].name} : ${aifrom} - ${aito} (step: ${spacing})`
+                : "Select class, track, and AI level"}
+            </Card.Text>
+
+            <Row className="g-3 align-items-center">
+              <Col md={4}>
+                <Form.Group controlId="ai-step">
+                  <Form.Label>Step between AI levels (1-5)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={spacing}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setSpacing(
+                        Number.isFinite(val)
+                          ? Math.min(5, Math.max(1, Math.floor(val)))
+                          : 1,
+                      );
+                    }}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={8} className="d-flex justify-content-end gap-2">
+                <Button
+                  variant="success"
+                  onClick={handleApply}
+                  disabled={isApplyDisabled}
+                >
+                  Apply Selected Modification
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      </Card.Body>
+    </Card>
   );
 };
 

@@ -128,7 +128,7 @@ export function processDatabase(database: Database): ProcessedDatabase {
         const ailevels: Record<number, number[]> = {};
         for (let i = config.minAI; i <= config.maxAI; i++) {
           // Round predictions to 2 decimal places for consistency
-          ailevels[i] = [parseFloat(gen(i).toFixed(2))];
+          ailevels[i] = [Number.parseFloat(gen(i).toFixed(2))];
         }
 
         const trackf = {

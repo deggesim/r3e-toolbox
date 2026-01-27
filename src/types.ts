@@ -15,9 +15,17 @@ export interface RaceRoomTrack {
   }>;
 }
 
+export interface RaceRoomTeam {
+  Type: string;
+  Name: string;
+  Id: number;
+}
+
 export interface RaceRoomData {
   classes: Record<string, RaceRoomClass>;
   tracks: Record<string, RaceRoomTrack>;
+  cars?: Record<string, { Name?: string; Class?: number }>;
+  teams?: Record<string, RaceRoomTeam>;
 }
 
 export interface TrackAsset {
@@ -37,6 +45,29 @@ export interface Assets {
   tracksSorted: TrackAsset[];
   numClasses: number;
   numTracks: number;
+}
+
+export interface LeaderboardAsset {
+  id: string;
+  name: string;
+  iconUrl?: string;
+}
+
+export interface LeaderboardAssets {
+  sourceUrl: string;
+  fetchedAt: string;
+  classes: LeaderboardAsset[];
+  tracks: LeaderboardAsset[];
+}
+
+export interface ChampionshipEntry {
+  alias: string;
+  fileName: string;
+  races: number;
+  generatedAt: string;
+  carName?: string;
+  carIcon?: string;
+  raceData?: any[]; // Store parsed races for later viewing
 }
 
 export interface AITimeEntry {

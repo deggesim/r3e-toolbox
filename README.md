@@ -1,6 +1,16 @@
 # R3E Toolbox
 
-A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience**. The toolbox includes multiple utilities for managing game data, including AI difficulty optimization, qualifying times correction, and results database building.
+A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience** (R3E). This web application provides three essential utilities for managing AI difficulty, correcting race results, and building championship standings.
+
+## What Does It Do?
+
+The toolbox combines multiple standalone tools into a single, user-friendly interface:
+
+1. **AI Management** - Optimize AI difficulty settings through statistical analysis of your race data
+2. **Fix Qualy Times** - Recover missing qualification times in race result files
+3. **Build Results Database** - Generate visual championship standings from race results with official RaceRoom icons
+
+**No backend required** - runs entirely in your browser with localStorage persistence for caching.
 
 ## Features
 
@@ -19,11 +29,89 @@ A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience**. T
 
 ### 2. Fix Qualy Times
 
-🚧 **In Development** - Utility to correct qualifying times in RaceRoom result files
+Corrects missing or invalid qualification times in RaceRoom race result files by extracting them from the corresponding qualification session file.
+
+**Features:**
+- **File Validation**: Ensures qualification and race files belong to the same event
+- **Automatic Patching**: Updates `qualTimeMs` field for each driver using their best qualification lap
+- **Error Detection**: Identifies drivers missing from qualification session
+- **Safe Processing**: Validates all lap times before applying changes
+- **Download Fixed File**: Generates `_fix.txt` suffix file with corrected data
+
+**How it works:**
+1. Upload qualification session file (`.txt` or `.json`)
+2. Upload race session file (`.txt` or `.json`)
+3. Tool validates event matching and lap time data integrity
+4. Extracts `bestLapTimeMs` from qualification file for each driver
+5. Patches race file's `qualTimeMs` field (handles `-1` invalid values)
+6. Shows detailed processing log with success/warning/error messages
+7. Downloads fixed race file with `_fix.txt` suffix
+
+**Use case:** RaceRoom sometimes saves race results with missing qualification times (`qualTimeMs: -1`). This tool recovers the correct times from the qualification session to generate accurate race standings and statistics.
 
 ### 3. Build Results Database
 
-🚧 **In Development** - Tool to build and analyze a database from RaceRoom race results
+Analyzes RaceRoom race result files and generates championship standings with visual asset integration from the official leaderboard.
+
+**Features:**
+- **Leaderboard Icon Download**: Fetches car class and track icons from the official RaceRoom leaderboard
+- **Asset Caching**: Automatically caches downloaded icons in localStorage to avoid repeated network requests
+- **Smart Cache Management**: Shows cache status (💾 Cached) and provides "Clear cache" button to reset on demand
+- **Batch Result Parsing**: Processes multiple race result files from a folder simultaneously
+- **Championship Standings**: Calculates points, positions, and statistics across all races
+- **HTML Export**: Generates formatted, standalone HTML file with embedded styles and icons
+- **Live Preview**: Real-time preview of championship standings before download
+
+**Workflow:**
+1. **Step 1 - Download Icons**: Click "Download and analyze" to fetch official RaceRoom assets (cars/tracks)
+   - Icons cached in localStorage for instant reuse
+   - Manual HTML paste option if CORS blocks request
+   - Clear cache button to force refresh
+
+2. **Step 2 - Select Results Folder**: Choose folder containing race result `.txt` files
+   - Auto-parses all files using `r3e-data.json` game database
+   - Displays count of parsed races
+   - Shows warnings for unrecognized tracks/classes
+
+3. **Step 3 - Championship Alias**: Enter championship name (e.g., "DTM 2026 Season")
+
+4. **Step 4 - Preview & Export**:
+   - Live HTML preview with standings table
+   - Driver statistics: races, wins, podiums, points
+   - Race-by-race results with track icons
+   - Click "Export HTML" to download standalone file
+
+**Integration**: Replicates the logic of [r3e-open-championship](https://github.com/pixeljetstream/r3e-open-championship) project for standings calculation and HTML generation.
+
+#### Asset Caching System
+
+The toolbox implements automatic localStorage caching for leaderboard assets (icons and metadata):
+
+**How it works:**
+1. First load: `fetchLeaderboardAssetsWithCache()` downloads icons from the leaderboard
+2. Assets stored: All car class and track URLs saved to localStorage via Zustand store
+3. Subsequent loads: Data retrieved from cache instantly without network request
+4. Cache indicator: UI shows "💾 Cached in localStorage" badge when data is from cache
+5. Manual clear: "Clear cache" button removes all cached assets from localStorage
+
+**Technical implementation** (`src/store/leaderboardAssetsStore.ts`):
+- Zustand store with persist middleware for localStorage persistence
+- Stores: asset URLs, icons, metadata, and fetch timestamps
+- Methods: `getClassIconUrl()`, `getTrackIconUrl()` for direct lookups
+- State: `assets`, `isLoading`, `error` for UI feedback
+
+**Usage in components**:
+```typescript
+// Automatically use cache (or fetch if not available)
+const assets = await fetchLeaderboardAssetsWithCache();
+
+// Or force refresh from leaderboard
+const freshAssets = await fetchLeaderboardAssetsWithCache({ forceRefresh: true });
+
+// Direct store access in React components
+const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
+const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
+```
 
 ## Getting Started
 
@@ -193,20 +281,31 @@ src/
 ├── App.css                    # App-specific styles
 │
 ├── components/
-│   ├── AIDashboard.tsx        # Main UI controller & state management
-│   └── AIManagementGUI.tsx    # Visualization & controls
+│   ├── AIDashboard.tsx           # AI Management: main controller & state
+│   ├── AIManagementGUI.tsx       # AI Management: visualization & controls
+│   ├── FixQualyTimes.tsx         # Fix Qualy Times: qualification time patcher
+│   ├── BuildResultsDatabase.tsx  # Build Results: championship standings builder
+│   ├── Layout.tsx                # Navigation layout wrapper
+│   └── Settings.tsx              # Global settings panel
+│
+├── store/
+│   ├── configStore.ts            # Zustand store for user config persistence
+│   └── leaderboardAssetsStore.ts # Zustand store for cached leaderboard assets
 │
 ├── utils/
-│   ├── xmlParser.ts           # Parse aiadaptation.xml → Database
-│   ├── jsonParser.ts          # Load r3e-data.json → Assets
-│   ├── databaseProcessor.ts   # Fit & validate → ProcessedDatabase
-│   ├── fitting.ts             # Linear/parabolic regression functions
-│   ├── timeUtils.ts           # Lap time computations
-│   ├── xmlBuilder.ts          # Reconstruct aiadaptation.xml
+│   ├── xmlParser.ts              # Parse aiadaptation.xml → Database
+│   ├── jsonParser.ts             # Load r3e-data.json → Assets
+│   ├── databaseProcessor.ts      # Fit & validate → ProcessedDatabase
+│   ├── fitting.ts                # Linear/parabolic regression functions
+│   ├── timeUtils.ts              # Lap time computations
+│   ├── xmlBuilder.ts             # Reconstruct aiadaptation.xml
+│   ├── leaderboardAssets.ts      # Fetch icons from RaceRoom leaderboard
+│   ├── raceResultParser.ts       # Parse race result files
+│   ├── htmlGenerator.ts          # Generate championship standings HTML
 │   └── [other utilities]
 │
-├── assets/                    # Static images/icons (if any)
-└── hooks/                     # (Empty, reserved for future)
+├── assets/                       # Static images/icons (if any)
+└── hooks/                        # (Empty, reserved for future)
 
 .github/
 ├── copilot-instructions.md    # AI agent guidelines
@@ -222,19 +321,26 @@ package.json                  # Dependencies & scripts
 
 ### Framework & Build
 
-- **React 19** - UI framework
-- **Vite 7** - Build tool (handles JSX, dev server, bundling)
-- **TypeScript 5.9** - Type safety
+- **React 19** - UI framework with hooks
+- **React Bootstrap 2.10** - UI component library (Cards, Buttons, Forms, etc.)
+- **Vite 7** - Build tool (handles JSX, dev server, hot reload, bundling)
+- **TypeScript 5.9** - Type safety and IntelliSense
+
+### State Management
+
+- **Zustand 5.0** - Lightweight state management (config + asset caching)
+- **zustand/middleware** - `persist` for localStorage persistence
 
 ### Data Processing
 
 - **fast-xml-parser 5.3** - Robust XML parsing (handles array/object duality)
-- **mathjs 15.1** - Matrix algebra for regression (LU decomposition)
+- **mathjs 15.1** - Matrix algebra for linear regression (LU decomposition)
 
 ### Code Quality
 
 - **ESLint 9** - Linting with TypeScript support
-- **eslint-plugin-react-hooks** - React best practices
+- **eslint-plugin-react-hooks** - React best practices enforcement
+- **@typescript-eslint** - TypeScript-specific linting rules
 
 ## Common Workflows
 
@@ -250,6 +356,57 @@ package.json                  # Dependencies & scripts
 6. Adjust config parameters if needed (`testMaxTimePct`, etc.)
 7. Review fitted curve predictions
 8. Click "Export XML" to save back to game directory
+
+### Fixing Qualification Times in Race Results
+
+**Scenario**: RaceRoom saved a race file with missing qualification times (`qualTimeMs: -1`).
+
+1. Navigate to "Fix Qualy Times" tool
+2. Upload qualification session file (`.txt` from `UserData/Log/Results/`)
+3. Upload race session file (same event)
+4. Click "Fix Qualy Times"
+5. Review processing log:
+   - ✔ Event validation (ensures files match)
+   - ✔ Lap time validation (all times are valid numbers)
+   - ⚠ Warnings for drivers missing from qualification
+   - Count of updated drivers
+6. Confirm download prompt
+7. Save `*_fix.txt` file to replace original race result
+
+**Example files**:
+```
+2026_01_23_14_30_00_Qualify.txt  → Qualification session
+2026_01_23_14_45_00_Race1.txt    → Race session (broken)
+2026_01_23_14_45_00_Race1_fix.txt → Fixed output
+```
+
+### Building Championship Standings from Race Results
+
+**Scenario**: You ran a 10-race championship and want to generate a visual standings page.
+
+1. Navigate to "Build Results Database" tool
+
+2. **Step 1 - Get Icons** (first time only):
+   - Click "Download and analyze"
+   - Wait for leaderboard assets to load (auto-cached in localStorage)
+   - Badge shows "💾 Cached in localStorage" on subsequent visits
+
+3. **Step 2 - Select Results**:
+   - Click folder input → select your results folder
+   - Example: `UserData/Log/Results/` containing all championship races
+   - Tool auto-parses files and displays: "10 result files selected"
+
+4. **Step 3 - Name Championship**:
+   - Enter "Championship alias": e.g., "DTM Classic 2026"
+
+5. **Step 4 - Preview & Export**:
+   - Review live HTML preview with:
+     - Overall standings table (driver, races, wins, podiums, points)
+     - Race results grid with track icons
+   - Click "Export HTML" → downloads `DTM Classic 2026.html`
+   - Open standalone HTML in any browser (works offline)
+
+**Tip**: Clear cache if RaceRoom adds new cars/tracks to update icons.
 
 ### Adding a New Fitting Algorithm
 
@@ -324,12 +481,35 @@ package.json                  # Dependencies & scripts
 
 ## Troubleshooting
 
-| Issue                        | Cause                          | Solution                                                     |
-| ---------------------------- | ------------------------------ | ------------------------------------------------------------ |
-| Fit rejected (non-monotonic) | Noisy data with inversions     | Increase `testMaxTimePct` or sample more races               |
-| Too many rejections          | Strict validation              | Lower `testMaxFailsPct` in config                            |
-| XML export missing data      | Empty classes/tracks in output | Check database normalization in debugger                     |
-| `r3e-data.json` not found    | Game database not generated    | Run [r3e-adaptive-ai-primer](../r3e-adaptive-ai-primer) tool |
+### AI Management
+
+| Issue                            | Cause                              | Solution                                                     |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| Fit rejected (non-monotonic)     | Noisy data with inversions         | Increase `testMaxTimePct` or sample more races               |
+| Too many rejections              | Strict validation                  | Lower `testMaxFailsPct` in config                            |
+| XML export missing data          | Empty classes/tracks in output     | Check database normalization in debugger                     |
+| `r3e-data.json` not found        | Game database not generated        | Run [r3e-adaptive-ai-primer](../r3e-adaptive-ai-primer) tool |
+| Can't import XML file            | File corrupted or wrong format     | Verify XML structure with text editor                        |
+
+### Fix Qualy Times
+
+| Issue                            | Cause                              | Solution                                                     |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| "Event attributes differ" error  | Wrong race/qual file pair          | Ensure both files are from the same event session            |
+| Driver missing from qual         | Driver joined after qualification  | Expected warning; tool patches available drivers only        |
+| Invalid bestLapTimeMs            | Corrupted qualification file       | Re-export from RaceRoom or use backup                        |
+| Can't read .txt file             | File encoding issue                | Save file as UTF-8 or try converting to JSON first           |
+
+### Build Results Database
+
+| Issue                            | Cause                              | Solution                                                     |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| CORS error fetching leaderboard  | Browser security blocking request  | Paste HTML manually (instructions in UI)                     |
+| Icons not showing in localStorage| Persist middleware not saving      | Check DevTools > Application > localStorage for key          |
+| Cache badge shows wrong status   | State sync issue                   | Click "Clear cache" and re-download                          |
+| Result files not parsing         | Unknown track/class in r3e-data    | Update `r3e-data.json` from primer tool                      |
+| HTML preview not loading         | Browser blocked iframe             | Export and open HTML file directly                           |
+| Missing championship alias       | Field left empty                   | Enter name in Step 3 before export                           |
 
 ## Development Guidelines
 

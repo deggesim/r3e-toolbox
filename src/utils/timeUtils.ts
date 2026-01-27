@@ -18,7 +18,7 @@ export function parseTime(str: string): number | undefined {
 }
 
 /**
- * Format total seconds into a time string HH:MM:SS.ffff or MM:SS.ffff format.
+ * Format total seconds into a time string HH:MM:SS.mmm or MM:SS.mmm format.
  * Zero-pads seconds when < 10. Separator (colon) can be customized.
  */
 export function makeTime(s: number, sep: string = ':'): string {
@@ -27,9 +27,9 @@ export function makeTime(s: number, sep: string = ':'): string {
   const m = Math.floor(s / 60);
   s = s - m * 60;
 
-  // Format seconds: zero-pad integer part, keep fractional part
+  // Format seconds: zero-pad integer part, keep fractional part (milliseconds only)
   const secInt = Math.floor(s);
-  const secDec = (s - secInt).toFixed(4).substring(1); // extracts fractional part as ".xxxx"
+  const secDec = (s - secInt).toFixed(3).substring(1); // extracts fractional part as ".mmm"
   const secStr = (secInt < 10 ? '0' : '') + secInt + secDec;
 
   // Include hours only if needed
