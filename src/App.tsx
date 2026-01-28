@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
-import AIDashboard from "./components/AIDashboard";
+import AIManagement from "./components/AIManagement";
 import FixQualyTimes from "./components/FixQualyTimes";
 import BuildResultsDatabase from "./components/BuildResultsDatabase";
 import ResultsDatabaseViewer from "./components/ResultsDatabaseViewer";
@@ -14,16 +14,13 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/ai-management" replace />} />
-          <Route path="/ai-management" element={<AIDashboard />} />
+          <Route path="/ai-management" element={<AIManagement />} />
           <Route path="/fix-qualy-times" element={<FixQualyTimes />} />
           <Route
             path="/build-results-database"
             element={<BuildResultsDatabase />}
           />
-          <Route
-            path="/results-database"
-            element={<ResultsDatabaseViewer />}
-          />
+          <Route path="/results-database" element={<ResultsDatabaseViewer />} />
           <Route
             path="/results-database/:alias"
             element={<ResultsDatabaseDetail />}
