@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "Ubuntu";
+  src: url("./assets/ubuntu.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
   color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
@@ -11,10 +17,24 @@
   --text-muted: #95a5a6;
   --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   --border-radius: 8px;
+  background-color: #212529;
+}
+
+body {
+  font-family:
+    "Ubuntu",
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 a {
   font-weight: 500;
+}
+
+.page-header-gradient {
+  background: linear-gradient(135deg, #dc143c 0%, #b91028 100%) !important;
+  color: white !important;
 }
 
 #root {
