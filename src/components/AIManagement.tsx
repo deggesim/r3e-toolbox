@@ -484,11 +484,11 @@ const AIManagement: React.FC = () => {
       </Card>
 
       {/* Reset All Confirmation Modal */}
-      <Modal show={showResetModal} onHide={cancelResetAll}>
-        <Modal.Header closeButton>
+      <Modal show={showResetModal} onHide={cancelResetAll} data-bs-theme="dark">
+        <Modal.Header closeButton className="bg-dark border-secondary">
           <Modal.Title>Reset All AI Times</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="bg-dark text-white">
           <p className="text-danger">
             ⚠️ <strong>Warning:</strong> This action cannot be undone.
           </p>
@@ -501,7 +501,7 @@ const AIManagement: React.FC = () => {
           </ul>
           <p>Are you sure you want to continue?</p>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="bg-dark border-secondary">
           <Button variant="secondary" onClick={cancelResetAll}>
             Cancel
           </Button>

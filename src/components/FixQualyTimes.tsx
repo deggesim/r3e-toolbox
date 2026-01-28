@@ -223,11 +223,15 @@ export default function FixQualyTimes() {
       </Card>
 
       {/* Download Confirmation Modal */}
-      <Modal show={showDownloadModal} onHide={handleCancelDownload}>
-        <Modal.Header closeButton>
+      <Modal
+        show={showDownloadModal}
+        onHide={handleCancelDownload}
+        data-bs-theme="dark"
+      >
+        <Modal.Header closeButton className="bg-dark border-secondary">
           <Modal.Title>File Processed Successfully</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="bg-dark text-white">
           {downloadData && (
             <>
               <p>✅ Processing completed successfully!</p>
@@ -245,7 +249,7 @@ export default function FixQualyTimes() {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="bg-dark border-secondary">
           <Button variant="secondary" onClick={handleCancelDownload}>
             Cancel
           </Button>

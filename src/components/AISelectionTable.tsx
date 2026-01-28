@@ -287,11 +287,15 @@ const AISelectionTable: React.FC<AISelectionTableProps> = ({
       </Card>
 
       {/* Apply Modification Confirmation Modal */}
-      <Modal show={showApplyModal} onHide={onHideApplyModal}>
-        <Modal.Header closeButton>
+      <Modal
+        show={showApplyModal}
+        onHide={onHideApplyModal}
+        data-bs-theme="dark"
+      >
+        <Modal.Header closeButton className="bg-dark border-secondary">
           <Modal.Title>Apply Modification</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="bg-dark text-white">
           {selectedClassId && selectedTrackId && (
             <>
               <p>You are about to apply the following modification:</p>
@@ -312,7 +316,7 @@ const AISelectionTable: React.FC<AISelectionTableProps> = ({
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="bg-dark border-secondary">
           <Button variant="secondary" onClick={onHideApplyModal}>
             Cancel
           </Button>
