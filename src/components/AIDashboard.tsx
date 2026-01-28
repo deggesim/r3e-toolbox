@@ -14,6 +14,8 @@ import { parseJson } from "../utils/jsonParser";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
 import { useConfigStore } from "../store/configStore";
+import { useProcessingLog } from "../hooks/useProcessingLog";
+import ProcessingLog from "./ProcessingLog";
 
 import AIManagementGUI from "./AIManagementGUI";
 
@@ -95,11 +97,13 @@ const AIDashboard: React.FC = () => {
   });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
   const xmlInputRef = useRef<HTMLInputElement>(null);
+  const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
+    useProcessingLog();
 
   const downloadXml = useCallback(
     (db: Database, pt: PlayerTimes) => {
       if (!assets) {
-        alert("Please load RaceRoom data before exporting XML");
+        addLog("error", "❌ Please load RaceRoom data before exporting XML");
         return;
       }
       try {
@@ -115,10 +119,10 @@ const AIDashboard: React.FC = () => {
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error("Error generating XML:", error);
-        alert("Error generating XML file");
+        addLog("error", "❌ Error generating XML file");
       }
     },
-    [assets],
+    [assets, addLog],
   );
 
   useEffect(() => {
@@ -156,12 +160,13 @@ const AIDashboard: React.FC = () => {
         const data: RaceRoomData = JSON.parse(text);
         const parsedAssets = parseJson(data);
         setAssets(parsedAssets);
+        addLog("success", "✔ RaceRoom data JSON loaded successfully");
       } catch (error) {
         console.error("Error parsing JSON:", error);
-        alert("Error parsing JSON file");
+        addLog("error", "❌ Error parsing JSON file");
       }
     },
-    [],
+    [addLog],
   );
 
   const handleXmlUpload = useCallback(
@@ -177,13 +182,14 @@ const AIDashboard: React.FC = () => {
         if (added) {
           setDatabase(newDatabase);
           setPlayerTimes(newPlayerTimes);
+          addLog("success", "✔ AI Adaptation XML loaded successfully");
         }
       } catch (error) {
         console.error("Error parsing XML:", error);
-        alert("Error parsing XML file");
+        addLog("error", "❌ Error parsing XML file");
       }
     },
-    [database, playerTimes],
+    [database, playerTimes, addLog],
   );
 
   const handleApplyModification = useCallback(
@@ -194,12 +200,24 @@ const AIDashboard: React.FC = () => {
       aito: number,
       aiSpacing: number,
     ): Database => {
+      // Reset logs and start
+      setLogs([]);
+
+      const classLabel = assets?.classes?.[classid]?.name || classid;
+      const trackLabel = assets?.tracks?.[trackid]?.name || trackid;
+
+      addLog("info", `Applying modification for ${classLabel} - ${trackLabel}`);
+      addLog("info", `AI Range: ${aifrom} - ${aito} (step: ${aiSpacing})`);
+
       // Validate that the track has been processed (fitted) successfully
       if (!processed.classes[classid]?.tracks[trackid]) {
-        alert("No processed data available for this class/track combination");
-        // Return current database unchanged to keep deterministic return type
+        addLog(
+          "error",
+          "❌ No processed data available for this class/track combination",
+        );
         return database;
       }
+      addLog("success", "✔ Processed data found");
 
       // Create a deep copy of the current database to avoid mutating state directly
       const newDatabase = structuredClone(database);
@@ -234,6 +252,8 @@ const AIDashboard: React.FC = () => {
         }
       }
 
+      addLog("success", `✔ Generated ${addedCount} AI level(s)`);
+
       // Update min/max AI for the track based on newly added levels
       const aiLevels = Object.keys(track.ailevels).map(Number);
       track.minAI = Math.min(...aiLevels);
@@ -247,13 +267,19 @@ const AIDashboard: React.FC = () => {
       classData.minAI = Math.min(...allTrackAIs);
       classData.maxAI = Math.max(...allTrackAIs);
 
+      addLog("success", "🎉 Modification applied successfully");
+
       setDatabase(newDatabase);
       return newDatabase;
     },
-    [database, processed],
+    [database, processed, assets, addLog, setLogs],
   );
 
   const handleRemoveGenerated = useCallback(() => {
+    // Reset logs and start
+    setLogs([]);
+    addLog("info", "Starting removal of generated AI levels...");
+
     // Create a deep copy of the database to avoid direct mutation
     const newDatabase = structuredClone(database);
     let removedCount = 0;
@@ -268,6 +294,13 @@ const AIDashboard: React.FC = () => {
           removedCount += removed;
           perClassTrackCount[classId] = perClassTrackCount[classId] || {};
           perClassTrackCount[classId][trackId] = removed;
+
+          const classLabel = assets?.classes?.[classId]?.name || classId;
+          const trackLabel = assets?.tracks?.[trackId]?.name || trackId;
+          addLog(
+            "success",
+            `✔ Removed ${removed} generated levels from ${classLabel} - ${trackLabel}`,
+          );
         }
 
         // Recalculate track min/max after removal
@@ -280,25 +313,23 @@ const AIDashboard: React.FC = () => {
 
     setDatabase(newDatabase);
 
-    // Build and display detailed report
-    const reportLines = buildRemovalReport(perClassTrackCount, assets);
-
     if (removedCount === 0) {
-      alert("No generated AI levels found to remove");
+      addLog("warning", "⚠ No generated AI levels found to remove");
     } else {
-      alert(
-        `Removed ${removedCount} generated AI levels` +
-          (reportLines.length ? `\n\nDetails:\n${reportLines.join("\n")}` : ""),
+      addLog(
+        "success",
+        `🎉 Successfully removed ${removedCount} generated AI level(s)`,
       );
     }
 
     downloadXml(newDatabase, playerTimes);
+    addLog("success", "📥 Downloaded modified aiadaptation.xml");
 
     // Reset XML file input
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [database, assets, playerTimes, downloadXml]);
+  }, [database, assets, playerTimes, downloadXml, addLog, setLogs]);
 
   const handleApplyClick = useCallback(
     (
@@ -334,13 +365,14 @@ const AIDashboard: React.FC = () => {
           link.click();
           link.remove();
           URL.revokeObjectURL(url);
+          addLog("success", "📥 Downloaded modified aiadaptation.xml");
         } catch (error) {
           console.error("Error generating XML:", error);
-          alert("Error generating XML file");
+          addLog("error", "❌ Error generating XML file");
         }
       }
     },
-    [assets, playerTimes, handleApplyModification],
+    [assets, playerTimes, handleApplyModification, addLog],
   );
 
   const handleResetAll = useCallback(() => {
@@ -353,19 +385,25 @@ const AIDashboard: React.FC = () => {
       return;
     }
 
+    // Reset logs and start
+    setLogs([]);
+    addLog("info", "Starting reset of all AI times...");
+
     // Clear only AI data: database and processed predictions, keep player times
     const emptyDb: Database = { classes: {} };
     setDatabase(emptyDb);
     setProcessed({ classes: {} });
+    addLog("success", "✔ All AI data cleared from database");
 
     downloadXml(emptyDb, playerTimes);
-    alert("All AI times have been reset");
+    addLog("success", "📥 Downloaded reset aiadaptation.xml");
+    addLog("success", "🎉 All AI times have been reset successfully");
 
     // Reset XML file input
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [downloadXml]);
+  }, [downloadXml, playerTimes, addLog, setLogs]);
 
   useEffect(() => {
     setProcessed(processDatabase(database));
@@ -434,6 +472,12 @@ const AIDashboard: React.FC = () => {
             onApplyClick={handleApplyClick}
             onRemoveGenerated={handleRemoveGenerated}
             onResetAll={handleResetAll}
+          />
+
+          <ProcessingLog
+            logs={logs}
+            getLogVariant={getLogVariant}
+            logsEndRef={logsEndRef}
           />
         </Card.Body>
       </Card>

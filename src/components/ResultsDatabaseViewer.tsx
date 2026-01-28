@@ -17,6 +17,8 @@ import {
   generateChampionshipIndexHTML,
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
+import { useProcessingLog } from "../hooks/useProcessingLog";
+import ProcessingLog from "./ProcessingLog";
 import ChampionshipCard from "./ChampionshipCard";
 
 function SectionTitle({ label }: { readonly label: string }) {
@@ -36,6 +38,7 @@ export default function ResultsDatabaseViewer() {
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
   const clearAll = useChampionshipStore((state) => state.clear);
+  const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
@@ -62,8 +65,9 @@ export default function ResultsDatabaseViewer() {
 
   const handleDownloadChampionship = (championship: ChampionshipEntry) => {
     if (!championship.raceData || championship.raceData.length === 0) {
-      alert(
-        "No race data stored for this championship. Create or update it first.",
+      addLog(
+        "error",
+        "❌ No race data stored for this championship. Create or update it first.",
       );
       return;
     }
@@ -71,16 +75,18 @@ export default function ResultsDatabaseViewer() {
     const races = championship.raceData;
     const html = generateStandingsHTML(races, championship.alias);
 
-    downloadHTML(
-      html,
-      championship.fileName || `${championship.alias || "championship"}.html`,
-    );
+    downloadHTML(html, championship.fileName);
+    addLog("success", `📥 Downloaded ${championship.fileName}`);
   };
 
   const handleDownloadIndex = () => {
-    if (championships.length === 0) return;
+    if (championships.length === 0) {
+      addLog("warning", "⚠ No championships available to create index");
+      return;
+    }
     const html = generateChampionshipIndexHTML(championships);
     downloadHTML(html, "index.html");
+    addLog("success", "📥 Downloaded index.html");
   };
 
   return (
@@ -246,6 +252,12 @@ export default function ResultsDatabaseViewer() {
               </Button>
             </Modal.Footer>
           </Modal>
+
+          <ProcessingLog
+            logs={logs}
+            getLogVariant={getLogVariant}
+            logsEndRef={logsEndRef}
+          />
         </Card.Body>
       </Card>
     </Container>
