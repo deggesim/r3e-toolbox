@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Card, Container, Form } from "react-bootstrap";
+import { Card, Container, Form, Modal, Button } from "react-bootstrap";
 import type {
   Assets,
   Database,
@@ -70,24 +70,6 @@ function recalculateClassMinMax(classData: DatabaseClass): void {
   }
 }
 
-/**
- * Builds a detailed report of removals
- */
-function buildRemovalReport(
-  perClassTrackCount: Record<string, Record<string, number>>,
-  assets: Assets | null,
-): string[] {
-  const lines: string[] = [];
-  for (const [classId, tracks] of Object.entries(perClassTrackCount)) {
-    for (const [trackId, count] of Object.entries(tracks)) {
-      const classLabel = assets?.classes?.[classId]?.name || classId;
-      const trackLabel = assets?.tracks?.[trackId]?.name || trackId;
-      lines.push(`${classLabel} - ${trackLabel}: ${count}`);
-    }
-  }
-  return lines;
-}
-
 const AIDashboard: React.FC = () => {
   const { config } = useConfigStore();
   const [assets, setAssets] = useState<Assets | null>(null);
@@ -96,6 +78,7 @@ const AIDashboard: React.FC = () => {
     classes: {},
   });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
+  const [showResetModal, setShowResetModal] = useState(false);
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
     useProcessingLog();
@@ -376,14 +359,16 @@ const AIDashboard: React.FC = () => {
   );
 
   const handleResetAll = useCallback(() => {
-    // Confirm destructive action before proceeding
-    if (
-      !confirm(
-        "Are you sure you want to reset all AI times? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
+    setShowResetModal(true);
+  }, []);
+
+  const cancelResetAll = useCallback(() => {
+    setShowResetModal(false);
+    addLog("info", "Reset cancelled by user.");
+  }, [addLog]);
+
+  const confirmResetAll = useCallback(() => {
+    setShowResetModal(false);
 
     // Reset logs and start
     setLogs([]);
@@ -481,6 +466,34 @@ const AIDashboard: React.FC = () => {
           />
         </Card.Body>
       </Card>
+
+      {/* Reset All Confirmation Modal */}
+      <Modal show={showResetModal} onHide={cancelResetAll}>
+        <Modal.Header closeButton>
+          <Modal.Title>Reset All AI Times</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-danger">
+            ⚠️ <strong>Warning:</strong> This action cannot be undone.
+          </p>
+          <p>You are about to reset all AI times in the database. This will:</p>
+          <ul>
+            <li>Clear all AI level data</li>
+            <li>Remove all processed predictions</li>
+            <li>Preserve your player times</li>
+            <li>Download a reset aiadaptation.xml file</li>
+          </ul>
+          <p>Are you sure you want to continue?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={cancelResetAll}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmResetAll}>
+            Reset All
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

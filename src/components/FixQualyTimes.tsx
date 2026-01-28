@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, Container, Form, Button, Alert } from "react-bootstrap";
+import { Card, Container, Form, Button, Alert, Modal } from "react-bootstrap";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import ProcessingLog from "./ProcessingLog";
 
@@ -8,6 +8,12 @@ export default function FixQualyTimes() {
   const [raceFile, setRaceFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadData, setDownloadData] = useState<{
+    fileName: string;
+    content: string;
+    updatedCount: number;
+  } | null>(null);
   const { logs, addLog, getLogVariant, setLogs, logsEndRef } =
     useProcessingLog();
 
@@ -85,31 +91,13 @@ export default function FixQualyTimes() {
 
       addLog("success", `🎉 Processing completed successfully!`);
 
-      // Wait for logs to render before showing confirmation dialog
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Ask for confirmation before download
-      const shouldDownload = globalThis.confirm(
-        `File processed successfully!\n\nUpdated ${updatedCount} driver(s).\n\nDownload the fixed file:\n${outputFileName}?`,
-      );
-
-      if (shouldDownload) {
-        // Create download
-        const outputContent = JSON.stringify(race, null, 2);
-        const blob = new Blob([outputContent], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = outputFileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-
-        addLog("success", `📥 File downloaded: ${outputFileName}`);
-      } else {
-        addLog("info", `Download cancelled by user.`);
-      }
+      // Prepare download data and show modal
+      setDownloadData({
+        fileName: outputFileName,
+        content: JSON.stringify(race, null, 2),
+        updatedCount: updatedCount,
+      });
+      setShowDownloadModal(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       addLog("error", errorMessage);
@@ -124,6 +112,30 @@ export default function FixQualyTimes() {
     setRaceFile(null);
     setLogs([]);
     setError(null);
+  };
+
+  const handleDownload = () => {
+    if (!downloadData) return;
+
+    const blob = new Blob([downloadData.content], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = downloadData.fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    addLog("success", `📥 File downloaded: ${downloadData.fileName}`);
+    setShowDownloadModal(false);
+  };
+
+  const handleCancelDownload = () => {
+    addLog("info", "Download cancelled by user.");
+    setShowDownloadModal(false);
   };
 
   return (
@@ -209,6 +221,39 @@ export default function FixQualyTimes() {
           />
         </Card.Body>
       </Card>
+
+      {/* Download Confirmation Modal */}
+      <Modal show={showDownloadModal} onHide={handleCancelDownload}>
+        <Modal.Header closeButton>
+          <Modal.Title>File Processed Successfully</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {downloadData && (
+            <>
+              <p>✅ Processing completed successfully!</p>
+              <ul>
+                <li>
+                  <strong>Updated drivers:</strong> {downloadData.updatedCount}
+                </li>
+                <li>
+                  <strong>Output file:</strong> {downloadData.fileName}
+                </li>
+              </ul>
+              <p className="text-muted">
+                Would you like to download the fixed file?
+              </p>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancelDownload}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleDownload}>
+            Download
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }
