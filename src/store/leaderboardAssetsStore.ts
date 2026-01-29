@@ -10,13 +10,11 @@ interface LeaderboardAssetsState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearAssets: () => void;
-  getClassIconUrl: (classId: string) => string | undefined;
-  getTrackIconUrl: (trackId: string) => string | undefined;
 }
 
 export const useLeaderboardAssetsStore = create<LeaderboardAssetsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       assets: null,
       isLoading: false,
       error: null,
@@ -38,20 +36,6 @@ export const useLeaderboardAssetsStore = create<LeaderboardAssetsState>()(
           error: null,
           isLoading: false,
         }),
-
-      getClassIconUrl: (classId: string) => {
-        const state = get();
-        if (!state.assets) return undefined;
-        const asset = state.assets.classes.find((c) => c.id === classId);
-        return asset?.iconUrl;
-      },
-
-      getTrackIconUrl: (trackId: string) => {
-        const state = get();
-        if (!state.assets) return undefined;
-        const asset = state.assets.tracks.find((t) => t.id === trackId);
-        return asset?.iconUrl;
-      },
     }),
     {
       name: "r3e-toolbox-leaderboard-assets",

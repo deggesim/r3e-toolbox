@@ -44,13 +44,13 @@ function SectionTitle({ label }: { readonly label: string }) {
 function convertAssetsForHTML(assets: LeaderboardAssets | null) {
   if (!assets) return undefined;
 
-  const classesMap: Record<string, string> = {};
+  const carsMap: Record<string, string> = {};
   const tracksMap: Record<string, string> = {};
 
-  assets.classes.forEach((c) => {
+  assets.cars.forEach((c) => {
     // Index by both name and ID
-    classesMap[c.name] = c.iconUrl || "";
-    classesMap[c.id] = c.iconUrl || "";
+    carsMap[c.name] = c.iconUrl || "";
+    carsMap[c.id] = c.iconUrl || "";
   });
 
   assets.tracks.forEach((t) => {
@@ -59,7 +59,7 @@ function convertAssetsForHTML(assets: LeaderboardAssets | null) {
     tracksMap[t.id] = t.iconUrl || "";
   });
 
-  return { classes: classesMap, tracks: tracksMap };
+  return { cars: carsMap, tracks: tracksMap };
 }
 
 function buildRaceKey(race: ParsedRace): string {
@@ -112,9 +112,9 @@ function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
       <Col md={6}>
         <div className="mb-2">
           <strong className="text-white">
-            Car Classes{" "}
+            Cars{" "}
             <Badge bg="light" text="dark" className="ms-1">
-              {assets.classes.length}
+              {assets.cars?.length ?? 0}
             </Badge>
           </strong>
         </div>
@@ -127,13 +127,13 @@ function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
           }}
         >
           <ListGroup variant="flush">
-            {assets.classes.length > 0 ? (
-              assets.classes.map((item) => (
+            {assets.cars && assets.cars.length > 0 ? (
+              assets.cars.map((item) => (
                 <AssetListItem key={`class-${item.id}`} item={item} />
               ))
             ) : (
               <ListGroup.Item className="bg-dark border-secondary text-white-50 text-center py-3">
-                No classes found
+                No cars found
               </ListGroup.Item>
             )}
           </ListGroup>
@@ -302,6 +302,62 @@ export default function BuildResultsDatabase() {
     [gameData],
   );
 
+  const resolveCarName = useCallback(
+    (slot: {
+      VehicleId?: string | number;
+      Vehicle?: string;
+      ClassName?: string;
+    }) => {
+      const vehicleId = slot.VehicleId;
+
+      // Try to get car name from gameData first
+      if (vehicleId && gameData?.cars?.[vehicleId]?.Name) {
+        return gameData.cars[vehicleId].Name;
+      }
+
+      // If not found in gameData, try assets
+      if (assets?.cars) {
+        const assetCar = assets.cars.find(
+          (c) => c.id === vehicleId || c.id === slot.Vehicle,
+        );
+        if (assetCar) {
+          return assetCar.name;
+        }
+      }
+
+      // Fallback to slot.Vehicle if it's not an ID
+      if (slot.Vehicle && !/^\d+$/.test(slot.Vehicle)) {
+        return slot.Vehicle;
+      }
+
+      // Last resort fallback
+      return slot.ClassName || slot.Vehicle;
+    },
+    [assets, gameData],
+  );
+
+  const resolveCarIcon = useCallback(
+    (slot: { VehicleId?: string | number; Vehicle?: string }) => {
+      if (!assets) return undefined;
+
+      const assetMap = convertAssetsForHTML(assets);
+      if (!assetMap?.cars) return undefined;
+
+      const keyCandidates = [slot.VehicleId, slot.Vehicle].filter(
+        Boolean,
+      ) as string[];
+
+      for (const key of keyCandidates) {
+        if (assetMap.cars[key]) {
+          return assetMap.cars[key];
+        }
+      }
+
+      return undefined;
+    },
+    [assets],
+  );
+
   const resolveCarInfo = useCallback(() => {
     const humanSlot = parsedRaces
       .flatMap((race) => race.slots)
@@ -314,27 +370,11 @@ export default function BuildResultsDatabase() {
     const slot = humanSlot || fallbackSlot;
     if (!slot) return { carName: undefined, carIcon: undefined };
 
-    const carName = slot.ClassName || slot.Vehicle;
-    let carIcon: string | undefined;
-
-    if (assets) {
-      const assetMap = convertAssetsForHTML(assets);
-      if (assetMap?.classes) {
-        const keyCandidates = [
-          slot.ClassName,
-          slot.ClassId ? String(slot.ClassId) : undefined,
-        ].filter(Boolean) as string[];
-        for (const key of keyCandidates) {
-          if (assetMap.classes[key]) {
-            carIcon = assetMap.classes[key];
-            break;
-          }
-        }
-      }
-    }
-
-    return { carName, carIcon };
-  }, [assets, parsedRaces]);
+    return {
+      carName: resolveCarName(slot),
+      carIcon: resolveCarIcon(slot),
+    };
+  }, [parsedRaces, resolveCarName, resolveCarIcon]);
 
   const handleRestoreDatabase = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -580,10 +620,10 @@ export default function BuildResultsDatabase() {
                       </div>
                       <div className="d-flex gap-3 mb-2">
                         <Badge bg="light" text="dark" className="py-2 px-3">
-                          {assets.classes.length} classes
+                          {assets.cars?.length ?? 0} cars
                         </Badge>
                         <Badge bg="light" text="dark" className="py-2 px-3">
-                          {assets.tracks.length} tracks
+                          {assets.tracks?.length ?? 0} tracks
                         </Badge>
                       </div>
                     </>

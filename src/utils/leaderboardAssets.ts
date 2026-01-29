@@ -3,7 +3,7 @@ import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 
 const LEADERBOARD_URL = "https://game.raceroom.com/leaderboard";
 
-type Bucket = "classes" | "tracks";
+type Bucket = "cars" | "tracks";
 
 function addOption(
   target: Map<string, LeaderboardAsset>,
@@ -25,14 +25,14 @@ function collectOptions(
   selector: string,
   bucket: Bucket,
   acc: {
-    classes: Map<string, LeaderboardAsset>;
+    cars: Map<string, LeaderboardAsset>;
     tracks: Map<string, LeaderboardAsset>;
   },
 ): void {
   const container = doc.querySelector(selector);
   if (!container) return;
 
-  const target = bucket === "classes" ? acc.classes : acc.tracks;
+  const target = bucket === "cars" ? acc.cars : acc.tracks;
   container.querySelectorAll("option").forEach((opt) => {
     addOption(target, opt);
   });
@@ -42,7 +42,7 @@ function detectBucket(option: HTMLOptionElement): Bucket | undefined {
   const parentWithType = option.closest("[data-type]");
   const dataType = (parentWithType as HTMLElement)?.dataset.type || "";
 
-  if (dataType.includes("car_class")) return "classes";
+  if (dataType.includes("car_class")) return "cars";
   if (dataType.includes("track")) return "tracks";
   return undefined;
 }
@@ -59,13 +59,13 @@ function parseHtml(html: string): LeaderboardAssets {
   const doc = parser.parseFromString(html, "text/html");
 
   const acc = {
-    classes: new Map<string, LeaderboardAsset>(),
+    cars: new Map<string, LeaderboardAsset>(),
     tracks: new Map<string, LeaderboardAsset>(),
   };
 
   const targetedSelectors: Array<{ selector: string; bucket: Bucket }> = [
-    { selector: '[data-type="car_class"]', bucket: "classes" },
-    { selector: 'select[name="car_class"]', bucket: "classes" },
+    { selector: '[data-type="car_class"]', bucket: "cars" },
+    { selector: 'select[name="car_class"]', bucket: "cars" },
     { selector: '[data-type="track"]', bucket: "tracks" },
     { selector: '[data-type="track_layout"]', bucket: "tracks" },
     { selector: 'select[name="track"]', bucket: "tracks" },
@@ -79,7 +79,7 @@ function parseHtml(html: string): LeaderboardAssets {
   doc.querySelectorAll("option[data-image]").forEach((opt) => {
     const bucket = detectBucket(opt as HTMLOptionElement);
     if (!bucket) return;
-    const target = bucket === "classes" ? acc.classes : acc.tracks;
+    const target = bucket === "cars" ? acc.cars : acc.tracks;
     addOption(target, opt as HTMLOptionElement);
   });
 
@@ -91,7 +91,7 @@ function parseHtml(html: string): LeaderboardAssets {
   return {
     sourceUrl: LEADERBOARD_URL,
     fetchedAt: new Date().toISOString(),
-    classes: toSortedArray(acc.classes),
+    cars: toSortedArray(acc.cars),
     tracks: toSortedArray(acc.tracks),
   };
 }
@@ -144,20 +144,6 @@ export async function fetchLeaderboardAssetsWithCache(options?: {
     
     // Save to store
     useLeaderboardAssetsStore.getState().setAssets(assets);
-    
-    // // Force localStorage persistence immediately
-    // try {
-    //   const storageData = {
-    //     state: { assets },
-    //     version: 1,
-    //   };
-    //   localStorage.setItem(
-    //     "r3e-toolbox-leaderboard-assets",
-    //     JSON.stringify(storageData),
-    //   );
-    // } catch (storageError) {
-    //   console.warn("Failed to save to localStorage:", storageError);
-    // }
     
     return assets;
   } catch (error) {

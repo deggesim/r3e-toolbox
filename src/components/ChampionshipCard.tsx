@@ -32,15 +32,6 @@ function ChampionshipCard({
     onClick(championship.alias);
   };
 
-  const generatedDate = new Date(championship.generatedAt);
-  const day = String(generatedDate.getDate()).padStart(2, "0");
-  const month = String(generatedDate.getMonth() + 1).padStart(2, "0");
-  const year = generatedDate.getFullYear();
-  const hours = String(generatedDate.getHours()).padStart(2, "0");
-  const minutes = String(generatedDate.getMinutes()).padStart(2, "0");
-  const seconds = String(generatedDate.getSeconds()).padStart(2, "0");
-  const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-
   return (
     <>
       <Card
@@ -52,35 +43,24 @@ function ChampionshipCard({
           <div className="d-flex justify-content-between align-items-start mb-3">
             <div className="flex-grow-1 overflow-hidden">
               <Card.Title className="text-white mb-1 d-flex align-items-center gap-2">
-                {championship.carIcon && (
+                <span style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>{championship.alias}</span>
+              </Card.Title>
+              {championship.carName && (
+                <Card.Subtitle className="text-white-50 small mb-2">
+                  {championship.carIcon && (
                   <img
                     src={championship.carIcon}
                     alt={championship.carName || championship.alias}
                     style={{
-                      width: 32,
-                      height: 32,
                       objectFit: "contain",
                       flexShrink: 0,
                     }}
                   />
                 )}
-                <span style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>{championship.alias}</span>
-              </Card.Title>
-              {championship.carName && (
-                <Card.Subtitle className="text-white-50 small mb-2">
                   {championship.carName}
                 </Card.Subtitle>
               )}
             </div>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleDeleteClick}
-              title="Delete championship"
-              className="ms-2"
-            >
-              Remove
-            </Button>
           </div>
 
           <ListGroup variant="flush" className="border-0">
@@ -90,18 +70,11 @@ function ChampionshipCard({
                 <Badge bg="primary">{championship.races}</Badge>
               </div>
             </ListGroup.Item>
-            {/* <ListGroup.Item className="bg-dark border-secondary py-2 px-0">
-              <div className="d-flex justify-content-between">
-                <span className="text-white-50 small">Generated:</span>
-                <span className="text-white small">{formattedDate}</span>
-              </div>
-            </ListGroup.Item> */}
             <ListGroup.Item className="bg-dark border-secondary py-2 px-0 border-bottom-0">
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-white-50 small">HTML File:</span>
                 <code
-                  className="text-white small text-truncate"
-                  style={{ maxWidth: "200px" }}
+                  className="text-white small"
                   title={championship.fileName}
                 >
                   {championship.fileName}
@@ -109,7 +82,16 @@ function ChampionshipCard({
               </div>
             </ListGroup.Item>
           </ListGroup>
-          <div className="d-flex justify-content-end mt-3">
+          
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDeleteClick}
+              title="Delete championship"
+              className="text-nowrap px-2 w-100 w-sm-auto mb-3"
+            >
+              🗑️ Remove
+            </Button>
             <Button
               variant="primary"
               size="sm"
@@ -120,10 +102,11 @@ function ChampionshipCard({
               disabled={
                 !championship.raceData || championship.raceData.length === 0
               }
+              className="text-nowrap px-2 w-100 w-sm-auto"
             >
               ⬇️ Download as HTML
             </Button>
-          </div>
+          
         </Card.Body>
       </Card>
 

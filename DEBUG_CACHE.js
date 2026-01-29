@@ -10,15 +10,15 @@ console.log(stored ? JSON.stringify(JSON.parse(stored), null, 2) : "❌ Nothing 
 
 // 2. Leggi lo stato dello store Zustand
 console.log("\n=== Zustand Store State ===");
-if (typeof useLeaderboardAssetsStore !== "undefined") {
+if (typeof useLeaderboardAssetsStore === "undefined") {
+  console.log("❌ Store not found in window");
+} else {
   const state = useLeaderboardAssetsStore.getState();
   console.log("Assets count:", {
-    classes: state.assets?.classes.length || 0,
+    cars: state.assets?.cars.length || 0,
     tracks: state.assets?.tracks.length || 0,
   });
   console.log("Full state:", state);
-} else {
-  console.log("❌ Store not found in window");
 }
 
 // 3. Manualmente trigger persist (forza la sincronizzazione)
@@ -41,7 +41,7 @@ setTimeout(() => {
 // 5. Utility per pulire e testare
 console.log("\n=== Utilities ===");
 console.log("clearAllLeaderboardCache() - pulisce il cache");
-window.clearAllLeaderboardCache = () => {
+globalThis.clearAllLeaderboardCache = () => {
   localStorage.removeItem("r3e-toolbox-leaderboard-assets");
   if (typeof useLeaderboardAssetsStore !== "undefined") {
     useLeaderboardAssetsStore.getState().clearAssets();
@@ -50,7 +50,7 @@ window.clearAllLeaderboardCache = () => {
 };
 
 console.log("showStorageSize() - mostra dimensione del cache");
-window.showStorageSize = () => {
+globalThis.showStorageSize = () => {
   const stored = localStorage.getItem("r3e-toolbox-leaderboard-assets");
   const bytes = new Blob([stored || ""]).size;
   console.log(`Storage size: ${(bytes / 1024).toFixed(2)} KB`);

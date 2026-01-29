@@ -376,7 +376,7 @@ export default function ResultsDatabaseDetail() {
 
   const getVehicleIcon = (vehicleId?: string) => {
     if (!vehicleId || !leaderboardAssets) return null;
-    const icon = leaderboardAssets.classes.find(
+    const icon = leaderboardAssets.cars.find(
       (c) => c.id === vehicleId,
     )?.iconUrl;
     return icon || null;
@@ -395,7 +395,7 @@ export default function ResultsDatabaseDetail() {
     if (!vehicleId) return vehicleName || "";
     // Try to get the name from leaderboard assets
     if (leaderboardAssets) {
-      const classData = leaderboardAssets.classes.find(
+      const classData = leaderboardAssets.cars.find(
         (c) => c.id === vehicleId,
       );
       if (classData?.name) {
@@ -462,13 +462,13 @@ export default function ResultsDatabaseDetail() {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
           classes: Object.fromEntries(
-            leaderboardAssets.classes.map((c) => [c.id, c.iconUrl || ""]),
+            leaderboardAssets.cars.map((c) => [c.id, c.iconUrl || ""]),
           ),
           tracks: Object.fromEntries(
             leaderboardAssets.tracks.map((t) => [t.name, t.iconUrl || ""]),
           ),
           classNames: Object.fromEntries(
-            leaderboardAssets.classes.map((c) => [c.id, c.name]),
+            leaderboardAssets.cars.map((c) => [c.id, c.name]),
           ),
         }
       : undefined;
@@ -496,7 +496,7 @@ export default function ResultsDatabaseDetail() {
             <img
               src={championship.carIcon}
               alt={championship.carName || championship.alias}
-              style={{ width: 48, height: 48, objectFit: "contain" }}
+              style={{ objectFit: "contain" }}
             />
           )}
           <h1 className="results-title mb-0">{championship.alias}</h1>

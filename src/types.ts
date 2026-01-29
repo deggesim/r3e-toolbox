@@ -58,7 +58,7 @@ export interface LeaderboardAsset {
 export interface LeaderboardAssets {
   sourceUrl: string;
   fetchedAt: string;
-  classes: LeaderboardAsset[];
+  cars: LeaderboardAsset[];
   tracks: LeaderboardAsset[];
 }
 

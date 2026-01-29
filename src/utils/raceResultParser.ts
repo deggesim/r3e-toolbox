@@ -29,7 +29,7 @@ function millisecondsToTime(ms: number): string {
 function resolveClassInfo(vehicleId: number | undefined, gameData: RaceRoomData): { classId?: number; className?: string } {
   if (!vehicleId || !gameData.cars) return {};
   const car = gameData.cars[String(vehicleId)];
-  if (!car || !car.Class) return {};
+  if (!car?.Class) return {};
   const classId = car.Class;
   const classData = gameData.classes?.[String(classId)];
   const className = classData?.Name;
@@ -74,6 +74,70 @@ function findTrack(
   return undefined;
 }
 
+function processSessionPlayers(
+  session: RaceSession,
+): RaceSlot[] {
+  const slots: RaceSlot[] = [];
+
+  for (const player of session.Players) {
+    const driver = player.Username;
+    const vehicle = player.CarName || String(player.CarId || "");
+    const team = player.Team || driver;
+
+    const totalTime = player.TotalTime
+      ? millisecondsToTime(player.TotalTime)
+      : undefined;
+    const bestLap = player.BestLapTime
+      ? millisecondsToTime(player.BestLapTime)
+      : undefined;
+
+    slots.push({
+      Driver: driver,
+      Vehicle: vehicle,
+      VehicleId: String(player.CarId || ""),
+      UserId: player.UserId ? Number(player.UserId) : undefined,
+      ClassName: player.ClassName,
+      ClassId: player.ClassId,
+      Team: team,
+      FinishTime: totalTime,
+      TotalTime: totalTime,
+      BestLap: bestLap,
+      FinishStatus: player.FinishStatus,
+    });
+  }
+
+  return slots;
+}
+
+function resolveMissingClassInfo(
+  slots: RaceSlot[],
+  gameData: RaceRoomData
+): void {
+  for (const slot of slots) {
+    if (!slot.ClassName && !slot.ClassId && slot.VehicleId) {
+      const { classId, className } = resolveClassInfo(
+        Number.parseInt(slot.VehicleId, 10),
+        gameData,
+      );
+      if (classId) slot.ClassId = classId;
+      if (className) slot.ClassName = className;
+    }
+  }
+}
+
+function addQualifyingTimes(
+  slots: RaceSlot[],
+  sessQualify: RaceSession | undefined
+): void {
+  if (!sessQualify) return;
+  for (const player of sessQualify.Players) {
+    const slot = slots.find((s) => s.Driver === player.Username);
+    if (slot && player.QualifyingTime) {
+      slot.QualTime = millisecondsToTime(player.QualifyingTime);
+    }
+  }
+}
+
 function parseMultiplayerResult(
   json: MultiplayerRaceResult,
   gameData: RaceRoomData,
@@ -112,62 +176,9 @@ function parseMultiplayerResult(
     return null;
   }
 
-  const processSession = (session: RaceSession): RaceSlot[] => {
-    const slots: RaceSlot[] = [];
-
-    for (const player of session.Players) {
-      const driver = player.Username;
-      const vehicle = player.CarName || String(player.CarId || "");
-      const team = player.Team || driver;
-
-      const totalTime = player.TotalTime
-        ? millisecondsToTime(player.TotalTime)
-        : undefined;
-      const bestLap = player.BestLapTime
-        ? millisecondsToTime(player.BestLapTime)
-        : undefined;
-
-      slots.push({
-        Driver: driver,
-        Vehicle: vehicle,
-        VehicleId: String(player.CarId || ""),
-        UserId: player.UserId ? Number(player.UserId) : undefined,
-        ClassName: player.ClassName,
-        ClassId: player.ClassId,
-        Team: team,
-        FinishTime: totalTime,
-        TotalTime: totalTime,
-        BestLap: bestLap,
-        FinishStatus: player.FinishStatus,
-      });
-    }
-
-    return slots;
-  };
-
-  const slots1 = processSession(sessRace);
-
-  // Resolve class info from vehicle IDs if not available
-  for (const slot of slots1) {
-    if (!slot.ClassName && !slot.ClassId && slot.VehicleId) {
-      const { classId, className } = resolveClassInfo(
-        parseInt(slot.VehicleId, 10),
-        gameData,
-      );
-      if (classId) slot.ClassId = classId;
-      if (className) slot.ClassName = className;
-    }
-  }
-
-  // Add qualifying times
-  if (sessQualify) {
-    for (const player of sessQualify.Players) {
-      const slot = slots1.find((s) => s.Driver === player.Username);
-      if (slot && player.QualifyingTime) {
-        slot.QualTime = millisecondsToTime(player.QualifyingTime);
-      }
-    }
-  }
+  const slots1 = processSessionPlayers(sessRace);
+  resolveMissingClassInfo(slots1, gameData);
+  addQualifyingTimes(slots1, sessQualify);
 
   const results: ParsedRace[] = [
     {
@@ -181,16 +192,76 @@ function parseMultiplayerResult(
 
   if (sessRace2) {
     const date2 = new Date((timestamp + 1) * 1000);
+    const slots2 = processSessionPlayers(sessRace2);
+    resolveMissingClassInfo(slots2, gameData);
+    addQualifyingTimes(slots2, sessQualify);
     results.push({
       trackname: trackInfo.name,
       trackid: trackInfo.layoutId,
       timestring: date2.toLocaleString("en-US"),
-      slots: processSession(sessRace2),
+      slots: slots2,
       ruleset,
     });
   }
 
   return results;
+}
+
+function buildSinglePlayerRaceSlot(
+  driver: any,
+  gameData: RaceRoomData
+): RaceSlot {
+  const totalTime = driver.raceTimeMs
+    ? millisecondsToTime(driver.raceTimeMs)
+    : undefined;
+  const bestLap = driver.bestLapTimeMs
+    ? millisecondsToTime(driver.bestLapTimeMs)
+    : undefined;
+  const qualTime = driver.qualTimeMs
+    ? millisecondsToTime(driver.qualTimeMs)
+    : undefined;
+
+  // Resolve team name from teamId if available
+  let teamName = driver.teamName || "";
+  if (!teamName && driver.teamId && gameData.teams) {
+    const team = gameData.teams[String(driver.teamId)];
+    teamName = team?.Name || "";
+  }
+  // Fallback to driver name if team is still empty
+  if (!teamName) {
+    teamName = driver.name;
+  }
+
+  const vehicleId = driver.carId || undefined;
+  const { classId, className } = resolveClassInfo(vehicleId, gameData);
+
+  const rawUserId =
+    driver.userId ?? driver.UserId ?? driver.userid ?? undefined;
+  const isStringUserId = typeof rawUserId === "string";
+  const isNumberUserId = typeof rawUserId === "number";
+  let userId: number | undefined;
+  if (isStringUserId) {
+    userId = Number(rawUserId);
+  } else if (isNumberUserId) {
+    userId = rawUserId;
+  } else {
+    userId = undefined;
+  }
+
+  return {
+    Driver: driver.name,
+    Vehicle: driver.carName || String(driver.carId || ""),
+    VehicleId: String(driver.carId || ""),
+    UserId: Number.isFinite(userId) ? userId : undefined,
+    ClassName: driver.className || driver.ClassName || className,
+    ClassId: driver.classId ?? driver.ClassId ?? classId,
+    Team: teamName,
+    FinishTime: totalTime,
+    TotalTime: totalTime,
+    BestLap: bestLap,
+    QualTime: qualTime,
+    FinishStatus: driver.finishStatus,
+  };
 }
 
 function parseSinglePlayerResult(
@@ -214,57 +285,9 @@ function parseSinglePlayerResult(
   }
 
   const timestring = json.header.time;
-  const slots: RaceSlot[] = [];
-
-  for (const driver of json.drivers) {
-    const totalTime = driver.raceTimeMs
-      ? millisecondsToTime(driver.raceTimeMs)
-      : undefined;
-    const bestLap = driver.bestLapTimeMs
-      ? millisecondsToTime(driver.bestLapTimeMs)
-      : undefined;
-    const qualTime = driver.qualTimeMs
-      ? millisecondsToTime(driver.qualTimeMs)
-      : undefined;
-
-    // Resolve team name from teamId if available
-    let teamName = driver.teamName || "";
-    if (!teamName && driver.teamId && gameData.teams) {
-      const team = gameData.teams[String(driver.teamId)];
-      teamName = team?.Name || "";
-    }
-    // Fallback to driver name if team is still empty
-    if (!teamName) {
-      teamName = driver.name;
-    }
-
-    const vehicleId = driver.carId || undefined;
-    const { classId, className } = resolveClassInfo(vehicleId, gameData);
-
-    const rawUserId =
-      driver.userId ?? driver.UserId ?? (driver as any).userid ?? undefined;
-    const userId =
-      typeof rawUserId === "string"
-        ? Number(rawUserId)
-        : typeof rawUserId === "number"
-          ? rawUserId
-          : undefined;
-
-    slots.push({
-      Driver: driver.name,
-      Vehicle: driver.carName || String(driver.carId || ""),
-      VehicleId: String(driver.carId || ""),
-      UserId: Number.isFinite(userId) ? userId : undefined,
-      ClassName: driver.className || driver.ClassName || className,
-      ClassId: driver.classId ?? driver.ClassId ?? classId,
-      Team: teamName,
-      FinishTime: totalTime,
-      TotalTime: totalTime,
-      BestLap: bestLap,
-      QualTime: qualTime,
-      FinishStatus: driver.finishStatus,
-    });
-  }
+  const slots: RaceSlot[] = json.drivers.map((driver) =>
+    buildSinglePlayerRaceSlot(driver, gameData)
+  );
 
   return {
     trackname: trackInfo.name,

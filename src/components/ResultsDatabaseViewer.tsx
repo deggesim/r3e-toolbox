@@ -239,13 +239,13 @@ export default function ResultsDatabaseViewer() {
                   disabled={championships.length === 0}
                   variant="secondary"
                 >
-                  Download database
+                  ⬇️ Download database
                 </Button>
                 <Button
                   onClick={handleDownloadIndex}
                   disabled={championships.length === 0}
                 >
-                  Download index.html
+                  ⬇️ Download index.html
                 </Button>
               </div>
               <Row className="g-3">
@@ -266,7 +266,7 @@ export default function ResultsDatabaseViewer() {
                   onClick={() => setShowClearAllModal(true)}
                   disabled={championships.length === 0}
                 >
-                  Clear All Championships
+                  🗑️ Clear All Championships
                 </Button>
               </div>
             </>
