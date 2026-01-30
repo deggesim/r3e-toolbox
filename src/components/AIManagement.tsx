@@ -15,6 +15,7 @@ import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
 import { useConfigStore } from "../store/configStore";
 import { useProcessingLog } from "../hooks/useProcessingLog";
+import { useElectronAPI } from "../hooks/useElectronAPI";
 import ProcessingLog from "./ProcessingLog";
 import FileUploadSection from "./FileUploadSection";
 import AISelectionTable from "./AISelectionTable";
@@ -72,6 +73,7 @@ function recalculateClassMinMax(classData: DatabaseClass): void {
 
 const AIManagement: React.FC = () => {
   const { config } = useConfigStore();
+  const electron = useElectronAPI();
 
   // Data state
   const [assets, setAssets] = useState<Assets | null>(null);
@@ -113,8 +115,26 @@ const AIManagement: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const loadDefaultJson = async () => {
+    const loadR3eData = async () => {
       try {
+        // First, try to find r3e-data.json in the RaceRoom installation
+        if (electron.isElectron) {
+          const result = await electron.findR3eDataFile();
+          if (result.success && result.data) {
+            try {
+              const data: RaceRoomData = JSON.parse(result.data);
+              if (!cancelled) {
+                setAssets((prev) => prev ?? parseJson(data));
+                addLog("success", `✔ Loaded r3e-data.json from: ${result.path}`);
+              }
+              return;
+            } catch (error) {
+              addLog("warning", `⚠ Failed to parse r3e-data.json from RaceRoom installation: ${error}`);
+            }
+          }
+        }
+
+        // Fallback: load default JSON from bundled asset
         const response = await fetch(DEFAULT_JSON_URL);
         if (!response.ok) {
           throw new Error(`Failed to fetch default JSON: ${response.status}`);
@@ -122,22 +142,58 @@ const AIManagement: React.FC = () => {
         const data: RaceRoomData = await response.json();
         if (!cancelled) {
           setAssets((prev) => prev ?? parseJson(data));
+          addLog("success", "✔ Loaded bundled r3e-data.json");
         }
       } catch (error) {
-        console.warn("Auto-load of default RaceRoom JSON failed:", error);
+        addLog("error", `❌ Auto-load of RaceRoom JSON failed: ${error}`);
       }
     };
 
-    loadDefaultJson();
+    loadR3eData();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [electron]);
 
   useEffect(() => {
     setProcessed(processDatabase(database));
   }, [config, database]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAiadaptationFile = async () => {
+      try {
+        if (electron.isElectron) {
+          const result = await electron.findAiadaptationFile();
+          if (result.success && result.data) {
+            try {
+              const newDatabase = { ...database };
+              const newPlayerTimes = { ...playerTimes };
+              const added = parseAdaptive(result.data, newDatabase, newPlayerTimes);
+              if (!cancelled && added) {
+                setDatabase(newDatabase);
+                setPlayerTimes(newPlayerTimes);
+                addLog("success", `✔ Loaded aiadaptation.xml from: ${result.path}`);
+              }
+              return;
+            } catch (error) {
+              addLog("warning", `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`);
+            }
+          }
+        }
+      } catch (error) {
+        addLog("error", `❌ Auto-load of aiadaptation.xml failed: ${error}`);
+      }
+    };
+
+    loadAiadaptationFile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [electron]);
 
   // ============ FILE UPLOAD HANDLERS ============
 

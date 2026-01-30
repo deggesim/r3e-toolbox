@@ -60,5 +60,19 @@ export const useElectronAPI = () => {
       }
       return result.data || [];
     },
+
+    async findR3eDataFile(): Promise<{ success: boolean; data?: string; path?: string; error?: string }> {
+      if (!isElectron) {
+        return { success: false, error: 'Electron API not available' };
+      }
+      return window.electron.findR3eDataFile();
+    },
+
+    async findAiadaptationFile(): Promise<{ success: boolean; data?: string; path?: string; error?: string }> {
+      if (!isElectron) {
+        return { success: false, error: 'Electron API not available' };
+      }
+      return window.electron.findAiadaptationFile();
+    },
   };
 };

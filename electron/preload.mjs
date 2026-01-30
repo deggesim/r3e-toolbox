@@ -10,4 +10,8 @@ contextBridge.exposeInMainWorld('electron', {
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   writeFile: (filePath, content) => ipcRenderer.invoke('fs:writeFile', filePath, content),
   readdir: (dirPath) => ipcRenderer.invoke('fs:readdir', dirPath),
+
+  // Application operations
+  findR3eDataFile: () => ipcRenderer.invoke('app:findR3eDataFile'),
+  findAiadaptationFile: () => ipcRenderer.invoke('app:findAiadaptationFile'),
 });
