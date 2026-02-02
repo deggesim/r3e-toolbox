@@ -1,8 +1,15 @@
 /* Custom styles for sidebar */
+@media (min-width: 768px) {
+  .sidebar-col {
+    max-width: 280px;
+  }
+}
+
 .sidebar {
   height: 100vh;
   position: sticky;
   top: 0;
+  width: 100%;
 }
 
 .text-gradient {

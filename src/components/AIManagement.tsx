@@ -476,7 +476,7 @@ const AIManagement: React.FC = () => {
     !selectedClassId || !selectedTrackId || selectedAILevel === null;
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary mb-4">
         <Card.Header as="h2" className="text-center page-header-gradient">
           🤖 AI Management

@@ -137,7 +137,7 @@ export default function ResultsDatabaseViewer() {
   };
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
           📊 Results Database Viewer
