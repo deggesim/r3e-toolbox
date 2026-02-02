@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
               <img
                 src={logoUrl}
                 alt="R3E Toolbox"
-                style={{ maxWidth: "100%", height: "auto", display: "block" }}
+                className="sidebar-logo"
               />
               <h1 className="h5 mb-2 mt-2 text-gradient">R3E Toolbox</h1>
             </div>

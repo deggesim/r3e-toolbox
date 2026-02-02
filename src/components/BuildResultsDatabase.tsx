@@ -14,6 +14,7 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useProcessingLog } from "../hooks/useProcessingLog";
+import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import type {
@@ -174,6 +175,7 @@ function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
 }
 
 export default function BuildResultsDatabase() {
+  const electron = useElectronAPI();
   const [assets, setAssets] = useState<LeaderboardAssets | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [assetsError, setAssetsError] = useState<string | null>(null);
@@ -208,19 +210,42 @@ export default function BuildResultsDatabase() {
 
   // Load game data for parsing
   useEffect(() => {
+    let cancelled = false;
+
     const loadGameData = async () => {
       try {
-        const response = await fetch(
-          new URL("../../r3e-data.json", import.meta.url).href,
-        );
-        const data: RaceRoomData = await response.json();
-        setGameData(data);
+        if (!electron.isElectron) {
+          console.error(
+            "r3e-data.json can only be loaded in Electron mode from game installation",
+          );
+          return;
+        }
+
+        const result = await electron.findR3eDataFile();
+
+        if (cancelled) return;
+
+        if (result.success && result.data) {
+          const data: RaceRoomData = JSON.parse(result.data);
+          if (!cancelled) {
+            setGameData(data);
+            addLog("success", `✔ Loaded r3e-data.json from: ${result.path}`);
+          }
+        } else {
+          console.error(
+            "r3e-data.json not found in RaceRoom installation paths",
+          );
+        }
       } catch (error) {
         console.error("Failed to load game data:", error);
       }
     };
     loadGameData();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [electron.isElectron]);
 
   // Initialize assets from cache on component mount
   useEffect(() => {

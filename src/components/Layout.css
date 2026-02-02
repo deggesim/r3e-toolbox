@@ -12,6 +12,20 @@
   width: 100%;
 }
 
+.sidebar-logo {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .sidebar-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
+}
+
 .text-gradient {
   background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
   -webkit-background-clip: text;

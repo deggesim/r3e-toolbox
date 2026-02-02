@@ -20,8 +20,6 @@ import ProcessingLog from "./ProcessingLog";
 import FileUploadSection from "./FileUploadSection";
 import AISelectionTable from "./AISelectionTable";
 
-const DEFAULT_JSON_URL = new URL("../../r3e-data.json", import.meta.url).href;
-
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
  */
@@ -115,43 +113,59 @@ const AIManagement: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const loadR3eData = async () => {
+    const loadGameFiles = async () => {
+      if (!electron.isElectron) {
+        addLog("error", "❌ Game files can only be loaded in Electron mode from game installation");
+        return;
+      }
+
+      // Load both files in parallel
       try {
-        // First, try to find r3e-data.json in the RaceRoom installation
-        if (electron.isElectron) {
-          const result = await electron.findR3eDataFile();
-          if (result.success && result.data) {
-            try {
-              const data: RaceRoomData = JSON.parse(result.data);
-              if (!cancelled) {
-                setAssets((prev) => prev ?? parseJson(data));
-                addLog("success", `✔ Loaded r3e-data.json from: ${result.path}`);
-              }
-              return;
-            } catch (error) {
-              addLog("warning", `⚠ Failed to parse r3e-data.json from RaceRoom installation: ${error}`);
+        const [r3eDataResult, aiadaptationResult] = await Promise.all([
+          electron.findR3eDataFile(),
+          electron.findAiadaptationFile(),
+        ]);
+
+        if (cancelled) return;
+
+        // Process r3e-data.json
+        if (r3eDataResult.success && r3eDataResult.data) {
+          try {
+            const data: RaceRoomData = JSON.parse(r3eDataResult.data);
+            if (!cancelled) {
+              setAssets((prev) => prev ?? parseJson(data));
+              addLog("success", `✔ Loaded r3e-data.json from: ${r3eDataResult.path}`);
             }
-          } else {
-            addLog("info", `ℹ r3e-data.json not found in installation paths, using bundled version`);
+          } catch (error) {
+            addLog("error", `❌ Failed to parse r3e-data.json from RaceRoom installation: ${error}`);
           }
+        } else {
+          addLog("error", `❌ r3e-data.json not found in RaceRoom installation paths`);
         }
 
-        // Fallback: load default JSON from bundled asset
-        const response = await fetch(DEFAULT_JSON_URL);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch default JSON: ${response.status}`);
-        }
-        const data: RaceRoomData = await response.json();
-        if (!cancelled) {
-          setAssets((prev) => prev ?? parseJson(data));
-          addLog("success", "✔ Loaded bundled r3e-data.json");
+        // Process aiadaptation.xml
+        if (aiadaptationResult.success && aiadaptationResult.data) {
+          try {
+            const newDatabase = { ...database };
+            const newPlayerTimes = { ...playerTimes };
+            const added = parseAdaptive(aiadaptationResult.data, newDatabase, newPlayerTimes);
+            if (!cancelled && added) {
+              setDatabase(newDatabase);
+              setPlayerTimes(newPlayerTimes);
+              addLog("success", `✔ Loaded aiadaptation.xml from: ${aiadaptationResult.path}`);
+            }
+          } catch (error) {
+            addLog("warning", `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`);
+          }
+        } else {
+          addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
         }
       } catch (error) {
-        addLog("error", `❌ Auto-load of RaceRoom JSON failed: ${error}`);
+        addLog("error", `❌ Auto-load of game files failed: ${error}`);
       }
     };
 
-    loadR3eData();
+    loadGameFiles();
 
     return () => {
       cancelled = true;
@@ -161,43 +175,6 @@ const AIManagement: React.FC = () => {
   useEffect(() => {
     setProcessed(processDatabase(database));
   }, [config, database]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAiadaptationFile = async () => {
-      try {
-        if (electron.isElectron) {
-          const result = await electron.findAiadaptationFile();
-          if (result.success && result.data) {
-            try {
-              const newDatabase = { ...database };
-              const newPlayerTimes = { ...playerTimes };
-              const added = parseAdaptive(result.data, newDatabase, newPlayerTimes);
-              if (!cancelled && added) {
-                setDatabase(newDatabase);
-                setPlayerTimes(newPlayerTimes);
-                addLog("success", `✔ Loaded aiadaptation.xml from: ${result.path}`);
-              }
-              return;
-            } catch (error) {
-              addLog("warning", `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`);
-            }
-          } else {
-            addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
-          }
-        }
-      } catch (error) {
-        addLog("error", `❌ Auto-load of aiadaptation.xml failed: ${error}`);
-      }
-    };
-
-    loadAiadaptationFile();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [electron.isElectron]);
 
   // ============ FILE UPLOAD HANDLERS ============
 
