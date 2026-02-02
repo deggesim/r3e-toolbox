@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { Container, Row, Col, Nav } from "react-bootstrap";
 import "./Layout.css";
+import logoUrl from "/logo.png";
 
 interface LayoutProps {
   readonly children: ReactNode;
@@ -31,13 +32,13 @@ const menuItems: MenuItemData[] = [
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <Container className="vh-100 p-0">
+    <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
         <Col xs={12} md={3} className="bg-dark border-end border-secondary">
           <div className="sidebar">
             <div className="sidebar-header border-bottom border-secondary text-center">
               <img
-                src="/logo.png"
+                src={logoUrl}
                 alt="R3E Toolbox"
                 style={{ maxWidth: "100%", height: "auto", display: "block" }}
               />
