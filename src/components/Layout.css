@@ -58,9 +58,12 @@
 .main-content-col {
   background-color: #212529;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100vh;
+  flex: 1;
 }
 
 .main-content {
   min-height: 100%;
+  width: 100%;
 }

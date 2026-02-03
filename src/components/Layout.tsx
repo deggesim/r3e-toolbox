@@ -34,14 +34,14 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
-        <Col xs={12} md={3} className="bg-dark border-end border-secondary sidebar-col">
+        <Col
+          xs={12}
+          md={3}
+          className="bg-dark border-end border-secondary sidebar-col"
+        >
           <div className="sidebar">
             <div className="sidebar-header border-bottom border-secondary text-center">
-              <img
-                src={logoUrl}
-                alt="R3E Toolbox"
-                className="sidebar-logo"
-              />
+              <img src={logoUrl} alt="R3E Toolbox" className="sidebar-logo" />
               <h1 className="h5 mb-2 mt-2 text-gradient">R3E Toolbox</h1>
             </div>
             <Nav className="flex-column p-2">
@@ -63,7 +63,7 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </Col>
         <Col xs={12} md={9} className="main-content-col">
-          <div className="main-content p-4">{children}</div>
+          <div className="main-content">{children}</div>
         </Col>
       </Row>
     </Container>
