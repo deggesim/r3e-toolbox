@@ -119,7 +119,6 @@ const AIManagement: React.FC = () => {
     if (gameData && !assets) {
       setAssets(parseJson(gameData));
       if (!gameDataLoggedRef.current) {
-        addLog("success", `✔ Loaded r3e-data.json`);
         gameDataLoggedRef.current = true;
       }
     }

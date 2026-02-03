@@ -1,51 +1,92 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Alert, Card, Container, Form, Spinner } from "react-bootstrap";
+import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import { useElectronAPI } from "../hooks/useElectronAPI";
+import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useGameDataStore } from "../store/gameDataStore";
 import type { RaceRoomData } from "../types";
+import { validateR3eData } from "../utils/r3eDataValidator";
+import ProcessingLog from "./ProcessingLog";
 
 export default function GameDataOnboarding() {
-  const navigate = useNavigate();
   const electron = useElectronAPI();
   const { setGameData, forceOnboarding, setForceOnboarding, isLoaded } =
     useGameDataStore();
+  const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadSuccess, setLoadSuccess] = useState(false);
 
   // Try to load game data automatically on mount
   useEffect(() => {
     const autoLoadGameData = async () => {
       if (forceOnboarding || isLoaded) return;
       if (!electron.isElectron) {
-        setError(
+        addLog(
+          "warning",
           "Game data can only be loaded in Electron mode from RaceRoom installation",
         );
         return;
       }
 
       setIsLoading(true);
+      addLog("info", "🔍 Searching for r3e-data.json in standard paths...");
+
       try {
         const result = await electron.findR3eDataFile();
         if (result.success && result.data) {
-          const data: RaceRoomData = JSON.parse(result.data);
-          setGameData(data);
+          addLog(
+            "success",
+            `✔ Found r3e-data.json at: ${result.path || "auto-detected path"}`,
+          );
+          addLog("info", "📋 Validating file structure...");
+
+          // Validate and parse the data
+          const parsed = JSON.parse(result.data);
+          const validation = validateR3eData(parsed);
+
+          if (validation.valid) {
+            addLog("success", "✔ File structure is valid");
+
+            // Log stats
+            const classCount = Object.keys(parsed.classes).length;
+            const trackCount = Object.keys(parsed.tracks).length;
+            addLog(
+              "info",
+              `📊 Loaded ${classCount} classes and ${trackCount} tracks`,
+            );
+
+            // Log warnings if any
+            if (validation.warnings.length > 0) {
+              validation.warnings.forEach((warning) => {
+                addLog("warning", `⚠ ${warning}`);
+              });
+            }
+
+            setGameData(parsed as RaceRoomData);
+            setLoadSuccess(true);
+            addLog("success", "✅ Game data loaded successfully!");
+          } else {
+            validation.errors.forEach((error) => {
+              addLog("error", `❌ ${error}`);
+            });
+            addLog("error", "Failed to load game data: validation errors");
+          }
         } else {
-          setError(
-            "r3e-data.json not found in standard RaceRoom installation paths. Please upload it manually.",
+          addLog(
+            "warning",
+            "⚠ r3e-data.json not found in standard paths. Please upload it manually.",
           );
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setError(`Failed to load game data: ${message}`);
+        addLog("error", `❌ Failed to load game data: ${message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
     autoLoadGameData();
-  }, [electron.isElectron, forceOnboarding, isLoaded, setGameData]);
+  }, [electron.isElectron, forceOnboarding, isLoaded, setGameData, addLog]);
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -53,40 +94,73 @@ export default function GameDataOnboarding() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setError(null);
+    setLoadSuccess(false);
     setIsLoading(true);
+    addLog("info", `📂 Loading file: ${file.name}`);
 
     try {
       const text = await file.text();
-      const data: RaceRoomData = JSON.parse(text);
-      setGameData(data);
-      setForceOnboarding(false);
+      addLog("info", "📋 Validating file structure...");
+
+      // Validate and parse the uploaded file
+      const parsed = JSON.parse(text);
+      const validation = validateR3eData(parsed);
+
+      if (validation.valid) {
+        addLog("success", "✔ File structure is valid");
+
+        // Log stats
+        const classCount = Object.keys(parsed.classes).length;
+        const trackCount = Object.keys(parsed.tracks).length;
+        addLog(
+          "info",
+          `📊 Loaded ${classCount} classes and ${trackCount} tracks`,
+        );
+
+        // Log warnings if any
+        if (validation.warnings.length > 0) {
+          validation.warnings.forEach((warning) => {
+            addLog("warning", `⚠ ${warning}`);
+          });
+        }
+
+        setGameData(parsed as RaceRoomData);
+        setLoadSuccess(true);
+        addLog("success", "✅ Game data loaded successfully!");
+      } else {
+        validation.errors.forEach((error) => {
+          addLog("error", `❌ ${error}`);
+        });
+        addLog("error", "Failed to load game data: validation errors");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setError(`Failed to parse file: ${message}`);
+      addLog("error", `❌ Failed to parse file: ${message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Navigate to AI Management when data is loaded
-  useEffect(() => {
-    if (isLoaded && !forceOnboarding) {
-      navigate("/ai-management", { replace: true });
-    }
-  }, [isLoaded, forceOnboarding, navigate]);
+  const handleContinue = () => {
+    setForceOnboarding(false);
+  };
 
   return (
     <Container
       fluid
       className="d-flex align-items-center justify-content-center"
-      style={{ minHeight: "100vh", background: "#0d1117" }}
+      style={{
+        minHeight: "100vh",
+        background: "#0d1117",
+        paddingTop: "2rem",
+        paddingBottom: "2rem",
+      }}
     >
       <Card
         bg="dark"
         text="white"
         className="border-secondary"
-        style={{ maxWidth: "500px", width: "100%" }}
+        style={{ maxWidth: "700px", width: "100%" }}
       >
         <Card.Header className="bg-dark border-secondary py-3">
           <Card.Title className="m-0 text-center">
@@ -95,12 +169,7 @@ export default function GameDataOnboarding() {
         </Card.Header>
         <Card.Body className="p-4">
           <div className="text-center mb-4">
-            {isLoading ? (
-              <>
-                <Spinner animation="border" className="mb-3" />
-                <p className="text-white-50">Loading game data...</p>
-              </>
-            ) : (
+            {!isLoading && !loadSuccess && (
               <>
                 <p className="text-white-50 mb-3">
                   The application needs to load <strong>r3e-data.json</strong>{" "}
@@ -118,14 +187,8 @@ export default function GameDataOnboarding() {
             )}
           </div>
 
-          {error && (
-            <Alert variant="danger" className="mb-4">
-              {error}
-            </Alert>
-          )}
-
-          {!isLoading && (
-            <Form.Group controlId="gameDataFile" className="mb-3">
+          {!isLoading && !loadSuccess && (
+            <Form.Group controlId="gameDataFile" className="mb-4">
               <Form.Label className="text-white">
                 Upload r3e-data.json
               </Form.Label>
@@ -139,6 +202,31 @@ export default function GameDataOnboarding() {
                 Select the r3e-data.json file from your RaceRoom installation
               </Form.Text>
             </Form.Group>
+          )}
+
+          {logs.length > 0 && (
+            <div className="mb-4">
+              <h5 className="text-white mb-3">Loading Status</h5>
+              <ProcessingLog
+                logs={logs}
+                logsEndRef={logsEndRef}
+                getLogVariant={getLogVariant}
+              />
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="text-center my-3">
+              <Spinner animation="border" variant="primary" />
+            </div>
+          )}
+
+          {loadSuccess && (
+            <div className="text-center mt-4">
+              <Button variant="success" onClick={handleContinue}>
+                Continue to AI Management →
+              </Button>
+            </div>
           )}
         </Card.Body>
       </Card>
