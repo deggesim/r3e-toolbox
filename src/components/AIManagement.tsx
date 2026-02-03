@@ -88,6 +88,8 @@ const AIManagement: React.FC = () => {
   const [spacing, setSpacing] = useState<number>(config.aiSpacing);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [r3eDataAutoLoaded, setR3eDataAutoLoaded] = useState(false);
+  const [xmlAutoLoaded, setXmlAutoLoaded] = useState(false);
 
   // Refs
   const xmlInputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +117,10 @@ const AIManagement: React.FC = () => {
 
     const loadGameFiles = async () => {
       if (!electron.isElectron) {
-        addLog("error", "❌ Game files can only be loaded in Electron mode from game installation");
+        addLog(
+          "error",
+          "❌ Game files can only be loaded in Electron mode from game installation",
+        );
         return;
       }
 
@@ -132,15 +137,32 @@ const AIManagement: React.FC = () => {
         if (r3eDataResult.success && r3eDataResult.data) {
           try {
             const data: RaceRoomData = JSON.parse(r3eDataResult.data);
+            const parsedAssets = parseJson(data);
             if (!cancelled) {
-              setAssets((prev) => prev ?? parseJson(data));
-              addLog("success", `✔ Loaded r3e-data.json from: ${r3eDataResult.path}`);
+              setAssets((prev) => prev ?? parsedAssets);
+              addLog(
+                "info",
+                `ℹ Loaded: ${parsedAssets.numClasses} classes and ${parsedAssets.numTracks} tracks`,
+              );
+              setR3eDataAutoLoaded(true);
+              addLog(
+                "success",
+                `✔ Loaded r3e-data.json from: ${r3eDataResult.path}`,
+              );
             }
           } catch (error) {
-            addLog("error", `❌ Failed to parse r3e-data.json from RaceRoom installation: ${error}`);
+            setR3eDataAutoLoaded(false);
+            addLog(
+              "error",
+              `❌ Failed to parse r3e-data.json from RaceRoom installation: ${error}`,
+            );
           }
         } else {
-          addLog("error", `❌ r3e-data.json not found in RaceRoom installation paths`);
+          setR3eDataAutoLoaded(false);
+          addLog(
+            "error",
+            `❌ r3e-data.json not found in RaceRoom installation paths`,
+          );
         }
 
         // Process aiadaptation.xml
@@ -148,16 +170,29 @@ const AIManagement: React.FC = () => {
           try {
             const newDatabase = { ...database };
             const newPlayerTimes = { ...playerTimes };
-            const added = parseAdaptive(aiadaptationResult.data, newDatabase, newPlayerTimes);
+            const added = parseAdaptive(
+              aiadaptationResult.data,
+              newDatabase,
+              newPlayerTimes,
+            );
             if (!cancelled && added) {
               setDatabase(newDatabase);
               setPlayerTimes(newPlayerTimes);
-              addLog("success", `✔ Loaded aiadaptation.xml from: ${aiadaptationResult.path}`);
+              setXmlAutoLoaded(true);
+              addLog(
+                "success",
+                `✔ Loaded aiadaptation.xml from: ${aiadaptationResult.path}`,
+              );
             }
           } catch (error) {
-            addLog("warning", `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`);
+            setXmlAutoLoaded(false);
+            addLog(
+              "warning",
+              `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`,
+            );
           }
         } else {
+          setXmlAutoLoaded(false);
           addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
         }
       } catch (error) {
@@ -459,15 +494,19 @@ const AIManagement: React.FC = () => {
           🤖 AI Management
         </Card.Header>
         <Card.Body>
-          <Card.Text className="text-white-50 mb-4">
-            Upload RaceRoom data files to analyze and configure AI parameters
-          </Card.Text>
+          {(!r3eDataAutoLoaded || !xmlAutoLoaded) && (
+            <Card.Text className="text-white-50 mb-4">
+              Upload RaceRoom data files to analyze and configure AI parameters
+            </Card.Text>
+          )}
 
           <FileUploadSection
             onJsonUpload={handleJsonUpload}
             onXmlUpload={handleXmlUpload}
             assets={assets}
             xmlInputRef={xmlInputRef}
+            showJsonInput={!r3eDataAutoLoaded}
+            showXmlInput={!xmlAutoLoaded}
           />
 
           <AISelectionTable
