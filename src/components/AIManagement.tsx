@@ -7,13 +7,13 @@ import type {
   DatabaseTrack,
   PlayerTimes,
   ProcessedDatabase,
-  RaceRoomData,
 } from "../types";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
 import { useConfigStore } from "../store/configStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import ProcessingLog from "./ProcessingLog";
@@ -72,6 +72,7 @@ function recalculateClassMinMax(classData: DatabaseClass): void {
 const AIManagement: React.FC = () => {
   const { config } = useConfigStore();
   const electron = useElectronAPI();
+  const gameData = useGameDataStore((state) => state.gameData);
 
   // Data state
   const [assets, setAssets] = useState<Assets | null>(null);
@@ -88,11 +89,12 @@ const AIManagement: React.FC = () => {
   const [spacing, setSpacing] = useState<number>(config.aiSpacing);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [r3eDataAutoLoaded, setR3eDataAutoLoaded] = useState(false);
   const [xmlAutoLoaded, setXmlAutoLoaded] = useState(false);
 
   // Refs
   const xmlInputRef = useRef<HTMLInputElement>(null);
+  const gameDataLoggedRef = useRef(false);
+  const xmlAutoLoadedRef = useRef(false);
   const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
     useProcessingLog();
 
@@ -112,76 +114,47 @@ const AIManagement: React.FC = () => {
     setSpacing(config.aiSpacing);
   }, [config.aiSpacing]);
 
+  // Load game data assets on mount from global store
   useEffect(() => {
-    let cancelled = false;
+    if (gameData && !assets) {
+      setAssets(parseJson(gameData));
+      if (!gameDataLoggedRef.current) {
+        addLog("success", `✔ Loaded r3e-data.json`);
+        gameDataLoggedRef.current = true;
+      }
+    }
+  }, [gameData, assets, addLog]);
 
-    const loadGameFiles = async () => {
+  useEffect(() => {
+    const loadAiadaptationFile = async () => {
+      if (xmlAutoLoadedRef.current) return;
       if (!electron.isElectron) {
         addLog(
-          "error",
-          "❌ Game files can only be loaded in Electron mode from game installation",
+          "warning",
+          "⚠ aiadaptation.xml can only be auto-loaded in Electron mode",
         );
         return;
       }
 
-      // Load both files in parallel
       try {
-        const [r3eDataResult, aiadaptationResult] = await Promise.all([
-          electron.findR3eDataFile(),
-          electron.findAiadaptationFile(),
-        ]);
-
-        if (cancelled) return;
-
-        // Process r3e-data.json
-        if (r3eDataResult.success && r3eDataResult.data) {
-          try {
-            const data: RaceRoomData = JSON.parse(r3eDataResult.data);
-            const parsedAssets = parseJson(data);
-            if (!cancelled) {
-              setAssets((prev) => prev ?? parsedAssets);
-              addLog(
-                "info",
-                `ℹ Loaded: ${parsedAssets.numClasses} classes and ${parsedAssets.numTracks} tracks`,
-              );
-              setR3eDataAutoLoaded(true);
-              addLog(
-                "success",
-                `✔ Loaded r3e-data.json from: ${r3eDataResult.path}`,
-              );
-            }
-          } catch (error) {
-            setR3eDataAutoLoaded(false);
-            addLog(
-              "error",
-              `❌ Failed to parse r3e-data.json from RaceRoom installation: ${error}`,
-            );
-          }
-        } else {
-          setR3eDataAutoLoaded(false);
-          addLog(
-            "error",
-            `❌ r3e-data.json not found in RaceRoom installation paths`,
-          );
-        }
-
-        // Process aiadaptation.xml
-        if (aiadaptationResult.success && aiadaptationResult.data) {
+        const result = await electron.findAiadaptationFile();
+        if (result.success && result.data) {
           try {
             const newDatabase = { ...database };
             const newPlayerTimes = { ...playerTimes };
             const added = parseAdaptive(
-              aiadaptationResult.data,
+              result.data,
               newDatabase,
               newPlayerTimes,
             );
-            if (!cancelled && added) {
+            if (added) {
               setDatabase(newDatabase);
               setPlayerTimes(newPlayerTimes);
               setXmlAutoLoaded(true);
+              xmlAutoLoadedRef.current = true;
               addLog(
                 "success",
-                `✔ Loaded aiadaptation.xml from: ${aiadaptationResult.path}`,
+                `✔ Loaded aiadaptation.xml from: ${result.path}`,
               );
             }
           } catch (error) {
@@ -196,16 +169,12 @@ const AIManagement: React.FC = () => {
           addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
         }
       } catch (error) {
-        addLog("error", `❌ Auto-load of game files failed: ${error}`);
+        addLog("error", `❌ Auto-load of aiadaptation.xml failed: ${error}`);
       }
     };
 
-    loadGameFiles();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [electron.isElectron]);
+    loadAiadaptationFile();
+  }, [electron.isElectron, addLog]);
 
   useEffect(() => {
     setProcessed(processDatabase(database));
@@ -220,7 +189,7 @@ const AIManagement: React.FC = () => {
 
       try {
         const text = await file.text();
-        const data: RaceRoomData = JSON.parse(text);
+        const data = JSON.parse(text);
         const parsedAssets = parseJson(data);
         setAssets(parsedAssets);
         addLog("success", "✔ RaceRoom data JSON loaded successfully");
@@ -494,19 +463,19 @@ const AIManagement: React.FC = () => {
           🤖 AI Management
         </Card.Header>
         <Card.Body>
-          {(!r3eDataAutoLoaded || !xmlAutoLoaded) && (
-            <Card.Text className="text-white-50 mb-4">
-              Upload RaceRoom data files to analyze and configure AI parameters
-            </Card.Text>
-          )}
+          <Card.Text className="text-white-50 mb-4">
+            {xmlAutoLoaded
+              ? "AI adaptation file loaded. You can upload a different file to replace it."
+              : "Upload RaceRoom data files to analyze and configure AI parameters"}
+          </Card.Text>
 
           <FileUploadSection
             onJsonUpload={handleJsonUpload}
             onXmlUpload={handleXmlUpload}
             assets={assets}
             xmlInputRef={xmlInputRef}
-            showJsonInput={!r3eDataAutoLoaded}
-            showXmlInput={!xmlAutoLoaded}
+            showJsonInput={false}
+            showXmlInput={true}
           />
 
           <AISelectionTable

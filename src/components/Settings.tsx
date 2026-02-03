@@ -3,6 +3,7 @@ import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import type { Config } from "../config";
 import { CFG } from "../config";
 import { useConfigStore } from "../store/configStore";
+import { useGameDataStore } from "../store/gameDataStore";
 
 type NumericConfigKey = {
   [K in keyof Config]: Config[K] extends number ? K : never;
@@ -68,6 +69,11 @@ const numberFields: NumberField[] = [
 
 export default function Settings() {
   const { config, setConfig, resetConfig } = useConfigStore();
+  const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
+  const setForceOnboarding = useGameDataStore(
+    (state) => state.setForceOnboarding,
+  );
+  const clearGameData = useGameDataStore((state) => state.clearGameData);
 
   const booleanFields = useMemo(
     () => [
@@ -155,6 +161,30 @@ export default function Settings() {
                 </Form.Group>
               </Col>
             ))}
+            {import.meta.env.DEV && (
+              <Col md={6}>
+                <Form.Group className="d-flex align-items-center justify-content-between p-3 border border-secondary rounded">
+                  <div>
+                    <div>Developer: force onboarding</div>
+                    <Form.Text className="text-white-50">
+                      Always show the GameData onboarding screen on startup.
+                    </Form.Text>
+                  </div>
+                  <Form.Check
+                    type="switch"
+                    id="forceOnboarding"
+                    checked={forceOnboarding}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setForceOnboarding(checked);
+                      if (checked) {
+                        clearGameData();
+                      }
+                    }}
+                  />
+                </Form.Group>
+              </Col>
+            )}
           </Row>
 
           <div className="d-flex justify-content-end mt-4 gap-2">
