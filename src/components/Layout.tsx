@@ -1,12 +1,8 @@
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
+import { Col, Container, Nav, Row } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
-import { Container, Row, Col, Nav } from "react-bootstrap";
 import "./Layout.css";
 import logoUrl from "/logo.png";
-
-interface LayoutProps {
-  readonly children: ReactNode;
-}
 
 interface MenuItemData {
   path: string;
@@ -30,7 +26,7 @@ const menuItems: MenuItemData[] = [
   { path: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
-export default function Layout({ children }: LayoutProps) {
+const Layout = ({ children }: PropsWithChildren<{}>) => {
   return (
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
@@ -68,4 +64,6 @@ export default function Layout({ children }: LayoutProps) {
       </Row>
     </Container>
   );
-}
+};
+
+export default Layout;

@@ -11,7 +11,7 @@ import Settings from "./pages/Settings";
 import { useGameDataStore } from "./store/gameDataStore";
 
 // Protected route component
-function ProtectedRoute({ element }: { element: React.ReactElement }) {
+const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
   const isLoaded = useGameDataStore((state) => state.isLoaded);
 
   if (!isLoaded) {
@@ -19,9 +19,9 @@ function ProtectedRoute({ element }: { element: React.ReactElement }) {
   }
 
   return element;
-}
+};
 
-function App() {
+const App = () => {
   const isLoaded = useGameDataStore((state) => state.isLoaded);
   const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
 
@@ -65,6 +65,6 @@ function App() {
       )}
     </HashRouter>
   );
-}
+};
 
 export default App;

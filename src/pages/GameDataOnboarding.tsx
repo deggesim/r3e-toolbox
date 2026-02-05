@@ -7,7 +7,7 @@ import type { RaceRoomData } from "../types";
 import { validateR3eData } from "../utils/r3eDataValidator";
 import ProcessingLog from "../components/ProcessingLog";
 
-export default function GameDataOnboarding() {
+const GameDataOnboarding = () => {
   const electron = useElectronAPI();
   const { setGameData, setForceOnboarding } = useGameDataStore();
   const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
@@ -235,4 +235,6 @@ export default function GameDataOnboarding() {
       </Card>
     </Container>
   );
-}
+};
+
+export default GameDataOnboarding;

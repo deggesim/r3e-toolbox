@@ -67,7 +67,7 @@ const numberFields: NumberField[] = [
   },
 ];
 
-export default function Settings() {
+const Settings = () => {
   const { config, setConfig, resetConfig } = useConfigStore();
   const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
   const setForceOnboarding = useGameDataStore(
@@ -194,4 +194,6 @@ export default function Settings() {
       </Card>
     </Container>
   );
-}
+};
+
+export default Settings;

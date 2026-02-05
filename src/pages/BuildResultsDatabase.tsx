@@ -28,7 +28,7 @@ import { parseResultFiles } from "../utils/raceResultParser";
 import ProcessingLog from "../components/ProcessingLog";
 import SectionTitle from "../components/SectionTitle";
 
-function buildRaceKey(race: ParsedRace): string {
+const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(
     (slot) => slot.ClassId !== undefined || slot.ClassName,
   );
@@ -38,13 +38,13 @@ function buildRaceKey(race: ParsedRace): string {
       : String(classInfo.ClassId);
   const trackPart = race.trackid ? String(race.trackid) : race.trackname;
   return `${trackPart}::${classPart}`;
-}
+};
 
-function AssetListItem({
+const AssetListItem = ({
   item,
 }: {
   readonly item: { id: string; name: string; iconUrl?: string };
-}) {
+}) => {
   return (
     <ListGroup.Item className="bg-dark border-secondary d-flex gap-2 align-items-center py-2">
       {item.iconUrl ? (
@@ -70,9 +70,9 @@ function AssetListItem({
       </div>
     </ListGroup.Item>
   );
-}
+};
 
-function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
+const AssetLists = ({ assets }: { readonly assets: LeaderboardAssets }) => {
   return (
     <Row className="g-3 mt-2">
       <Col md={6}>
@@ -137,9 +137,9 @@ function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
       </Col>
     </Row>
   );
-}
+};
 
-export default function BuildResultsDatabase() {
+const BuildResultsDatabase = () => {
   const gameData = useGameDataStore((state) => state.gameData);
   const [assets, setAssets] = useState<LeaderboardAssets | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
@@ -749,4 +749,6 @@ export default function BuildResultsDatabase() {
       </Modal>
     </Container>
   );
-}
+};
+
+export default BuildResultsDatabase;

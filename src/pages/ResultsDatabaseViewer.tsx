@@ -25,7 +25,7 @@ import ProcessingLog from "../components/ProcessingLog";
 import ChampionshipCard from "../components/ChampionshipCard";
 import SectionTitle from "../components/SectionTitle";
 
-export default function ResultsDatabaseViewer() {
+const ResultsDatabaseViewer = () => {
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
@@ -317,4 +317,6 @@ export default function ResultsDatabaseViewer() {
       </Card>
     </Container>
   );
-}
+};
+
+export default ResultsDatabaseViewer;

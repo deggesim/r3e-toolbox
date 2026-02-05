@@ -3,7 +3,7 @@ import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import ProcessingLog from "../components/ProcessingLog";
 
-export default function FixQualyTimes() {
+const FixQualyTimes = () => {
   const [qualFile, setQualFile] = useState<File | null>(null);
   const [raceFile, setRaceFile] = useState<File | null>(null);
   const qualInputRef = useRef<HTMLInputElement>(null);
@@ -265,4 +265,6 @@ export default function FixQualyTimes() {
       </Modal>
     </Container>
   );
-}
+};
+
+export default FixQualyTimes;

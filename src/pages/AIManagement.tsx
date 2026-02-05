@@ -23,7 +23,7 @@ import AISelectionTable from "../components/AISelectionTable";
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
  */
-function removeGeneratedFromTrack(track: DatabaseTrack): number {
+const removeGeneratedFromTrack = (track: DatabaseTrack): number => {
   track.samplesCount = track.samplesCount || {};
   let removedCount = 0;
 
@@ -37,12 +37,12 @@ function removeGeneratedFromTrack(track: DatabaseTrack): number {
   }
 
   return removedCount;
-}
+};
 
 /**
  * Recalculates min/max AI levels for a track after removal
  */
-function recalculateTrackMinMax(track: DatabaseTrack): void {
+const recalculateTrackMinMax = (track: DatabaseTrack): void => {
   const aiLevels = Object.keys(track.ailevels).map(Number);
   if (aiLevels.length > 0) {
     track.minAI = Math.min(...aiLevels);
@@ -51,12 +51,12 @@ function recalculateTrackMinMax(track: DatabaseTrack): void {
     delete track.minAI;
     delete track.maxAI;
   }
-}
+};
 
 /**
  * Recalculates min/max AI levels for a class based on all tracks
  */
-function recalculateClassMinMax(classData: DatabaseClass): void {
+const recalculateClassMinMax = (classData: DatabaseClass): void => {
   const allTrackAIs = Object.values(classData.tracks).flatMap((t) =>
     Object.keys(t.ailevels).map(Number),
   );
@@ -67,7 +67,7 @@ function recalculateClassMinMax(classData: DatabaseClass): void {
     delete classData.minAI;
     delete classData.maxAI;
   }
-}
+};
 
 const AIManagement: React.FC = () => {
   const { config } = useConfigStore();

@@ -7,7 +7,7 @@ interface ProcessingLogProps {
   logsEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function ProcessingLog({
+const ProcessingLog = ({
   logs,
   getLogVariant,
   logsEndRef,
@@ -50,4 +50,6 @@ export default function ProcessingLog({
       </Card.Body>
     </Card>
   );
-}
+};
+
+export default ProcessingLog;
