@@ -13,20 +13,20 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import ProcessingLog from "../components/ProcessingLog";
+import SectionTitle from "../components/SectionTitle";
 import { useProcessingLog } from "../hooks/useProcessingLog";
-import { useGameDataStore } from "../store/gameDataStore";
 import { useChampionshipStore } from "../store/championshipStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import type { ChampionshipEntry, LeaderboardAssets } from "../types";
 import type { ParsedRace } from "../types/raceResults";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
-import { convertAssetsForHTML } from "../utils/assetConverter";
 import { parseResultFiles } from "../utils/raceResultParser";
-import ProcessingLog from "../components/ProcessingLog";
-import SectionTitle from "../components/SectionTitle";
 
 const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(

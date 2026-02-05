@@ -9,12 +9,12 @@ import { useConfigStore } from "../store/configStore";
  * Returns a function that can predict lap times for any AI level between 80-120.
  * Returns undefined if the track doesn't have enough data or if validation fails.
  */
-function trackGenerator(
+const trackGenerator = (
   _classid: string,
   _trackid: string,
   track: any,
   config: Config,
-): ((t: number) => number) | undefined {
+): ((t: number) => number) | undefined => {
   // Validate: need at least testMinAIdiffs difference between min and max AI levels
   if (!track.maxAI || track.maxAI - track.minAI < config.testMinAIdiffs)
     return undefined;
@@ -100,14 +100,14 @@ function trackGenerator(
   const accepted =
     tested - passed <= Math.max(1, tested * config.testMaxFailsPct);
   return accepted ? generator : undefined;
-}
+};
 
 /**
  * Process the database to generate AI level predictions for all tracks/classes.
  * For each track with sufficient data points, a linear fit is computed and used
  * to generate predicted lap times for AI levels 80-120 in 1-point increments.
  */
-export function processDatabase(database: Database): ProcessedDatabase {
+export const processDatabase = (database: Database): ProcessedDatabase => {
   const config = useConfigStore.getState().config;
   const filtered: ProcessedDatabase = { classes: {} };
 
@@ -143,4 +143,4 @@ export function processDatabase(database: Database): ProcessedDatabase {
   }
 
   return filtered;
-}
+};

@@ -5,10 +5,10 @@ const LEADERBOARD_URL = "https://game.raceroom.com/leaderboard";
 
 type Bucket = "cars" | "tracks";
 
-function addOption(
+const addOption = (
   target: Map<string, LeaderboardAsset>,
   option: HTMLOptionElement,
-): void {
+): void => {
   const id = option.getAttribute("value")?.trim();
   if (!id || id.toLowerCase() === "all") return;
 
@@ -18,9 +18,9 @@ function addOption(
   if (!target.has(id)) {
     target.set(id, { id, name, iconUrl });
   }
-}
+};
 
-function collectOptions(
+const collectOptions = (
   doc: Document,
   selector: string,
   bucket: Bucket,
@@ -28,7 +28,7 @@ function collectOptions(
     cars: Map<string, LeaderboardAsset>;
     tracks: Map<string, LeaderboardAsset>;
   },
-): void {
+): void => {
   const container = doc.querySelector(selector);
   if (!container) return;
 
@@ -36,25 +36,25 @@ function collectOptions(
   container.querySelectorAll("option").forEach((opt) => {
     addOption(target, opt);
   });
-}
+};
 
-function detectBucket(option: HTMLOptionElement): Bucket | undefined {
+const detectBucket = (option: HTMLOptionElement): Bucket | undefined => {
   const parentWithType = option.closest("[data-type]");
   const dataType = (parentWithType as HTMLElement)?.dataset.type || "";
 
   if (dataType.includes("car_class")) return "cars";
   if (dataType.includes("track")) return "tracks";
   return undefined;
-}
+};
 
-function ensureDomParser(): DOMParser {
+const ensureDomParser = (): DOMParser => {
   if (typeof DOMParser === "undefined") {
     throw new TypeError("DOMParser not available in this environment");
   }
   return new DOMParser();
-}
+};
 
-function parseHtml(html: string): LeaderboardAssets {
+const parseHtml = (html: string): LeaderboardAssets => {
   const parser = ensureDomParser();
   const doc = parser.parseFromString(html, "text/html");
 
@@ -94,12 +94,12 @@ function parseHtml(html: string): LeaderboardAssets {
     cars: toSortedArray(acc.cars),
     tracks: toSortedArray(acc.tracks),
   };
-}
+};
 
-export async function fetchLeaderboardAssets(options?: {
+export const fetchLeaderboardAssets = async (options?: {
   htmlOverride?: string;
   signal?: AbortSignal;
-}): Promise<LeaderboardAssets> {
+}): Promise<LeaderboardAssets> => {
   const { htmlOverride, signal } = options || {};
 
   if (htmlOverride) {
@@ -114,7 +114,7 @@ export async function fetchLeaderboardAssets(options?: {
   }
   const html = await response.text();
   return parseHtml(html);
-}
+};
 
 /**
  * Fetch leaderboard assets with automatic caching via Zustand store.
@@ -126,10 +126,10 @@ export async function fetchLeaderboardAssets(options?: {
  * @param options.signal - AbortSignal for request cancellation
  * @returns Cached or freshly fetched leaderboard assets
  */
-export async function fetchLeaderboardAssetsWithCache(options?: {
+export const fetchLeaderboardAssetsWithCache = async (options?: {
   forceRefresh?: boolean;
   signal?: AbortSignal;
-}): Promise<LeaderboardAssets> {
+}): Promise<LeaderboardAssets> => {
   const { forceRefresh = false, signal } = options || {};
   const store = useLeaderboardAssetsStore.getState();
 
@@ -141,10 +141,10 @@ export async function fetchLeaderboardAssetsWithCache(options?: {
   try {
     useLeaderboardAssetsStore.getState().setLoading(true);
     const assets = await fetchLeaderboardAssets({ signal });
-    
+
     // Save to store
     useLeaderboardAssetsStore.getState().setAssets(assets);
-    
+
     return assets;
   } catch (error) {
     const message =
@@ -152,5 +152,4 @@ export async function fetchLeaderboardAssetsWithCache(options?: {
     useLeaderboardAssetsStore.getState().setError(message);
     throw error;
   }
-}
-
+};

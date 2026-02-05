@@ -10,7 +10,7 @@ export interface ValidationResult {
  * Validates the structure of r3e-data.json file
  * Ensures all required fields are present and properly formatted
  */
-export function validateR3eData(data: unknown): ValidationResult {
+export const validateR3eData = (data: unknown): ValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -63,14 +63,14 @@ export function validateR3eData(data: unknown): ValidationResult {
     errors,
     warnings,
   };
-}
+};
 
 /**
  * Validates the classes object structure
  */
-function validateClasses(
+const validateClasses = (
   classes: Record<string, unknown>,
-): Pick<ValidationResult, "errors" | "warnings"> {
+): Pick<ValidationResult, "errors" | "warnings"> => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -148,14 +148,14 @@ function validateClasses(
   }
 
   return { errors, warnings };
-}
+};
 
 /**
  * Validates the tracks object structure
  */
-function validateTracks(
+const validateTracks = (
   tracks: Record<string, unknown>,
-): Pick<ValidationResult, "errors" | "warnings"> {
+): Pick<ValidationResult, "errors" | "warnings"> => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -265,13 +265,13 @@ function validateTracks(
   }
 
   return { errors, warnings };
-}
+};
 
 /**
  * Validates and parses r3e-data.json content
  * Throws an error with detailed message if validation fails
  */
-export function parseAndValidateR3eData(content: string): RaceRoomData {
+export const parseAndValidateR3eData = (content: string): RaceRoomData => {
   let parsed: unknown;
 
   // Step 1: Parse JSON
@@ -302,13 +302,13 @@ export function parseAndValidateR3eData(content: string): RaceRoomData {
   }
 
   return parsed as RaceRoomData;
-}
+};
 
 /**
  * Quick validation check without detailed error messages
  * Useful for pre-validation before attempting full parse
  */
-export function isValidR3eDataStructure(data: unknown): boolean {
+export const isValidR3eDataStructure = (data: unknown): boolean => {
   if (!data || typeof data !== "object") return false;
 
   const gameData = data as Partial<RaceRoomData>;
@@ -322,4 +322,4 @@ export function isValidR3eDataStructure(data: unknown): boolean {
     Object.keys(gameData.classes).length > 0 &&
     Object.keys(gameData.tracks).length > 0
   );
-}
+};

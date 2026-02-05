@@ -4,10 +4,10 @@ import type { LeaderboardAssets } from "../types";
  * Converts LeaderboardAssets to HTML-friendly format with icon URL maps
  * Supports indexing by both name and ID
  */
-export function convertAssetsForHTML(
+export const convertAssetsForHTML = (
   assets: LeaderboardAssets | null,
   includeCarNames: boolean = false,
-) {
+) => {
   if (!assets) return undefined;
 
   const carsMap: Record<string, string> = {};
@@ -35,4 +35,4 @@ export function convertAssetsForHTML(
   }
 
   return result;
-}
+};

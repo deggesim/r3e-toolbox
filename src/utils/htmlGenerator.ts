@@ -41,7 +41,7 @@ interface BestTime {
 
 const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
-function parseTime(timeStr: string | undefined): number {
+const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
   const parts = timeStr.split(":");
   if (parts.length === 3) {
@@ -52,17 +52,17 @@ function parseTime(timeStr: string | undefined): number {
     return m * 60 + s;
   }
   return Infinity;
-}
+};
 
-function formatTimeDiff(baseMs: number, currentMs: number): string {
+const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   const diff = currentMs - baseMs;
   if (diff === 0) return "";
   const sign = diff > 0 ? "+ " : "- ";
   const absDiff = Math.abs(diff) / 1000;
   return `${sign}${absDiff.toFixed(3)}`;
-}
+};
 
-function getRacePosition(slots: RaceSlot[], driver: string): number | null {
+const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
   const sortedSlots = [...slots].sort((a, b) => {
     const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
     const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
@@ -75,9 +75,9 @@ function getRacePosition(slots: RaceSlot[], driver: string): number | null {
 
   const index = sortedSlots.findIndex((s) => s.Driver === driver);
   return index >= 0 && sortedSlots[index].TotalTime ? index + 1 : null;
-}
+};
 
-function calculateDriverStandings(races: ParsedRace[]): DriverStanding[] {
+const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
   const driverMap = new Map<
     string,
     {
@@ -150,9 +150,9 @@ function calculateDriverStandings(races: ParsedRace[]): DriverStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateTeamStandings(races: ParsedRace[]): TeamStanding[] {
+const calculateTeamStandings = (races: ParsedRace[]): TeamStanding[] => {
   const teamMap = new Map<
     string,
     { entries: Set<string>; racePoints: (number | null)[] }
@@ -207,9 +207,9 @@ function calculateTeamStandings(races: ParsedRace[]): TeamStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateVehicleStandings(races: ParsedRace[]): VehicleStanding[] {
+const calculateVehicleStandings = (races: ParsedRace[]): VehicleStanding[] => {
   const vehicleMap = new Map<
     string,
     { vehicleId?: number; entries: Set<string>; racePoints: (number | null)[] }
@@ -266,9 +266,12 @@ function calculateVehicleStandings(races: ParsedRace[]): VehicleStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function getBestLapTimes(races: ParsedRace[], topN: number = 20): BestTime[][] {
+const getBestLapTimes = (
+  races: ParsedRace[],
+  topN: number = 20,
+): BestTime[][] => {
   return races.map((race) => {
     const times: BestTime[] = race.slots
       .filter((s) => s.BestLap)
@@ -284,12 +287,12 @@ function getBestLapTimes(races: ParsedRace[], topN: number = 20): BestTime[][] {
 
     return times.slice(0, topN);
   });
-}
+};
 
-function getBestQualifyingTimes(
+const getBestQualifyingTimes = (
   races: ParsedRace[],
   topN: number = 20,
-): BestTime[][] {
+): BestTime[][] => {
   return races.map((race) => {
     const times: BestTime[] = race.slots
       .filter((s) => s.QualTime)
@@ -305,9 +308,9 @@ function getBestQualifyingTimes(
 
     return times.slice(0, topN);
   });
-}
+};
 
-export function generateStandingsHTML(
+export const generateStandingsHTML = (
   races: ParsedRace[],
   championshipName: string,
   leaderboardAssets?: {
@@ -316,7 +319,7 @@ export function generateStandingsHTML(
     carNames?: Record<string, string>;
   },
   gameData?: Record<string, any> | null,
-): string {
+): string => {
   const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
     const vehicleIdStr =
       vehicleId !== undefined ? String(vehicleId) : undefined;
@@ -973,11 +976,11 @@ body {
   </div>
 </body>
 </html>`;
-}
+};
 
-export function generateChampionshipIndexHTML(
+export const generateChampionshipIndexHTML = (
   championships: ChampionshipEntry[],
-): string {
+): string => {
   const sorted = [...championships].sort((a, b) =>
     b.generatedAt.localeCompare(a.generatedAt),
   );
@@ -1127,9 +1130,9 @@ export function generateChampionshipIndexHTML(
   </div>
 </body>
 </html>`;
-}
+};
 
-export function downloadHTML(html: string, filename: string): void {
+export const downloadHTML = (html: string, filename: string): void => {
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1139,4 +1142,4 @@ export function downloadHTML(html: string, filename: string): void {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-}
+};

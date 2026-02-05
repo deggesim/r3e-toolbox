@@ -18,10 +18,10 @@ interface StandingsEntry {
   positions: number[];
 }
 
-export function calculateRacePoints(
+export const calculateRacePoints = (
   race: ParsedRace,
   pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
-): Map<string, number> {
+): Map<string, number> => {
   const pointsMap = new Map<string, number>();
 
   // Sort by finish time
@@ -52,7 +52,7 @@ export function calculateRacePoints(
   });
 
   return pointsMap;
-}
+};
 
 function parseTimeToSeconds(timeStr: string | undefined): number | null {
   if (!timeStr) return null;
@@ -74,14 +74,14 @@ function parseTimeToSeconds(timeStr: string | undefined): number | null {
   return Number.isNaN(seconds) ? null : seconds;
 }
 
-export function buildStandings(
+export const buildStandings = (
   races: ParsedRace[],
   pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
 ): {
   drivers: StandingsEntry[];
   teams: Map<string, number>;
   vehicles: Map<string, number>;
-} {
+} => {
   const driverStats = new Map<string, DriverPoints>();
   const driverInfo = new Map<string, { vehicle: string; team: string }>();
   const teamPoints = new Map<string, number>();
@@ -162,11 +162,11 @@ export function buildStandings(
   });
 
   return { drivers, teams: teamPoints, vehicles: vehiclePoints };
-}
+};
 
-export function getBestLapTimes(
+export const getBestLapTimes = (
   races: ParsedRace[],
-): Array<{ driver: string; time: string; track: string; vehicle: string }> {
+): Array<{ driver: string; time: string; track: string; vehicle: string }> => {
   const bestLaps: Array<{
     driver: string;
     time: string;
@@ -196,11 +196,11 @@ export function getBestLapTimes(
   bestLaps.sort((a, b) => a.seconds - b.seconds);
 
   return bestLaps.slice(0, 20).map(({ seconds, ...rest }) => rest);
-}
+};
 
-export function getBestQualifyingTimes(
+export const getBestQualifyingTimes = (
   races: ParsedRace[],
-): Array<{ driver: string; time: string; track: string; vehicle: string }> {
+): Array<{ driver: string; time: string; track: string; vehicle: string }> => {
   const bestQuals: Array<{
     driver: string;
     time: string;
@@ -230,14 +230,14 @@ export function getBestQualifyingTimes(
   bestQuals.sort((a, b) => a.seconds - b.seconds);
 
   return bestQuals.slice(0, 20).map(({ seconds, ...rest }) => rest);
-}
+};
 
-export function buildRaceDatabase(
+export const buildRaceDatabase = (
   races: ParsedRace[],
   description: string = "",
-): RaceDatabase {
+): RaceDatabase => {
   return {
     description,
     races,
   };
-}
+};

@@ -14,10 +14,10 @@ export interface FitResult {
  * Uses normal equations: (A^T * A)^(-1) * A^T * Y
  * Solves via LU decomposition for numerical stability.
  */
-export function fitLinear(xValues: number[], yValues: number[]): FitResult {
+export const fitLinear = (xValues: number[], yValues: number[]): FitResult => {
   if (xValues.length !== yValues.length || xValues.length < 2) {
     throw new Error(
-      "Invalid input: x and y must have same length and at least 2 points"
+      "Invalid input: x and y must have same length and at least 2 points",
     );
   }
 
@@ -36,12 +36,15 @@ export function fitLinear(xValues: number[], yValues: number[]): FitResult {
   const X = math.lusolve(ATA, ATY) as number[][];
 
   return { a: X[0][0], b: X[1][0] };
-}
+};
 
-export function fitParabola(xValues: number[], yValues: number[]): FitResult {
+export const fitParabola = (
+  xValues: number[],
+  yValues: number[],
+): FitResult => {
   if (xValues.length !== yValues.length || xValues.length < 3) {
     throw new Error(
-      "Invalid input: x and y must have same length and at least 3 points"
+      "Invalid input: x and y must have same length and at least 3 points",
     );
   }
 
@@ -60,20 +63,22 @@ export function fitParabola(xValues: number[], yValues: number[]): FitResult {
   const X = math.lusolve(ATA, ATY) as number[][];
 
   return { a: X[0][0], b: X[1][0], c: X[2][0] };
-}
+};
 
-export function computeTime(times: number[]): {
+export const computeTime = (
+  times: number[],
+): {
   num: number;
   avg: number;
   variance: number;
-} {
+} => {
   const num = times?.length || 0;
   if (num < 1) return { num: 0, avg: 0, variance: 0 };
 
   const avg = times.reduce((sum, t) => sum + t, 0) / num;
   const variance = Math.sqrt(
-    times.reduce((sum, t) => sum + (t - avg) ** 2, 0) / num
+    times.reduce((sum, t) => sum + (t - avg) ** 2, 0) / num,
   );
 
   return { num, avg, variance };
-}
+};
