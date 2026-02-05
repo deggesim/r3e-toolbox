@@ -4,7 +4,7 @@ export interface RaceSlot {
   Driver: string;
   Team: string;
   Vehicle: string;
-  VehicleId?: string;
+  VehicleId?: number;
   UserId?: number;
   ClassName?: string;
   ClassId?: number;

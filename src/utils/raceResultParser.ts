@@ -26,7 +26,10 @@ function millisecondsToTime(ms: number): string {
   return formatTime(ms / 1000);
 }
 
-function resolveClassInfo(vehicleId: number | undefined, gameData: RaceRoomData): { classId?: number; className?: string } {
+function resolveClassInfo(
+  vehicleId: number | undefined,
+  gameData: RaceRoomData,
+): { classId?: number; className?: string } {
   if (!vehicleId || !gameData.cars) return {};
   const car = gameData.cars[String(vehicleId)];
   if (!car?.Class) return {};
@@ -34,6 +37,15 @@ function resolveClassInfo(vehicleId: number | undefined, gameData: RaceRoomData)
   const classData = gameData.classes?.[String(classId)];
   const className = classData?.Name;
   return { classId, className };
+}
+
+function resolveVehicleName(
+  vehicleId: number | undefined,
+  gameData: RaceRoomData,
+): string | undefined {
+  if (!vehicleId || !gameData.cars) return undefined;
+  const car = gameData.cars[String(vehicleId)];
+  return car?.Name;
 }
 
 function buildTrackLookup(data: RaceRoomData): {
@@ -76,12 +88,17 @@ function findTrack(
 
 function processSessionPlayers(
   session: RaceSession,
+  gameData: RaceRoomData,
 ): RaceSlot[] {
   const slots: RaceSlot[] = [];
 
   for (const player of session.Players) {
     const driver = player.Username;
-    const vehicle = player.CarName || String(player.CarId || "");
+    const vehicleId = player.CarId;
+    const vehicleName =
+      player.CarName ||
+      resolveVehicleName(vehicleId, gameData) ||
+      (vehicleId ? String(vehicleId) : "");
     const team = player.Team || driver;
 
     const totalTime = player.TotalTime
@@ -93,8 +110,8 @@ function processSessionPlayers(
 
     slots.push({
       Driver: driver,
-      Vehicle: vehicle,
-      VehicleId: String(player.CarId || ""),
+      Vehicle: vehicleName,
+      VehicleId: vehicleId,
       UserId: player.UserId ? Number(player.UserId) : undefined,
       ClassName: player.ClassName,
       ClassId: player.ClassId,
@@ -111,14 +128,11 @@ function processSessionPlayers(
 
 function resolveMissingClassInfo(
   slots: RaceSlot[],
-  gameData: RaceRoomData
+  gameData: RaceRoomData,
 ): void {
   for (const slot of slots) {
     if (!slot.ClassName && !slot.ClassId && slot.VehicleId) {
-      const { classId, className } = resolveClassInfo(
-        Number.parseInt(slot.VehicleId, 10),
-        gameData,
-      );
+      const { classId, className } = resolveClassInfo(slot.VehicleId, gameData);
       if (classId) slot.ClassId = classId;
       if (className) slot.ClassName = className;
     }
@@ -127,7 +141,7 @@ function resolveMissingClassInfo(
 
 function addQualifyingTimes(
   slots: RaceSlot[],
-  sessQualify: RaceSession | undefined
+  sessQualify: RaceSession | undefined,
 ): void {
   if (!sessQualify) return;
   for (const player of sessQualify.Players) {
@@ -176,7 +190,7 @@ function parseMultiplayerResult(
     return null;
   }
 
-  const slots1 = processSessionPlayers(sessRace);
+  const slots1 = processSessionPlayers(sessRace, gameData);
   resolveMissingClassInfo(slots1, gameData);
   addQualifyingTimes(slots1, sessQualify);
 
@@ -192,7 +206,7 @@ function parseMultiplayerResult(
 
   if (sessRace2) {
     const date2 = new Date((timestamp + 1) * 1000);
-    const slots2 = processSessionPlayers(sessRace2);
+    const slots2 = processSessionPlayers(sessRace2, gameData);
     resolveMissingClassInfo(slots2, gameData);
     addQualifyingTimes(slots2, sessQualify);
     results.push({
@@ -209,7 +223,7 @@ function parseMultiplayerResult(
 
 function buildSinglePlayerRaceSlot(
   driver: any,
-  gameData: RaceRoomData
+  gameData: RaceRoomData,
 ): RaceSlot {
   const totalTime = driver.raceTimeMs
     ? millisecondsToTime(driver.raceTimeMs)
@@ -234,6 +248,10 @@ function buildSinglePlayerRaceSlot(
 
   const vehicleId = driver.carId || undefined;
   const { classId, className } = resolveClassInfo(vehicleId, gameData);
+  const vehicleName =
+    driver.carName ||
+    resolveVehicleName(vehicleId, gameData) ||
+    (vehicleId ? String(vehicleId) : "");
 
   const rawUserId =
     driver.userId ?? driver.UserId ?? driver.userid ?? undefined;
@@ -250,8 +268,8 @@ function buildSinglePlayerRaceSlot(
 
   return {
     Driver: driver.name,
-    Vehicle: driver.carName || String(driver.carId || ""),
-    VehicleId: String(driver.carId || ""),
+    Vehicle: vehicleName,
+    VehicleId: vehicleId,
     UserId: Number.isFinite(userId) ? userId : undefined,
     ClassName: driver.className || driver.ClassName || className,
     ClassId: driver.classId ?? driver.ClassId ?? classId,
@@ -286,7 +304,7 @@ function parseSinglePlayerResult(
 
   const timestring = json.header.time;
   const slots: RaceSlot[] = json.drivers.map((driver) =>
-    buildSinglePlayerRaceSlot(driver, gameData)
+    buildSinglePlayerRaceSlot(driver, gameData),
   );
 
   return {

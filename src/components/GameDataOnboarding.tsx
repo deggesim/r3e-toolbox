@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
@@ -9,17 +9,20 @@ import ProcessingLog from "./ProcessingLog";
 
 export default function GameDataOnboarding() {
   const electron = useElectronAPI();
-  const { setGameData, forceOnboarding, setForceOnboarding, isLoaded } =
-    useGameDataStore();
+  const { setGameData, setForceOnboarding } = useGameDataStore();
   const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadSuccess, setLoadSuccess] = useState(false);
+  const autoLoadAttemptedRef = useRef(false);
 
   // Try to load game data automatically on mount
   useEffect(() => {
     const autoLoadGameData = async () => {
-      if (forceOnboarding || isLoaded) return;
+      // Prevent double execution in React StrictMode (dev mode)
+      if (autoLoadAttemptedRef.current) return;
+      autoLoadAttemptedRef.current = true;
+
       if (!electron.isElectron) {
         addLog(
           "warning",
@@ -86,7 +89,7 @@ export default function GameDataOnboarding() {
     };
 
     autoLoadGameData();
-  }, [electron.isElectron, forceOnboarding, isLoaded, setGameData, addLog]);
+  }, [electron.isElectron]);
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,

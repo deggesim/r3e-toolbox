@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { Card, Container, Form, Button, Alert, Modal } from "react-bootstrap";
+import { useRef, useState } from "react";
+import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import ProcessingLog from "./ProcessingLog";
 
 export default function FixQualyTimes() {
   const [qualFile, setQualFile] = useState<File | null>(null);
   const [raceFile, setRaceFile] = useState<File | null>(null);
+  const qualInputRef = useRef<HTMLInputElement>(null);
+  const raceInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadData, setDownloadData] = useState<{
     fileName: string;
@@ -21,13 +22,13 @@ export default function FixQualyTimes() {
     JSON.stringify(event1) === JSON.stringify(event2);
 
   const processFiles = async () => {
+    setLogs([]);
     if (!qualFile || !raceFile) {
-      setError("Please select both qualification and race files");
+      addLog("warning", "Please select both qualification and race files");
       return;
     }
 
     setIsProcessing(true);
-    setError(null);
     setLogs([]);
 
     try {
@@ -51,7 +52,7 @@ export default function FixQualyTimes() {
 
       // Validation 2: bestLapTimeMs must be valid
       qual.drivers.forEach((d: any) => {
-        if (typeof d.bestLapTimeMs !== "number") {
+        if (typeof d.bestLapTimeMs !== "number" || d.bestLapTimeMs <= -1) {
           throw new TypeError(
             `❌ ERROR: Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
           );
@@ -61,6 +62,16 @@ export default function FixQualyTimes() {
         "success",
         "✔ All qualification drivers have valid bestLapTimeMs.",
       );
+
+      // Validation 3: raceTimeMs must be > -1
+      race.drivers.forEach((d: any) => {
+        if (typeof d.raceTimeMs !== "number" || d.raceTimeMs <= -1) {
+          throw new TypeError(
+            `❌ ERROR: Driver '${d.name}' has invalid raceTimeMs: ${d.raceTimeMs}`,
+          );
+        }
+      });
+      addLog("success", "✔ All race drivers have valid raceTimeMs.");
 
       // Build map from name → bestLapTimeMs
       const qualTimesMap = new Map(
@@ -101,7 +112,6 @@ export default function FixQualyTimes() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       addLog("error", errorMessage);
-      setError(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -111,7 +121,10 @@ export default function FixQualyTimes() {
     setQualFile(null);
     setRaceFile(null);
     setLogs([]);
-    setError(null);
+
+    // Reset input file elements
+    if (qualInputRef.current) qualInputRef.current.value = "";
+    if (raceInputRef.current) raceInputRef.current.value = "";
   };
 
   const handleDownload = () => {
@@ -154,6 +167,7 @@ export default function FixQualyTimes() {
             <Form.Group className="mb-3">
               <Form.Label>Qualification File (.txt)</Form.Label>
               <Form.Control
+                ref={qualInputRef}
                 type="file"
                 accept=".txt,.json"
                 onChange={(e) =>
@@ -171,6 +185,7 @@ export default function FixQualyTimes() {
             <Form.Group className="mb-3">
               <Form.Label>Race File (.txt)</Form.Label>
               <Form.Control
+                ref={raceInputRef}
                 type="file"
                 accept=".txt,.json"
                 onChange={(e) =>
@@ -184,16 +199,6 @@ export default function FixQualyTimes() {
                 </Form.Text>
               )}
             </Form.Group>
-
-            {error && (
-              <Alert
-                variant="danger"
-                dismissible
-                onClose={() => setError(null)}
-              >
-                {error}
-              </Alert>
-            )}
 
             <div className="d-flex gap-2">
               <Button

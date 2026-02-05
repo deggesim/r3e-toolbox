@@ -114,6 +114,10 @@ const AIManagement: React.FC = () => {
     setSpacing(config.aiSpacing);
   }, [config.aiSpacing]);
 
+  useEffect(() => {
+    setProcessed(processDatabase(database));
+  }, [config, database]);
+
   // Load game data assets on mount from global store
   useEffect(() => {
     if (gameData && !assets) {
@@ -127,6 +131,7 @@ const AIManagement: React.FC = () => {
   useEffect(() => {
     const loadAiadaptationFile = async () => {
       if (xmlAutoLoadedRef.current) return;
+      xmlAutoLoadedRef.current = true;
       if (!electron.isElectron) {
         addLog(
           "warning",
@@ -150,7 +155,6 @@ const AIManagement: React.FC = () => {
               setDatabase(newDatabase);
               setPlayerTimes(newPlayerTimes);
               setXmlAutoLoaded(true);
-              xmlAutoLoadedRef.current = true;
               addLog(
                 "success",
                 `✔ Loaded aiadaptation.xml from: ${result.path}`,
@@ -173,31 +177,9 @@ const AIManagement: React.FC = () => {
     };
 
     loadAiadaptationFile();
-  }, [electron.isElectron, addLog]);
-
-  useEffect(() => {
-    setProcessed(processDatabase(database));
-  }, [config, database]);
+  }, [electron.isElectron]);
 
   // ============ FILE UPLOAD HANDLERS ============
-
-  const handleJsonUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        const parsedAssets = parseJson(data);
-        setAssets(parsedAssets);
-        addLog("success", "✔ RaceRoom data JSON loaded successfully");
-      } catch (error) {
-        addLog("error", "❌ Error parsing JSON file");
-      }
-    },
-    [addLog],
-  );
 
   const handleXmlUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -465,16 +447,13 @@ const AIManagement: React.FC = () => {
           <Card.Text className="text-white-50 mb-4">
             {xmlAutoLoaded
               ? "AI adaptation file loaded. You can upload a different file to replace it."
-              : "Upload RaceRoom data files to analyze and configure AI parameters"}
+              : "Upload AI adaptation file to analyze and configure AI parameters"}
           </Card.Text>
 
           <FileUploadSection
-            onJsonUpload={handleJsonUpload}
             onXmlUpload={handleXmlUpload}
             assets={assets}
             xmlInputRef={xmlInputRef}
-            showJsonInput={false}
-            showXmlInput={true}
           />
 
           <AISelectionTable

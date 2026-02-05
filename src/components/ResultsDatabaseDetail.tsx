@@ -11,7 +11,7 @@ interface DriverStanding {
   position: number;
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   team: string;
   points: number;
@@ -30,7 +30,7 @@ interface TeamStanding {
 interface VehicleStanding {
   position: number;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   entries: number;
   points: number;
   racePoints: (number | null)[];
@@ -39,7 +39,7 @@ interface VehicleStanding {
 interface BestTime {
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   time: string;
   timeMs: number;
@@ -96,7 +96,7 @@ function calculateDriverStandings(races: any[]): DriverStanding[] {
     string,
     {
       vehicle: string;
-      vehicleId?: string;
+      vehicleId?: number;
       isHuman: boolean;
       team: string;
       raceResults: (number | null)[];
@@ -214,7 +214,7 @@ function calculateVehicleStandings(races: any[]): VehicleStanding[] {
   const vehicleMap = new Map<
     string,
     {
-      vehicleId?: string;
+      vehicleId?: number;
       entries: Set<string>;
       racePoints: (number | null)[];
     }
@@ -374,10 +374,11 @@ export default function ResultsDatabaseDetail() {
     };
   }, [championship]);
 
-  const getVehicleIcon = (vehicleId?: string) => {
-    if (!vehicleId || !leaderboardAssets) return null;
+  const getVehicleIcon = (vehicleId?: number) => {
+    if (vehicleId === undefined || !leaderboardAssets) return null;
+    const vehicleIdStr = String(vehicleId);
     const icon = leaderboardAssets.cars.find(
-      (c) => c.id === vehicleId,
+      (c) => c.id === vehicleIdStr,
     )?.iconUrl;
     return icon || null;
   };
@@ -390,19 +391,21 @@ export default function ResultsDatabaseDetail() {
     return icon || null;
   };
 
-  const getVehicleName = (vehicleId?: string, vehicleName?: string): string => {
-    if (vehicleName && vehicleName !== vehicleId) return vehicleName;
-    if (!vehicleId) return vehicleName || "";
+  const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
+    const vehicleIdStr =
+      vehicleId !== undefined ? String(vehicleId) : undefined;
+    if (vehicleName && vehicleName !== vehicleIdStr) return vehicleName;
+    if (vehicleId === undefined) return vehicleName || "";
     // Try to get the name from leaderboard assets
     if (leaderboardAssets) {
       const classData = leaderboardAssets.cars.find(
-        (c) => c.id === vehicleId,
+        (c) => c.id === vehicleIdStr,
       );
       if (classData?.name) {
         return classData.name;
       }
     }
-    return vehicleName || vehicleId || "";
+    return vehicleName || vehicleIdStr || "";
   };
 
   if (!championship) {

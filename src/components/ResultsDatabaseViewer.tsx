@@ -11,6 +11,8 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useChampionshipStore } from "../store/championshipStore";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import type { ChampionshipEntry } from "../types";
 import {
   downloadHTML,
@@ -38,6 +40,8 @@ export default function ResultsDatabaseViewer() {
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
   const clearAll = useChampionshipStore((state) => state.clear);
+  const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
+  const gameData = useGameDataStore((state) => state.gameData);
   const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,10 +80,10 @@ export default function ResultsDatabaseViewer() {
         }
         return new Date(champ.generatedAt).getTime();
       };
-      
+
       const dateA = getFirstRaceDate(a);
       const dateB = getFirstRaceDate(b);
-      
+
       // Ordine decrescente (più recenti prima)
       return dateB - dateA;
     });
@@ -91,6 +95,30 @@ export default function ResultsDatabaseViewer() {
 
   const totalRaces = championships.reduce((sum, champ) => sum + champ.races, 0);
 
+  const convertAssetsForHTML = () => {
+    if (!leaderboardAssets) return undefined;
+
+    const carsMap: Record<string, string> = {};
+    const tracksMap: Record<string, string> = {};
+    const carNamesMap: Record<string, string> = {};
+
+    leaderboardAssets.cars.forEach((c) => {
+      carsMap[c.id] = c.iconUrl || "";
+      carNamesMap[c.id] = c.name;
+    });
+
+    leaderboardAssets.tracks.forEach((t) => {
+      tracksMap[t.name] = t.iconUrl || "";
+      tracksMap[t.id] = t.iconUrl || "";
+    });
+
+    return {
+      cars: carsMap,
+      tracks: tracksMap,
+      carNames: carNamesMap,
+    };
+  };
+
   const handleDownloadChampionship = (championship: ChampionshipEntry) => {
     if (!championship.raceData || championship.raceData.length === 0) {
       addLog(
@@ -101,7 +129,13 @@ export default function ResultsDatabaseViewer() {
     }
 
     const races = championship.raceData;
-    const html = generateStandingsHTML(races, championship.alias);
+    const assetsForHTML = convertAssetsForHTML();
+    const html = generateStandingsHTML(
+      races,
+      championship.alias,
+      assetsForHTML,
+      gameData,
+    );
 
     downloadHTML(html, championship.fileName);
     addLog("success", `📥 Downloaded ${championship.fileName}`);
