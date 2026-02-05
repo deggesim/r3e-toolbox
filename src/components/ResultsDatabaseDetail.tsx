@@ -464,13 +464,13 @@ export default function ResultsDatabaseDetail() {
   const handleDownloadHTML = () => {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
-          classes: Object.fromEntries(
+          cars: Object.fromEntries(
             leaderboardAssets.cars.map((c) => [c.id, c.iconUrl || ""]),
           ),
           tracks: Object.fromEntries(
             leaderboardAssets.tracks.map((t) => [t.name, t.iconUrl || ""]),
           ),
-          classNames: Object.fromEntries(
+          carNames: Object.fromEntries(
             leaderboardAssets.cars.map((c) => [c.id, c.name]),
           ),
         }
