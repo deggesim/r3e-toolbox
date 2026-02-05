@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import {
   Alert,
   Badge,
@@ -13,56 +20,22 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import ProcessingLog from "../components/ProcessingLog";
+import SectionTitle from "../components/SectionTitle";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
-import type {
-  ChampionshipEntry,
-  LeaderboardAssets,
-  RaceRoomData,
-} from "../types";
+import type { ChampionshipEntry, LeaderboardAssets } from "../types";
 import type { ParsedRace } from "../types/raceResults";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
 import { parseResultFiles } from "../utils/raceResultParser";
-import ProcessingLog from "./ProcessingLog";
 
-function SectionTitle({ label }: { readonly label: string }) {
-  return (
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <div
-        style={{ width: 6, height: 28, background: "#646cff" }}
-        aria-hidden
-      />
-      <h3 className="h5 m-0 text-uppercase text-white-50">{label}</h3>
-    </div>
-  );
-}
-
-function convertAssetsForHTML(assets: LeaderboardAssets | null) {
-  if (!assets) return undefined;
-
-  const carsMap: Record<string, string> = {};
-  const tracksMap: Record<string, string> = {};
-
-  assets.cars.forEach((c) => {
-    // Index by both name and ID
-    carsMap[c.name] = c.iconUrl || "";
-    carsMap[c.id] = c.iconUrl || "";
-  });
-
-  assets.tracks.forEach((t) => {
-    // Index by both name and ID
-    tracksMap[t.name] = t.iconUrl || "";
-    tracksMap[t.id] = t.iconUrl || "";
-  });
-
-  return { cars: carsMap, tracks: tracksMap };
-}
-
-function buildRaceKey(race: ParsedRace): string {
+const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(
     (slot) => slot.ClassId !== undefined || slot.ClassName,
   );
@@ -72,13 +45,13 @@ function buildRaceKey(race: ParsedRace): string {
       : String(classInfo.ClassId);
   const trackPart = race.trackid ? String(race.trackid) : race.trackname;
   return `${trackPart}::${classPart}`;
-}
+};
 
-function AssetListItem({
+const AssetListItem = ({
   item,
 }: {
   readonly item: { id: string; name: string; iconUrl?: string };
-}) {
+}) => {
   return (
     <ListGroup.Item className="bg-dark border-secondary d-flex gap-2 align-items-center py-2">
       {item.iconUrl ? (
@@ -104,9 +77,9 @@ function AssetListItem({
       </div>
     </ListGroup.Item>
   );
-}
+};
 
-function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
+const AssetLists = ({ assets }: { readonly assets: LeaderboardAssets }) => {
   return (
     <Row className="g-3 mt-2">
       <Col md={6}>
@@ -171,9 +144,10 @@ function AssetLists({ assets }: { readonly assets: LeaderboardAssets }) {
       </Col>
     </Row>
   );
-}
+};
 
-export default function BuildResultsDatabase() {
+const BuildResultsDatabase = () => {
+  const gameData = useGameDataStore((state) => state.gameData);
   const [assets, setAssets] = useState<LeaderboardAssets | null>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [assetsError, setAssetsError] = useState<string | null>(null);
@@ -182,7 +156,6 @@ export default function BuildResultsDatabase() {
   const [championshipAlias, setChampionshipAlias] = useState("");
   const [parsedRaces, setParsedRaces] = useState<ParsedRace[]>([]);
   const [isParsingRaces, setIsParsingRaces] = useState(false);
-  const [gameData, setGameData] = useState<RaceRoomData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [pendingRestoreFile, setPendingRestoreFile] = useState<
@@ -205,22 +178,6 @@ export default function BuildResultsDatabase() {
     if (resultFiles.length === 0) return "No files selected";
     return `${resultFiles.length} result file${resultFiles.length > 1 ? "s" : ""} selected`;
   }, [resultFiles.length]);
-
-  // Load game data for parsing
-  useEffect(() => {
-    const loadGameData = async () => {
-      try {
-        const response = await fetch(
-          new URL("../../r3e-data.json", import.meta.url).href,
-        );
-        const data: RaceRoomData = await response.json();
-        setGameData(data);
-      } catch (error) {
-        console.error("Failed to load game data:", error);
-      }
-    };
-    loadGameData();
-  }, []);
 
   // Initialize assets from cache on component mount
   useEffect(() => {
@@ -279,7 +236,7 @@ export default function BuildResultsDatabase() {
   }, [htmlOverride]);
 
   const handleFolderChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
       setChampionshipAlias(""); // Reset alias when files are selected
@@ -303,11 +260,7 @@ export default function BuildResultsDatabase() {
   );
 
   const resolveCarName = useCallback(
-    (slot: {
-      VehicleId?: string | number;
-      Vehicle?: string;
-      ClassName?: string;
-    }) => {
+    (slot: { VehicleId?: number; Vehicle?: string; ClassName?: string }) => {
       const vehicleId = slot.VehicleId;
 
       // Try to get car name from gameData first
@@ -318,34 +271,35 @@ export default function BuildResultsDatabase() {
       // If not found in gameData, try assets
       if (assets?.cars) {
         const assetCar = assets.cars.find(
-          (c) => c.id === vehicleId || c.id === slot.Vehicle,
+          (c) => c.id === String(vehicleId) || c.name === slot.Vehicle,
         );
         if (assetCar) {
           return assetCar.name;
         }
       }
 
-      // Fallback to slot.Vehicle if it's not an ID
-      if (slot.Vehicle && !/^\d+$/.test(slot.Vehicle)) {
+      // Fallback to slot.Vehicle
+      if (slot.Vehicle) {
         return slot.Vehicle;
       }
 
       // Last resort fallback
-      return slot.ClassName || slot.Vehicle;
+      return slot.ClassName || (vehicleId ? String(vehicleId) : undefined);
     },
     [assets, gameData],
   );
 
   const resolveCarIcon = useCallback(
-    (slot: { VehicleId?: string | number; Vehicle?: string }) => {
+    (slot: { VehicleId?: number; Vehicle?: string }) => {
       if (!assets) return undefined;
 
       const assetMap = convertAssetsForHTML(assets);
       if (!assetMap?.cars) return undefined;
 
-      const keyCandidates = [slot.VehicleId, slot.Vehicle].filter(
-        Boolean,
-      ) as string[];
+      const keyCandidates = [
+        slot.VehicleId ? String(slot.VehicleId) : undefined,
+        slot.Vehicle,
+      ].filter(Boolean) as string[];
 
       for (const key of keyCandidates) {
         if (assetMap.cars[key]) {
@@ -377,7 +331,7 @@ export default function BuildResultsDatabase() {
   }, [parsedRaces, resolveCarName, resolveCarIcon]);
 
   const handleRestoreDatabase = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -529,7 +483,7 @@ export default function BuildResultsDatabase() {
   ]);
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
           💾 Build Results Database
@@ -802,4 +756,6 @@ export default function BuildResultsDatabase() {
       </Modal>
     </Container>
   );
-}
+};
+
+export default BuildResultsDatabase;

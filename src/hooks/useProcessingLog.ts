@@ -6,7 +6,7 @@ export interface LogEntry {
   timestamp: number;
 }
 
-export function useProcessingLog() {
+export const useProcessingLog = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,4 +35,4 @@ export function useProcessingLog() {
   };
 
   return { logs, addLog, logsEndRef, getLogVariant, clearLogs, setLogs };
-}
+};

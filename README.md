@@ -2,6 +2,12 @@
 
 A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience** (R3E). This web application provides three essential utilities for managing AI difficulty, correcting race results, and building championship standings.
 
+## 📥 Download
+
+**[⬇️ Download Latest Release (Windows Installer)](https://github.com/deggesim/r3e-toolbox/releases/latest)**
+
+Alternatively, download directly from the [Releases page](https://github.com/deggesim/r3e-toolbox/releases) for other versions or formats.
+
 ## What Does It Do?
 
 The toolbox combines multiple standalone tools into a single, user-friendly interface:
@@ -32,6 +38,7 @@ The toolbox combines multiple standalone tools into a single, user-friendly inte
 Corrects missing or invalid qualification times in RaceRoom race result files by extracting them from the corresponding qualification session file.
 
 **Features:**
+
 - **File Validation**: Ensures qualification and race files belong to the same event
 - **Automatic Patching**: Updates `qualTimeMs` field for each driver using their best qualification lap
 - **Error Detection**: Identifies drivers missing from qualification session
@@ -39,6 +46,7 @@ Corrects missing or invalid qualification times in RaceRoom race result files by
 - **Download Fixed File**: Generates `_fix.txt` suffix file with corrected data
 
 **How it works:**
+
 1. Upload qualification session file (`.txt` or `.json`)
 2. Upload race session file (`.txt` or `.json`)
 3. Tool validates event matching and lap time data integrity
@@ -54,6 +62,7 @@ Corrects missing or invalid qualification times in RaceRoom race result files by
 Analyzes RaceRoom race result files and generates championship standings with visual asset integration from the official leaderboard.
 
 **Features:**
+
 - **Leaderboard Icon Download**: Fetches car and track icons from the official RaceRoom leaderboard
 - **Asset Caching**: Automatically caches downloaded icons in localStorage to avoid repeated network requests
 - **Smart Cache Management**: Shows cache status (💾 Cached) and provides "Clear cache" button to reset on demand
@@ -63,6 +72,7 @@ Analyzes RaceRoom race result files and generates championship standings with vi
 - **Live Preview**: Real-time preview of championship standings before download
 
 **Workflow:**
+
 1. **Step 1 - Download Icons**: Click "Download and analyze" to fetch official RaceRoom assets (cars/tracks)
    - Icons cached in localStorage for instant reuse
    - Manual HTML paste option if CORS blocks request
@@ -88,6 +98,7 @@ Analyzes RaceRoom race result files and generates championship standings with vi
 The toolbox implements automatic localStorage caching for leaderboard assets (icons and metadata):
 
 **How it works:**
+
 1. First load: `fetchLeaderboardAssetsWithCache()` downloads icons from the leaderboard
 2. Assets stored: All car and track URLs saved to localStorage via Zustand store
 3. Subsequent loads: Data retrieved from cache instantly without network request
@@ -95,17 +106,21 @@ The toolbox implements automatic localStorage caching for leaderboard assets (ic
 5. Manual clear: "Clear cache" button removes all cached assets from localStorage
 
 **Technical implementation** (`src/store/leaderboardAssetsStore.ts`):
+
 - Zustand store with persist middleware for localStorage persistence
 - Stores: asset URLs, icons, metadata, and fetch timestamps
 - State: `assets`, `isLoading`, `error` for UI feedback
 
 **Usage in components**:
+
 ```typescript
 // Automatically use cache (or fetch if not available)
 const assets = await fetchLeaderboardAssetsWithCache();
 
 // Or force refresh from leaderboard
-const freshAssets = await fetchLeaderboardAssetsWithCache({ forceRefresh: true });
+const freshAssets = await fetchLeaderboardAssetsWithCache({
+  forceRefresh: true,
+});
 
 // Direct store access in React components
 const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
@@ -166,6 +181,17 @@ npm run lint
 ```
 
 ## Technical Architecture
+
+### Data Validation
+
+All game data (`r3e-data.json`) is validated on load to ensure structural integrity:
+
+- **Automatic validation**: Both manual upload and auto-detection in Electron mode
+- **Type-safe parsing**: Validates classes, tracks, layouts with detailed error messages
+- **Non-blocking warnings**: Logs non-critical issues (e.g., ID mismatches) to console
+- **Early error detection**: Prevents runtime errors from malformed game data
+
+See [Data Validation Documentation](docs/R3E_DATA_VALIDATION.md) for complete validation rules and troubleshooting.
 
 ### Data Flow
 
@@ -294,6 +320,7 @@ src/
 ├── utils/
 │   ├── xmlParser.ts              # Parse aiadaptation.xml → Database
 │   ├── jsonParser.ts             # Load r3e-data.json → Assets
+│   ├── r3eDataValidator.ts       # Validate r3e-data.json structure
 │   ├── databaseProcessor.ts      # Fit & validate → ProcessedDatabase
 │   ├── fitting.ts                # Linear/parabolic regression functions
 │   ├── timeUtils.ts              # Lap time computations
@@ -373,6 +400,7 @@ package.json                  # Dependencies & scripts
 7. Save `*_fix.txt` file to replace original race result
 
 **Example files**:
+
 ```
 2026_01_23_14_30_00_Qualify.txt  → Qualification session
 2026_01_23_14_45_00_Race1.txt    → Race session (broken)
@@ -432,12 +460,10 @@ package.json                  # Dependencies & scripts
 ### Debugging Data Import Issues
 
 1. **Check XML structure**: Log output of `parseAdaptive()` in browser console
-
    - Verify classes and tracks are extracted correctly
    - Ensure `toArray()` normalizes single/multiple entries
 
 2. **Verify Database normalization**: Inspect `Database` object
-
    - Structure: `classes[classId].tracks[trackId].ailevels[level]` (keyed by AI level number)
    - `samplesCount[level]`: 0 = synthetic, >0 = real data
 
@@ -482,33 +508,64 @@ package.json                  # Dependencies & scripts
 
 ### AI Management
 
-| Issue                            | Cause                              | Solution                                                     |
-| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| Fit rejected (non-monotonic)     | Noisy data with inversions         | Increase `testMaxTimePct` or sample more races               |
-| Too many rejections              | Strict validation                  | Lower `testMaxFailsPct` in config                            |
-| XML export missing data          | Empty classes/tracks in output     | Check database normalization in debugger                     |
-| `r3e-data.json` not found        | Game database not generated        | Run [r3e-adaptive-ai-primer](../r3e-adaptive-ai-primer) tool |
-| Can't import XML file            | File corrupted or wrong format     | Verify XML structure with text editor                        |
+| Issue                        | Cause                          | Solution                                                     |
+| ---------------------------- | ------------------------------ | ------------------------------------------------------------ |
+| Fit rejected (non-monotonic) | Noisy data with inversions     | Increase `testMaxTimePct` or sample more races               |
+| Too many rejections          | Strict validation              | Lower `testMaxFailsPct` in config                            |
+| XML export missing data      | Empty classes/tracks in output | Check database normalization in debugger                     |
+| `r3e-data.json` not found    | Game database not generated    | Run [r3e-adaptive-ai-primer](../r3e-adaptive-ai-primer) tool |
+| Can't import XML file        | File corrupted or wrong format | Verify XML structure with text editor                        |
 
 ### Fix Qualy Times
 
-| Issue                            | Cause                              | Solution                                                     |
-| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| "Event attributes differ" error  | Wrong race/qual file pair          | Ensure both files are from the same event session            |
-| Driver missing from qual         | Driver joined after qualification  | Expected warning; tool patches available drivers only        |
-| Invalid bestLapTimeMs            | Corrupted qualification file       | Re-export from RaceRoom or use backup                        |
-| Can't read .txt file             | File encoding issue                | Save file as UTF-8 or try converting to JSON first           |
+| Issue                           | Cause                             | Solution                                              |
+| ------------------------------- | --------------------------------- | ----------------------------------------------------- |
+| "Event attributes differ" error | Wrong race/qual file pair         | Ensure both files are from the same event session     |
+| Driver missing from qual        | Driver joined after qualification | Expected warning; tool patches available drivers only |
+| Invalid bestLapTimeMs           | Corrupted qualification file      | Re-export from RaceRoom or use backup                 |
+| Can't read .txt file            | File encoding issue               | Save file as UTF-8 or try converting to JSON first    |
 
 ### Build Results Database
 
-| Issue                            | Cause                              | Solution                                                     |
-| -------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| CORS error fetching leaderboard  | Browser security blocking request  | Paste HTML manually (instructions in UI)                     |
-| Icons not showing in localStorage| Persist middleware not saving      | Check DevTools > Application > localStorage for key          |
-| Cache badge shows wrong status   | State sync issue                   | Click "Clear cache" and re-download                          |
-| Result files not parsing         | Unknown track/class in r3e-data    | Update `r3e-data.json` from primer tool                      |
-| HTML preview not loading         | Browser blocked iframe             | Export and open HTML file directly                           |
-| Missing championship alias       | Field left empty                   | Enter name in Step 3 before export                           |
+| Issue                             | Cause                             | Solution                                            |
+| --------------------------------- | --------------------------------- | --------------------------------------------------- |
+| CORS error fetching leaderboard   | Browser security blocking request | Paste HTML manually (instructions in UI)            |
+| Icons not showing in localStorage | Persist middleware not saving     | Check DevTools > Application > localStorage for key |
+| Cache badge shows wrong status    | State sync issue                  | Click "Clear cache" and re-download                 |
+| Result files not parsing          | Unknown track/class in r3e-data   | Update `r3e-data.json` from primer tool             |
+| HTML preview not loading          | Browser blocked iframe            | Export and open HTML file directly                  |
+| Missing championship alias        | Field left empty                  | Enter name in Step 3 before export                  |
+
+## 🚀 Releasing New Versions (For Maintainers)
+
+To create a new release with automatic installers on GitHub:
+
+```bash
+# 1. Make sure everything is committed
+git add .
+git commit -m "Release v1.0.0"
+
+# 2. Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+
+# 3. GitHub Actions will automatically build and create the release
+# Installers will appear at: https://github.com/deggesim/r3e-toolbox/releases
+```
+
+The automated workflow:
+
+- ✅ Builds the Electron app for Windows (add macOS/Linux in the workflow if needed)
+- ✅ Creates installer packages (`.exe`, `.dmg`, `.AppImage`, `.deb`)
+- ✅ Creates GitHub Release with attached installers
+- ✅ Generates release notes automatically from commits
+
+To release manually without GitHub Actions:
+
+```bash
+npm run build:electron
+# Installers will be in dist-electron/
+```
 
 ## Development Guidelines
 
@@ -517,3 +574,12 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for AI ag
 ```
 
 ```
+
+## Disclaimer
+
+This project is a personal, independent initiative developed in my personal time and with personal equipment.
+
+It is not affiliated with, sponsored by, or related to my employer in any way.
+No proprietary information, confidential materials, or company resources have been used in its development.
+
+The software is provided free of charge, without any warranty or obligation of support.

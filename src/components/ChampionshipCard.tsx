@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Card, Button, ListGroup, Badge, Modal } from "react-bootstrap";
+import { useState, type MouseEvent } from "react";
+import { Badge, Button, Card, ListGroup, Modal } from "react-bootstrap";
 import type { ChampionshipEntry } from "../types";
 
 interface ChampionshipCardProps {
@@ -9,21 +9,21 @@ interface ChampionshipCardProps {
   readonly onDownload: (championship: ChampionshipEntry) => void;
 }
 
-function ChampionshipCard({
+const ChampionshipCard = ({
   championship,
   onDelete,
   onClick,
   onDownload,
-}: ChampionshipCardProps) {
+}: ChampionshipCardProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
     onDelete(championship.alias);
     setShowDeleteModal(false);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: MouseEvent) => {
     e.stopPropagation();
     setShowDeleteModal(true);
   };
@@ -43,20 +43,27 @@ function ChampionshipCard({
           <div className="d-flex justify-content-between align-items-start mb-3">
             <div className="flex-grow-1 overflow-hidden">
               <Card.Title className="text-white mb-1 d-flex align-items-center gap-2">
-                <span style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>{championship.alias}</span>
+                <span
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                  }}
+                >
+                  {championship.alias}
+                </span>
               </Card.Title>
               {championship.carName && (
                 <Card.Subtitle className="text-white-50 small mb-2">
                   {championship.carIcon && (
-                  <img
-                    src={championship.carIcon}
-                    alt={championship.carName || championship.alias}
-                    style={{
-                      objectFit: "contain",
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
+                    <img
+                      src={championship.carIcon}
+                      alt={championship.carName || championship.alias}
+                      style={{
+                        objectFit: "contain",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
                   {championship.carName}
                 </Card.Subtitle>
               )}
@@ -82,31 +89,30 @@ function ChampionshipCard({
               </div>
             </ListGroup.Item>
           </ListGroup>
-          
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleDeleteClick}
-              title="Delete championship"
-              className="text-nowrap px-2 w-100 w-sm-auto mb-3"
-            >
-              🗑️ Remove
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownload(championship);
-              }}
-              disabled={
-                !championship.raceData || championship.raceData.length === 0
-              }
-              className="text-nowrap px-2 w-100 w-sm-auto"
-            >
-              ⬇️ Download as HTML
-            </Button>
-          
+
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteClick}
+            title="Delete championship"
+            className="text-nowrap px-2 w-100 w-sm-auto mb-3"
+          >
+            🗑️ Remove
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload(championship);
+            }}
+            disabled={
+              !championship.raceData || championship.raceData.length === 0
+            }
+            className="text-nowrap px-2 w-100 w-sm-auto"
+          >
+            ⬇️ Download as HTML
+          </Button>
         </Card.Body>
       </Card>
 
@@ -140,6 +146,6 @@ function ChampionshipCard({
       </Modal>
     </>
   );
-}
+};
 
 export default ChampionshipCard;

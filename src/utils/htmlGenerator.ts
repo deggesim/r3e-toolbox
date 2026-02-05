@@ -5,7 +5,7 @@ interface DriverStanding {
   position: number;
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   team: string;
   points: number;
@@ -24,7 +24,7 @@ interface TeamStanding {
 interface VehicleStanding {
   position: number;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   entries: number;
   points: number;
   racePoints: (number | null)[];
@@ -33,7 +33,7 @@ interface VehicleStanding {
 interface BestTime {
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   time: string;
   timeMs: number;
@@ -41,7 +41,7 @@ interface BestTime {
 
 const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
-function parseTime(timeStr: string | undefined): number {
+const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
   const parts = timeStr.split(":");
   if (parts.length === 3) {
@@ -52,17 +52,17 @@ function parseTime(timeStr: string | undefined): number {
     return m * 60 + s;
   }
   return Infinity;
-}
+};
 
-function formatTimeDiff(baseMs: number, currentMs: number): string {
+const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   const diff = currentMs - baseMs;
   if (diff === 0) return "";
   const sign = diff > 0 ? "+ " : "- ";
   const absDiff = Math.abs(diff) / 1000;
   return `${sign}${absDiff.toFixed(3)}`;
-}
+};
 
-function getRacePosition(slots: RaceSlot[], driver: string): number | null {
+const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
   const sortedSlots = [...slots].sort((a, b) => {
     const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
     const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
@@ -75,14 +75,14 @@ function getRacePosition(slots: RaceSlot[], driver: string): number | null {
 
   const index = sortedSlots.findIndex((s) => s.Driver === driver);
   return index >= 0 && sortedSlots[index].TotalTime ? index + 1 : null;
-}
+};
 
-function calculateDriverStandings(races: ParsedRace[]): DriverStanding[] {
+const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
   const driverMap = new Map<
     string,
     {
       vehicle: string;
-      vehicleId?: string;
+      vehicleId?: number;
       isHuman: boolean;
       team: string;
       raceResults: (number | null)[];
@@ -150,9 +150,9 @@ function calculateDriverStandings(races: ParsedRace[]): DriverStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateTeamStandings(races: ParsedRace[]): TeamStanding[] {
+const calculateTeamStandings = (races: ParsedRace[]): TeamStanding[] => {
   const teamMap = new Map<
     string,
     { entries: Set<string>; racePoints: (number | null)[] }
@@ -207,12 +207,12 @@ function calculateTeamStandings(races: ParsedRace[]): TeamStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateVehicleStandings(races: ParsedRace[]): VehicleStanding[] {
+const calculateVehicleStandings = (races: ParsedRace[]): VehicleStanding[] => {
   const vehicleMap = new Map<
     string,
-    { vehicleId?: string; entries: Set<string>; racePoints: (number | null)[] }
+    { vehicleId?: number; entries: Set<string>; racePoints: (number | null)[] }
   >();
 
   races.forEach((race, raceIdx) => {
@@ -266,9 +266,12 @@ function calculateVehicleStandings(races: ParsedRace[]): VehicleStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function getBestLapTimes(races: ParsedRace[], topN: number = 20): BestTime[][] {
+const getBestLapTimes = (
+  races: ParsedRace[],
+  topN: number = 20,
+): BestTime[][] => {
   return races.map((race) => {
     const times: BestTime[] = race.slots
       .filter((s) => s.BestLap)
@@ -284,12 +287,12 @@ function getBestLapTimes(races: ParsedRace[], topN: number = 20): BestTime[][] {
 
     return times.slice(0, topN);
   });
-}
+};
 
-function getBestQualifyingTimes(
+const getBestQualifyingTimes = (
   races: ParsedRace[],
   topN: number = 20,
-): BestTime[][] {
+): BestTime[][] => {
   return races.map((race) => {
     const times: BestTime[] = race.slots
       .filter((s) => s.QualTime)
@@ -305,30 +308,33 @@ function getBestQualifyingTimes(
 
     return times.slice(0, topN);
   });
-}
+};
 
-export function generateStandingsHTML(
+export const generateStandingsHTML = (
   races: ParsedRace[],
   championshipName: string,
   leaderboardAssets?: {
-    classes: Record<string, string>;
+    cars: Record<string, string>;
     tracks: Record<string, string>;
-    classNames?: Record<string, string>;
+    carNames?: Record<string, string>;
   },
   gameData?: Record<string, any> | null,
-): string {
-  const getVehicleName = (vehicleId?: string, vehicleName?: string): string => {
-    if (vehicleName && vehicleName !== vehicleId) return vehicleName;
-    
+): string => {
+  const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
+    const vehicleIdStr =
+      vehicleId !== undefined ? String(vehicleId) : undefined;
+    if (vehicleName && vehicleName !== vehicleIdStr) return vehicleName;
+
     // Try to get name from leaderboard assets first
-    if (vehicleId && leaderboardAssets?.classNames?.[vehicleId]) {
-      return leaderboardAssets.classNames[vehicleId];
+    if (vehicleIdStr && leaderboardAssets?.carNames?.[vehicleIdStr]) {
+      return leaderboardAssets.carNames[vehicleIdStr];
     }
-    
+
     // Fallback to gameData
-    if (!vehicleId || !gameData?.cars) return vehicleName || vehicleId || "";
-    const car = gameData.cars[vehicleId];
-    return car?.Name || vehicleName || vehicleId;
+    if (!vehicleIdStr || !gameData?.cars)
+      return vehicleName || vehicleIdStr || "";
+    const car = gameData.cars[vehicleIdStr];
+    return car?.Name || vehicleName || vehicleIdStr;
   };
 
   const driverStandings = calculateDriverStandings(races);
@@ -623,8 +629,12 @@ body {
           ${races
             .map((race) => {
               const trackImg = leaderboardAssets?.tracks[race.trackname] || "";
-              const imgHtml = trackImg ? `<img src="${trackImg}" alt="${race.trackname}" />` : "";
-              const timeHtml = race.timestring ? `<span class="track-time">${race.timestring}</span>` : "";
+              const imgHtml = trackImg
+                ? `<img src="${trackImg}" alt="${race.trackname}" />`
+                : "";
+              const timeHtml = race.timestring
+                ? `<span class="track-time">${race.timestring}</span>`
+                : "";
               return `<th colspan="2" class="track-header">${imgHtml}<div>${race.trackname}</div>${timeHtml}</th>`;
             })
             .join("")}
@@ -637,8 +647,8 @@ body {
         ${driverStandings
           .map((standing) => {
             const vehicleIcon =
-              standing.vehicleId && leaderboardAssets?.classes[standing.vehicleId]
-                ? leaderboardAssets.classes[standing.vehicleId]
+              standing.vehicleId && leaderboardAssets?.cars[standing.vehicleId]
+                ? leaderboardAssets.cars[standing.vehicleId]
                 : "";
             const displayVehicleName = getVehicleName(
               standing.vehicleId,
@@ -682,7 +692,9 @@ body {
           <th rowspan="2">Points</th>
           ${races
             .map((race) => {
-              const timeSpan = race.timestring ? `<span class="track-time">${race.timestring}</span>` : "";
+              const timeSpan = race.timestring
+                ? `<span class="track-time">${race.timestring}</span>`
+                : "";
               return `<th>${race.trackname}${timeSpan}</th>`;
             })
             .join("")}
@@ -718,7 +730,9 @@ body {
           <th rowspan="2">Points</th>
           ${races
             .map((race) => {
-              const timeSpan = race.timestring ? `<span class="track-time">${race.timestring}</span>` : "";
+              const timeSpan = race.timestring
+                ? `<span class="track-time">${race.timestring}</span>`
+                : "";
               return `<th>${race.trackname}${timeSpan}</th>`;
             })
             .join("")}
@@ -728,8 +742,9 @@ body {
         ${vehicleStandings
           .map((standing) => {
             const vehicleIcon =
-              standing.vehicleId && leaderboardAssets?.classes[standing.vehicleId]
-                ? leaderboardAssets.classes[standing.vehicleId]
+              standing.vehicleId &&
+              leaderboardAssets?.cars[String(standing.vehicleId)]
+                ? leaderboardAssets.cars[String(standing.vehicleId)]
                 : "";
             const displayVehicleName = getVehicleName(
               standing.vehicleId,
@@ -760,10 +775,7 @@ body {
           <tr>
             <th>Pos</th>
             ${races
-              .map(
-                (race) =>
-                  `<th class="race-header">${race.trackname}</th>`,
-              )
+              .map((race) => `<th class="race-header">${race.trackname}</th>`)
               .join("")}
           </tr>
         </thead>
@@ -780,8 +792,9 @@ body {
                       ? formatTimeDiff(raceTimes[0].timeMs, time.timeMs)
                       : "";
                   const vehicleIcon =
-                    time.vehicleId && leaderboardAssets?.classes[time.vehicleId]
-                      ? leaderboardAssets.classes[time.vehicleId]
+                    time.vehicleId &&
+                    leaderboardAssets?.cars[String(time.vehicleId)]
+                      ? leaderboardAssets.cars[String(time.vehicleId)]
                       : "";
                   const displayVehicleName = getVehicleName(
                     time.vehicleId,
@@ -821,10 +834,7 @@ body {
           <tr>
             <th>Pos</th>
             ${races
-              .map(
-                (race) =>
-                  `<th class="race-header">${race.trackname}</th>`,
-              )
+              .map((race) => `<th class="race-header">${race.trackname}</th>`)
               .join("")}
           </tr>
         </thead>
@@ -841,8 +851,9 @@ body {
                       ? formatTimeDiff(raceTimes[0].timeMs, time.timeMs)
                       : "";
                   const vehicleIcon =
-                    time.vehicleId && leaderboardAssets?.classes[time.vehicleId]
-                      ? leaderboardAssets.classes[time.vehicleId]
+                    time.vehicleId &&
+                    leaderboardAssets?.cars[String(time.vehicleId)]
+                      ? leaderboardAssets.cars[String(time.vehicleId)]
                       : "";
                   const displayVehicleName = getVehicleName(
                     time.vehicleId,
@@ -882,10 +893,7 @@ body {
           <tr>
             <th>Pos</th>
             ${races
-              .map(
-                (race) =>
-                  `<th class="race-header">${race.trackname}</th>`,
-              )
+              .map((race) => `<th class="race-header">${race.trackname}</th>`)
               .join("")}
           </tr>
         </thead>
@@ -895,8 +903,10 @@ body {
               const cells = races
                 .map((race) => {
                   const sortedSlots = [...race.slots].sort((a, b) => {
-                    const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
-                    const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
+                    const aFinished =
+                      a.FinishStatus === "Finished" || !!a.TotalTime;
+                    const bFinished =
+                      b.FinishStatus === "Finished" || !!b.TotalTime;
                     if (aFinished !== bFinished) return bFinished ? 1 : -1;
 
                     const aTime = parseTime(a.TotalTime);
@@ -910,14 +920,16 @@ body {
                   }
 
                   const vehicleIcon =
-                    slot.VehicleId && leaderboardAssets?.classes[slot.VehicleId]
-                      ? leaderboardAssets.classes[slot.VehicleId]
+                    slot.VehicleId &&
+                    leaderboardAssets?.cars[String(slot.VehicleId)]
+                      ? leaderboardAssets.cars[String(slot.VehicleId)]
                       : "";
                   const displayVehicleName = getVehicleName(
                     slot.VehicleId,
                     slot.Vehicle,
                   );
-                  const isHuman = typeof slot.UserId === "number" && slot.UserId > 0;
+                  const isHuman =
+                    typeof slot.UserId === "number" && slot.UserId > 0;
 
                   return `<td class="race-result-cell">
                     <div class="race-result-entry${isHuman ? " human-driver" : ""}">
@@ -964,11 +976,11 @@ body {
   </div>
 </body>
 </html>`;
-}
+};
 
-export function generateChampionshipIndexHTML(
+export const generateChampionshipIndexHTML = (
   championships: ChampionshipEntry[],
-): string {
+): string => {
   const sorted = [...championships].sort((a, b) =>
     b.generatedAt.localeCompare(a.generatedAt),
   );
@@ -976,17 +988,19 @@ export function generateChampionshipIndexHTML(
   const rows = sorted
     .map((c, idx) => {
       const date = new Date(c.generatedAt);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
       const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 
       const rowClass = idx % 2 === 0 ? "even" : "odd";
 
-      const carIconHtml = c.carIcon ? `<img src="${c.carIcon}" alt="${c.carName || "Car icon"}" />` : "";
+      const carIconHtml = c.carIcon
+        ? `<img src="${c.carIcon}" alt="${c.carName || "Car icon"}" />`
+        : "";
       const carCell = c.carName
         ? `<div class="car-cell">
             ${carIconHtml}
@@ -1116,9 +1130,9 @@ export function generateChampionshipIndexHTML(
   </div>
 </body>
 </html>`;
-}
+};
 
-export function downloadHTML(html: string, filename: string): void {
+export const downloadHTML = (html: string, filename: string): void => {
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1128,4 +1142,4 @@ export function downloadHTML(html: string, filename: string): void {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-}
+};

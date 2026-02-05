@@ -1,5 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Card, Container, Modal, Button } from "react-bootstrap";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+import { Button, Card, Container, Modal } from "react-bootstrap";
+import AISelectionTable from "../components/AISelectionTable";
+import FileUploadSection from "../components/FileUploadSection";
+import ProcessingLog from "../components/ProcessingLog";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { useProcessingLog } from "../hooks/useProcessingLog";
+import { useConfigStore } from "../store/configStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import type {
   Assets,
   Database,
@@ -7,24 +20,16 @@ import type {
   DatabaseTrack,
   PlayerTimes,
   ProcessedDatabase,
-  RaceRoomData,
 } from "../types";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
-import { useConfigStore } from "../store/configStore";
-import { useProcessingLog } from "../hooks/useProcessingLog";
-import ProcessingLog from "./ProcessingLog";
-import FileUploadSection from "./FileUploadSection";
-import AISelectionTable from "./AISelectionTable";
-
-const DEFAULT_JSON_URL = new URL("../../r3e-data.json", import.meta.url).href;
 
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
  */
-function removeGeneratedFromTrack(track: DatabaseTrack): number {
+const removeGeneratedFromTrack = (track: DatabaseTrack): number => {
   track.samplesCount = track.samplesCount || {};
   let removedCount = 0;
 
@@ -38,12 +43,12 @@ function removeGeneratedFromTrack(track: DatabaseTrack): number {
   }
 
   return removedCount;
-}
+};
 
 /**
  * Recalculates min/max AI levels for a track after removal
  */
-function recalculateTrackMinMax(track: DatabaseTrack): void {
+const recalculateTrackMinMax = (track: DatabaseTrack): void => {
   const aiLevels = Object.keys(track.ailevels).map(Number);
   if (aiLevels.length > 0) {
     track.minAI = Math.min(...aiLevels);
@@ -52,12 +57,12 @@ function recalculateTrackMinMax(track: DatabaseTrack): void {
     delete track.minAI;
     delete track.maxAI;
   }
-}
+};
 
 /**
  * Recalculates min/max AI levels for a class based on all tracks
  */
-function recalculateClassMinMax(classData: DatabaseClass): void {
+const recalculateClassMinMax = (classData: DatabaseClass): void => {
   const allTrackAIs = Object.values(classData.tracks).flatMap((t) =>
     Object.keys(t.ailevels).map(Number),
   );
@@ -68,10 +73,12 @@ function recalculateClassMinMax(classData: DatabaseClass): void {
     delete classData.minAI;
     delete classData.maxAI;
   }
-}
+};
 
-const AIManagement: React.FC = () => {
+const AIManagement = () => {
   const { config } = useConfigStore();
+  const electron = useElectronAPI();
+  const gameData = useGameDataStore((state) => state.gameData);
 
   // Data state
   const [assets, setAssets] = useState<Assets | null>(null);
@@ -88,9 +95,12 @@ const AIManagement: React.FC = () => {
   const [spacing, setSpacing] = useState<number>(config.aiSpacing);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [xmlAutoLoaded, setXmlAutoLoaded] = useState(false);
 
   // Refs
   const xmlInputRef = useRef<HTMLInputElement>(null);
+  const gameDataLoggedRef = useRef(false);
+  const xmlAutoLoadedRef = useRef(false);
   const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
     useProcessingLog();
 
@@ -111,57 +121,74 @@ const AIManagement: React.FC = () => {
   }, [config.aiSpacing]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadDefaultJson = async () => {
-      try {
-        const response = await fetch(DEFAULT_JSON_URL);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch default JSON: ${response.status}`);
-        }
-        const data: RaceRoomData = await response.json();
-        if (!cancelled) {
-          setAssets((prev) => prev ?? parseJson(data));
-        }
-      } catch (error) {
-        console.warn("Auto-load of default RaceRoom JSON failed:", error);
-      }
-    };
-
-    loadDefaultJson();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     setProcessed(processDatabase(database));
   }, [config, database]);
 
-  // ============ FILE UPLOAD HANDLERS ============
+  // Load game data assets on mount from global store
+  useEffect(() => {
+    if (gameData && !assets) {
+      setAssets(parseJson(gameData));
+      if (!gameDataLoggedRef.current) {
+        gameDataLoggedRef.current = true;
+      }
+    }
+  }, [gameData, assets, addLog]);
 
-  const handleJsonUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  useEffect(() => {
+    const loadAiadaptationFile = async () => {
+      if (xmlAutoLoadedRef.current) return;
+      xmlAutoLoadedRef.current = true;
+      if (!electron.isElectron) {
+        addLog(
+          "warning",
+          "⚠ aiadaptation.xml can only be auto-loaded in Electron mode",
+        );
+        return;
+      }
 
       try {
-        const text = await file.text();
-        const data: RaceRoomData = JSON.parse(text);
-        const parsedAssets = parseJson(data);
-        setAssets(parsedAssets);
-        addLog("success", "✔ RaceRoom data JSON loaded successfully");
+        const result = await electron.findAiadaptationFile();
+        if (result.success && result.data) {
+          try {
+            const newDatabase = { ...database };
+            const newPlayerTimes = { ...playerTimes };
+            const added = parseAdaptive(
+              result.data,
+              newDatabase,
+              newPlayerTimes,
+            );
+            if (added) {
+              setDatabase(newDatabase);
+              setPlayerTimes(newPlayerTimes);
+              setXmlAutoLoaded(true);
+              addLog(
+                "success",
+                `✔ Loaded aiadaptation.xml from: ${result.path}`,
+              );
+            }
+          } catch (error) {
+            setXmlAutoLoaded(false);
+            addLog(
+              "warning",
+              `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`,
+            );
+          }
+        } else {
+          setXmlAutoLoaded(false);
+          addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
+        }
       } catch (error) {
-        console.error("Error parsing JSON:", error);
-        addLog("error", "❌ Error parsing JSON file");
+        addLog("error", `❌ Auto-load of aiadaptation.xml failed: ${error}`);
       }
-    },
-    [addLog],
-  );
+    };
+
+    loadAiadaptationFile();
+  }, [electron.isElectron]);
+
+  // ============ FILE UPLOAD HANDLERS ============
 
   const handleXmlUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -176,7 +203,6 @@ const AIManagement: React.FC = () => {
           addLog("success", "✔ AI Adaptation XML loaded successfully");
         }
       } catch (error) {
-        console.error("Error parsing XML:", error);
         addLog("error", "❌ Error parsing XML file");
       }
     },
@@ -203,7 +229,6 @@ const AIManagement: React.FC = () => {
         link.remove();
         URL.revokeObjectURL(url);
       } catch (error) {
-        console.error("Error generating XML:", error);
         addLog("error", "❌ Error generating XML file");
       }
     },
@@ -327,7 +352,6 @@ const AIManagement: React.FC = () => {
           URL.revokeObjectURL(url);
           addLog("success", "📥 Downloaded modified aiadaptation.xml");
         } catch (error) {
-          console.error("Error generating XML:", error);
           addLog("error", "❌ Error generating XML file");
         }
       }
@@ -420,18 +444,19 @@ const AIManagement: React.FC = () => {
     !selectedClassId || !selectedTrackId || selectedAILevel === null;
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary mb-4">
         <Card.Header as="h2" className="text-center page-header-gradient">
           🤖 AI Management
         </Card.Header>
         <Card.Body>
           <Card.Text className="text-white-50 mb-4">
-            Upload RaceRoom data files to analyze and configure AI parameters
+            {xmlAutoLoaded
+              ? "AI adaptation file loaded. You can upload a different file to replace it."
+              : "Upload AI adaptation file to analyze and configure AI parameters"}
           </Card.Text>
 
           <FileUploadSection
-            onJsonUpload={handleJsonUpload}
             onXmlUpload={handleXmlUpload}
             assets={assets}
             xmlInputRef={xmlInputRef}

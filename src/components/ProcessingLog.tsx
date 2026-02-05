@@ -1,17 +1,18 @@
+import type { RefObject } from "react";
 import { Badge, Card } from "react-bootstrap";
 import type { LogEntry } from "../hooks/useProcessingLog";
 
 interface ProcessingLogProps {
   logs: LogEntry[];
   getLogVariant: (type: LogEntry["type"]) => string;
-  logsEndRef: React.RefObject<HTMLDivElement | null>;
+  logsEndRef: RefObject<HTMLDivElement | null>;
 }
 
-export default function ProcessingLog({
+const ProcessingLog = ({
   logs,
   getLogVariant,
   logsEndRef,
-}: Readonly<ProcessingLogProps>) {
+}: Readonly<ProcessingLogProps>) => {
   if (logs.length === 0) {
     return null;
   }
@@ -50,4 +51,6 @@ export default function ProcessingLog({
       </Card.Body>
     </Card>
   );
-}
+};
+
+export default ProcessingLog;

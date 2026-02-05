@@ -13,19 +13,19 @@ const parser = new XMLParser({
 /**
  * Normalizes XML data to always be an array
  */
-function toArray<T>(data: T | T[]): T[] {
+const toArray = <T>(data: T | T[]): T[] => {
   return Array.isArray(data) ? data : [data];
-}
+};
 
 /**
  * Processes player lap times for a track/class combination
  */
-function processPlayerTimes(
+const processPlayerTimes = (
   playerentries: any,
   playertimes: PlayerTimes,
   classid: string,
-  trackid: string
-): void {
+  trackid: string,
+): void => {
   const class_pt = playertimes.classes[classid] || { tracks: {} };
   playertimes.classes[classid] = class_pt;
   const track_pt = class_pt.tracks[trackid] || {
@@ -52,17 +52,17 @@ function processPlayerTimes(
     track_pt.playertimes = allTimes;
     track_pt.playertime = mintime;
   }
-}
+};
 
 /**
  * Processes AI skill levels and lap times for a track/class combination
  */
-function processAIEntries(
+const processAIEntries = (
   aientries: any,
   database: Database,
   classid: string,
-  trackid: string
-): boolean {
+  trackid: string,
+): boolean => {
   const aiSkills = toArray(aientries.aiSkill);
   const aiDatas = toArray(aientries.aiData);
 
@@ -79,12 +79,12 @@ function processAIEntries(
   for (let k = 0; k < aiSkills.length; k++) {
     const ailevel = Number.parseInt(aiSkills[k]["#text"] || aiSkills[k]);
     const aitime = Number.parseFloat(
-      aiDatas[k].averagedLapTime["#text"] || aiDatas[k].averagedLapTime
+      aiDatas[k].averagedLapTime["#text"] || aiDatas[k].averagedLapTime,
     );
     const numSamples = Number.parseInt(
       aiDatas[k].numberOfSampledRaces?.["#text"] ??
         aiDatas[k].numberOfSampledRaces ??
-        "1"
+        "1",
     );
 
     if (Number.isNaN(aitime)) continue;
@@ -113,18 +113,18 @@ function processAIEntries(
   }
 
   return added;
-}
+};
 
 /**
  * Processes a single class entry for a track
  */
-function processClassEntry(
+const processClassEntry = (
   classkey: any,
   classcustom: any,
   trackid: string,
   database: Database,
-  playertimes?: PlayerTimes
-): boolean {
+  playertimes?: PlayerTimes,
+): boolean => {
   if (!classkey || !classcustom) return false;
 
   const classid = classkey["#text"]?.toString();
@@ -142,17 +142,17 @@ function processClassEntry(
   }
 
   return false;
-}
+};
 
 /**
  * Processes a single track entry
  */
-function processTrackEntry(
+const processTrackEntry = (
   trackkey: any,
   trackvalue: any,
   database: Database,
-  playertimes?: PlayerTimes
-): boolean {
+  playertimes?: PlayerTimes,
+): boolean => {
   if (!trackkey || !trackvalue) return false;
 
   const trackid = trackkey["#text"]?.toString();
@@ -171,7 +171,7 @@ function processTrackEntry(
         sampledDatas[j],
         trackid,
         database,
-        playertimes
+        playertimes,
       )
     ) {
       added = true;
@@ -179,7 +179,7 @@ function processTrackEntry(
   }
 
   return added;
-}
+};
 
 /**
  * Parses the aiadaptation.xml file and populates database and player times.
@@ -187,11 +187,11 @@ function processTrackEntry(
  * Preserves both single best player lap time and array of all player lap times.
  * Returns true if data was successfully parsed and added.
  */
-export function parseAdaptive(
+export const parseAdaptive = (
   xmlText: string,
   database: Database,
-  playertimes?: PlayerTimes
-): boolean {
+  playertimes?: PlayerTimes,
+): boolean => {
   const xml = parser.parse(xmlText);
   if (!xml) return false;
 
@@ -211,4 +211,4 @@ export function parseAdaptive(
   }
 
   return added;
-}
+};

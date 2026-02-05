@@ -12,7 +12,7 @@ interface TrackInfo {
   name: string;
 }
 
-function formatTime(seconds: number): string {
+const formatTime = (seconds: number): string => {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -20,13 +20,16 @@ function formatTime(seconds: number): string {
     return `${h}:${m}:${s.toFixed(3)}`;
   }
   return `${m}:${s.toFixed(3)}`;
-}
+};
 
-function millisecondsToTime(ms: number): string {
+const millisecondsToTime = (ms: number): string => {
   return formatTime(ms / 1000);
-}
+};
 
-function resolveClassInfo(vehicleId: number | undefined, gameData: RaceRoomData): { classId?: number; className?: string } {
+const resolveClassInfo = (
+  vehicleId: number | undefined,
+  gameData: RaceRoomData,
+): { classId?: number; className?: string } => {
   if (!vehicleId || !gameData.cars) return {};
   const car = gameData.cars[String(vehicleId)];
   if (!car?.Class) return {};
@@ -34,12 +37,23 @@ function resolveClassInfo(vehicleId: number | undefined, gameData: RaceRoomData)
   const classData = gameData.classes?.[String(classId)];
   const className = classData?.Name;
   return { classId, className };
-}
+};
 
-function buildTrackLookup(data: RaceRoomData): {
+const resolveVehicleName = (
+  vehicleId: number | undefined,
+  gameData: RaceRoomData,
+): string | undefined => {
+  if (!vehicleId || !gameData.cars) return undefined;
+  const car = gameData.cars[String(vehicleId)];
+  return car?.Name;
+};
+
+const buildTrackLookup = (
+  data: RaceRoomData,
+): {
   byName: Map<string, TrackInfo>;
   byId: Map<number, TrackInfo>;
-} {
+} => {
   const byName = new Map<string, TrackInfo>();
   const byId = new Map<number, TrackInfo>();
 
@@ -53,15 +67,15 @@ function buildTrackLookup(data: RaceRoomData): {
   }
 
   return { byName, byId };
-}
+};
 
-function findTrack(
+const findTrack = (
   trackName: string | undefined,
   layoutName: string | undefined,
   layoutId: number | undefined,
   trackLookup: Map<string, TrackInfo>,
   trackById: Map<number, TrackInfo>,
-): TrackInfo | undefined {
+): TrackInfo | undefined => {
   if (layoutId) {
     return trackById.get(layoutId);
   }
@@ -72,16 +86,21 @@ function findTrack(
   }
 
   return undefined;
-}
+};
 
-function processSessionPlayers(
+const processSessionPlayers = (
   session: RaceSession,
-): RaceSlot[] {
+  gameData: RaceRoomData,
+): RaceSlot[] => {
   const slots: RaceSlot[] = [];
 
   for (const player of session.Players) {
     const driver = player.Username;
-    const vehicle = player.CarName || String(player.CarId || "");
+    const vehicleId = player.CarId;
+    const vehicleName =
+      player.CarName ||
+      resolveVehicleName(vehicleId, gameData) ||
+      (vehicleId ? String(vehicleId) : "");
     const team = player.Team || driver;
 
     const totalTime = player.TotalTime
@@ -93,8 +112,8 @@ function processSessionPlayers(
 
     slots.push({
       Driver: driver,
-      Vehicle: vehicle,
-      VehicleId: String(player.CarId || ""),
+      Vehicle: vehicleName,
+      VehicleId: vehicleId,
       UserId: player.UserId ? Number(player.UserId) : undefined,
       ClassName: player.ClassName,
       ClassId: player.ClassId,
@@ -107,28 +126,25 @@ function processSessionPlayers(
   }
 
   return slots;
-}
+};
 
-function resolveMissingClassInfo(
+const resolveMissingClassInfo = (
   slots: RaceSlot[],
-  gameData: RaceRoomData
-): void {
+  gameData: RaceRoomData,
+): void => {
   for (const slot of slots) {
     if (!slot.ClassName && !slot.ClassId && slot.VehicleId) {
-      const { classId, className } = resolveClassInfo(
-        Number.parseInt(slot.VehicleId, 10),
-        gameData,
-      );
+      const { classId, className } = resolveClassInfo(slot.VehicleId, gameData);
       if (classId) slot.ClassId = classId;
       if (className) slot.ClassName = className;
     }
   }
-}
+};
 
-function addQualifyingTimes(
+const addQualifyingTimes = (
   slots: RaceSlot[],
-  sessQualify: RaceSession | undefined
-): void {
+  sessQualify: RaceSession | undefined,
+): void => {
   if (!sessQualify) return;
   for (const player of sessQualify.Players) {
     const slot = slots.find((s) => s.Driver === player.Username);
@@ -136,13 +152,13 @@ function addQualifyingTimes(
       slot.QualTime = millisecondsToTime(player.QualifyingTime);
     }
   }
-}
+};
 
-function parseMultiplayerResult(
+const parseMultiplayerResult = (
   json: MultiplayerRaceResult,
   gameData: RaceRoomData,
   ruleset: string,
-): ParsedRace[] | null {
+): ParsedRace[] | null => {
   const { byName: trackLookup, byId: trackById } = buildTrackLookup(gameData);
 
   const trackName = json.Track;
@@ -176,7 +192,7 @@ function parseMultiplayerResult(
     return null;
   }
 
-  const slots1 = processSessionPlayers(sessRace);
+  const slots1 = processSessionPlayers(sessRace, gameData);
   resolveMissingClassInfo(slots1, gameData);
   addQualifyingTimes(slots1, sessQualify);
 
@@ -192,7 +208,7 @@ function parseMultiplayerResult(
 
   if (sessRace2) {
     const date2 = new Date((timestamp + 1) * 1000);
-    const slots2 = processSessionPlayers(sessRace2);
+    const slots2 = processSessionPlayers(sessRace2, gameData);
     resolveMissingClassInfo(slots2, gameData);
     addQualifyingTimes(slots2, sessQualify);
     results.push({
@@ -205,12 +221,12 @@ function parseMultiplayerResult(
   }
 
   return results;
-}
+};
 
-function buildSinglePlayerRaceSlot(
+const buildSinglePlayerRaceSlot = (
   driver: any,
-  gameData: RaceRoomData
-): RaceSlot {
+  gameData: RaceRoomData,
+): RaceSlot => {
   const totalTime = driver.raceTimeMs
     ? millisecondsToTime(driver.raceTimeMs)
     : undefined;
@@ -234,6 +250,10 @@ function buildSinglePlayerRaceSlot(
 
   const vehicleId = driver.carId || undefined;
   const { classId, className } = resolveClassInfo(vehicleId, gameData);
+  const vehicleName =
+    driver.carName ||
+    resolveVehicleName(vehicleId, gameData) ||
+    (vehicleId ? String(vehicleId) : "");
 
   const rawUserId =
     driver.userId ?? driver.UserId ?? driver.userid ?? undefined;
@@ -250,8 +270,8 @@ function buildSinglePlayerRaceSlot(
 
   return {
     Driver: driver.name,
-    Vehicle: driver.carName || String(driver.carId || ""),
-    VehicleId: String(driver.carId || ""),
+    Vehicle: vehicleName,
+    VehicleId: vehicleId,
     UserId: Number.isFinite(userId) ? userId : undefined,
     ClassName: driver.className || driver.ClassName || className,
     ClassId: driver.classId ?? driver.ClassId ?? classId,
@@ -262,13 +282,13 @@ function buildSinglePlayerRaceSlot(
     QualTime: qualTime,
     FinishStatus: driver.finishStatus,
   };
-}
+};
 
-function parseSinglePlayerResult(
+const parseSinglePlayerResult = (
   json: SinglePlayerRaceResult,
   gameData: RaceRoomData,
   ruleset: string,
-): ParsedRace | null {
+): ParsedRace | null => {
   const { byName: trackLookup, byId: trackById } = buildTrackLookup(gameData);
 
   const trackInfo = findTrack(
@@ -286,7 +306,7 @@ function parseSinglePlayerResult(
 
   const timestring = json.header.time;
   const slots: RaceSlot[] = json.drivers.map((driver) =>
-    buildSinglePlayerRaceSlot(driver, gameData)
+    buildSinglePlayerRaceSlot(driver, gameData),
   );
 
   return {
@@ -296,13 +316,13 @@ function parseSinglePlayerResult(
     slots,
     ruleset,
   };
-}
+};
 
-export async function parseResultFile(
+export const parseResultFile = async (
   file: File,
   gameData: RaceRoomData,
   ruleset: string = "default",
-): Promise<ParsedRace[] | null> {
+): Promise<ParsedRace[] | null> => {
   try {
     // Validate file extension
     const ext = file.name.toLowerCase().split(".").pop();
@@ -357,13 +377,13 @@ export async function parseResultFile(
     );
     return null;
   }
-}
+};
 
-export async function parseResultFiles(
+export const parseResultFiles = async (
   files: File[],
   gameData: RaceRoomData,
   ruleset: string = "default",
-): Promise<ParsedRace[]> {
+): Promise<ParsedRace[]> => {
   const allRaces: ParsedRace[] = [];
 
   for (const file of files) {
@@ -377,4 +397,4 @@ export async function parseResultFiles(
   }
 
   return allRaces;
-}
+};

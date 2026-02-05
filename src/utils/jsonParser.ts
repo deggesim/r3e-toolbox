@@ -1,11 +1,11 @@
-import type { RaceRoomData, Assets, TrackAsset, ClassAsset } from '../types';
+import type { RaceRoomData, Assets, TrackAsset, ClassAsset } from "../types";
 
 /**
  * Parses RaceRoom's JSON database and extracts class and track information.
  * Creates lookup maps and sorted arrays for UI selection and display.
  * Combines track name and layout name for readability in UI.
  */
-export function parseJson(data: RaceRoomData): Assets {
+export const parseJson = (data: RaceRoomData): Assets => {
   // Build classes map and list
   const numClasses = Object.keys(data.classes).length;
   const classes: Record<string, ClassAsset> = {};
@@ -45,4 +45,4 @@ export function parseJson(data: RaceRoomData): Assets {
     numClasses,
     numTracks,
   };
-}
+};

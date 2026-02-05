@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import { useConfigStore } from "../store/configStore";
 import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
@@ -19,14 +19,14 @@ interface AIManagementGUIProps {
   onResetAll: () => void;
 }
 
-const AIManagementGUI: React.FC<AIManagementGUIProps> = ({
+const AIManagementGUI = ({
   assets,
   processed,
   playertimes,
   onApplyClick,
   onRemoveGenerated,
   onResetAll,
-}) => {
+}: AIManagementGUIProps) => {
   const { config } = useConfigStore();
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [selectedTrackId, setSelectedTrackId] = useState<string>("");

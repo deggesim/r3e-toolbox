@@ -11,6 +11,9 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useChampionshipStore } from "../store/championshipStore";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useGameDataStore } from "../store/gameDataStore";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import type { ChampionshipEntry } from "../types";
 import {
   downloadHTML,
@@ -18,26 +21,17 @@ import {
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
 import { useProcessingLog } from "../hooks/useProcessingLog";
-import ProcessingLog from "./ProcessingLog";
-import ChampionshipCard from "./ChampionshipCard";
+import ProcessingLog from "../components/ProcessingLog";
+import ChampionshipCard from "../components/ChampionshipCard";
+import SectionTitle from "../components/SectionTitle";
 
-function SectionTitle({ label }: { readonly label: string }) {
-  return (
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <div
-        style={{ width: 6, height: 28, background: "#646cff" }}
-        aria-hidden
-      />
-      <h3 className="h5 m-0 text-uppercase text-white-50">{label}</h3>
-    </div>
-  );
-}
-
-export default function ResultsDatabaseViewer() {
+const ResultsDatabaseViewer = () => {
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
   const clearAll = useChampionshipStore((state) => state.clear);
+  const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
+  const gameData = useGameDataStore((state) => state.gameData);
   const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,10 +70,10 @@ export default function ResultsDatabaseViewer() {
         }
         return new Date(champ.generatedAt).getTime();
       };
-      
+
       const dateA = getFirstRaceDate(a);
       const dateB = getFirstRaceDate(b);
-      
+
       // Ordine decrescente (più recenti prima)
       return dateB - dateA;
     });
@@ -91,6 +85,8 @@ export default function ResultsDatabaseViewer() {
 
   const totalRaces = championships.reduce((sum, champ) => sum + champ.races, 0);
 
+  const htmlAssets = convertAssetsForHTML(leaderboardAssets, true);
+
   const handleDownloadChampionship = (championship: ChampionshipEntry) => {
     if (!championship.raceData || championship.raceData.length === 0) {
       addLog(
@@ -101,7 +97,13 @@ export default function ResultsDatabaseViewer() {
     }
 
     const races = championship.raceData;
-    const html = generateStandingsHTML(races, championship.alias);
+    const assetsForHTML = htmlAssets;
+    const html = generateStandingsHTML(
+      races,
+      championship.alias,
+      assetsForHTML,
+      gameData,
+    );
 
     downloadHTML(html, championship.fileName);
     addLog("success", `📥 Downloaded ${championship.fileName}`);
@@ -137,7 +139,7 @@ export default function ResultsDatabaseViewer() {
   };
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
           📊 Results Database Viewer
@@ -315,4 +317,6 @@ export default function ResultsDatabaseViewer() {
       </Card>
     </Container>
   );
-}
+};
+
+export default ResultsDatabaseViewer;

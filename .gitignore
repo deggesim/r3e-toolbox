@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# RaceRoom data files
+r3e-data.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

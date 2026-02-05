@@ -1,4 +1,3 @@
-import React from "react";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
 import { makeTime } from "../utils/timeUtils";
@@ -26,7 +25,7 @@ interface AISelectionTableProps {
   onConfirmApply: () => void;
 }
 
-const AISelectionTable: React.FC<AISelectionTableProps> = ({
+const AISelectionTable = ({
   assets,
   processed,
   playertimes,
@@ -47,7 +46,7 @@ const AISelectionTable: React.FC<AISelectionTableProps> = ({
   showApplyModal,
   onHideApplyModal,
   onConfirmApply,
-}) => {
+}: AISelectionTableProps) => {
   // Calculate available classes and tracks
   const availableClasses =
     assets?.classesSorted.filter((classAsset) => {

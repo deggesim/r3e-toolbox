@@ -11,7 +11,7 @@ interface DriverStanding {
   position: number;
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   team: string;
   points: number;
@@ -30,7 +30,7 @@ interface TeamStanding {
 interface VehicleStanding {
   position: number;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   entries: number;
   points: number;
   racePoints: (number | null)[];
@@ -39,7 +39,7 @@ interface VehicleStanding {
 interface BestTime {
   driver: string;
   vehicle: string;
-  vehicleId?: string;
+  vehicleId?: number;
   isHuman: boolean;
   time: string;
   timeMs: number;
@@ -47,7 +47,7 @@ interface BestTime {
 
 const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
-function parseTime(timeStr: string | undefined): number {
+const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
   const parts = timeStr.split(":");
   if (parts.length === 3) {
@@ -58,17 +58,17 @@ function parseTime(timeStr: string | undefined): number {
     return m * 60 + s;
   }
   return Infinity;
-}
+};
 
-function formatTimeDiff(baseMs: number, currentMs: number): string {
+const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   const diff = currentMs - baseMs;
   if (diff === 0) return "";
   const sign = diff > 0 ? "+ " : "- ";
   const absDiff = Math.abs(diff) / 1000;
   return `${sign}${absDiff.toFixed(3)}`;
-}
+};
 
-function getRacePosition(slots: any[], driver: string): number | null {
+const getRacePosition = (slots: any[], driver: string): number | null => {
   const sortedSlots = [...slots].sort((a, b) => {
     const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
     const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
@@ -81,9 +81,9 @@ function getRacePosition(slots: any[], driver: string): number | null {
 
   const index = sortedSlots.findIndex((s) => s.Driver === driver);
   return index >= 0 && sortedSlots[index].TotalTime ? index + 1 : null;
-}
+};
 
-function calculateDriverStandings(races: any[]): DriverStanding[] {
+const calculateDriverStandings = (races: any[]): DriverStanding[] => {
   // Identify human players: the first driver in each race's slots array
   const humanDriverNames = new Set<string>();
   for (const race of races) {
@@ -96,7 +96,7 @@ function calculateDriverStandings(races: any[]): DriverStanding[] {
     string,
     {
       vehicle: string;
-      vehicleId?: string;
+      vehicleId?: number;
       isHuman: boolean;
       team: string;
       raceResults: (number | null)[];
@@ -157,9 +157,9 @@ function calculateDriverStandings(races: any[]): DriverStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateTeamStandings(races: any[]): TeamStanding[] {
+const calculateTeamStandings = (races: any[]): TeamStanding[] => {
   const teamMap = new Map<
     string,
     { entries: Set<string>; racePoints: (number | null)[] }
@@ -208,13 +208,13 @@ function calculateTeamStandings(races: any[]): TeamStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function calculateVehicleStandings(races: any[]): VehicleStanding[] {
+const calculateVehicleStandings = (races: any[]): VehicleStanding[] => {
   const vehicleMap = new Map<
     string,
     {
-      vehicleId?: string;
+      vehicleId?: number;
       entries: Set<string>;
       racePoints: (number | null)[];
     }
@@ -271,9 +271,9 @@ function calculateVehicleStandings(races: any[]): VehicleStanding[] {
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
-}
+};
 
-function getBestLapTimesPerRace(races: any[]): BestTime[][] {
+const getBestLapTimesPerRace = (races: any[]): BestTime[][] => {
   return races.map((race) => {
     const raceLapTimes: BestTime[] = [];
     const humanDriver =
@@ -300,9 +300,9 @@ function getBestLapTimesPerRace(races: any[]): BestTime[][] {
     );
     return sorted;
   });
-}
+};
 
-function getBestQualifyingTimesPerRace(races: any[]): BestTime[][] {
+const getBestQualifyingTimesPerRace = (races: any[]): BestTime[][] => {
   return races.map((race) => {
     const raceQualTimes: BestTime[] = [];
     const humanDriver =
@@ -329,9 +329,9 @@ function getBestQualifyingTimesPerRace(races: any[]): BestTime[][] {
     );
     return sorted;
   });
-}
+};
 
-export default function ResultsDatabaseDetail() {
+const ResultsDatabaseDetail = () => {
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
@@ -374,10 +374,11 @@ export default function ResultsDatabaseDetail() {
     };
   }, [championship]);
 
-  const getVehicleIcon = (vehicleId?: string) => {
-    if (!vehicleId || !leaderboardAssets) return null;
+  const getVehicleIcon = (vehicleId?: number) => {
+    if (vehicleId === undefined || !leaderboardAssets) return null;
+    const vehicleIdStr = String(vehicleId);
     const icon = leaderboardAssets.cars.find(
-      (c) => c.id === vehicleId,
+      (c) => c.id === vehicleIdStr,
     )?.iconUrl;
     return icon || null;
   };
@@ -390,19 +391,21 @@ export default function ResultsDatabaseDetail() {
     return icon || null;
   };
 
-  const getVehicleName = (vehicleId?: string, vehicleName?: string): string => {
-    if (vehicleName && vehicleName !== vehicleId) return vehicleName;
-    if (!vehicleId) return vehicleName || "";
+  const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
+    const vehicleIdStr =
+      vehicleId !== undefined ? String(vehicleId) : undefined;
+    if (vehicleName && vehicleName !== vehicleIdStr) return vehicleName;
+    if (vehicleId === undefined) return vehicleName || "";
     // Try to get the name from leaderboard assets
     if (leaderboardAssets) {
       const classData = leaderboardAssets.cars.find(
-        (c) => c.id === vehicleId,
+        (c) => c.id === vehicleIdStr,
       );
       if (classData?.name) {
         return classData.name;
       }
     }
-    return vehicleName || vehicleId || "";
+    return vehicleName || vehicleIdStr || "";
   };
 
   if (!championship) {
@@ -461,13 +464,13 @@ export default function ResultsDatabaseDetail() {
   const handleDownloadHTML = () => {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
-          classes: Object.fromEntries(
+          cars: Object.fromEntries(
             leaderboardAssets.cars.map((c) => [c.id, c.iconUrl || ""]),
           ),
           tracks: Object.fromEntries(
             leaderboardAssets.tracks.map((t) => [t.name, t.iconUrl || ""]),
           ),
-          classNames: Object.fromEntries(
+          carNames: Object.fromEntries(
             leaderboardAssets.cars.map((c) => [c.id, c.name]),
           ),
         }
@@ -482,7 +485,7 @@ export default function ResultsDatabaseDetail() {
   };
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       <Button
         onClick={() => navigate("/results-database")}
         className="back-button"
@@ -963,4 +966,6 @@ export default function ResultsDatabaseDetail() {
       </div>
     </Container>
   );
-}
+};
+
+export default ResultsDatabaseDetail;
