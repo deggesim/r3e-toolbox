@@ -23,41 +23,10 @@ import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import { parseResultFiles } from "../utils/raceResultParser";
 import ProcessingLog from "../components/ProcessingLog";
-
-function SectionTitle({ label }: { readonly label: string }) {
-  return (
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <div
-        style={{ width: 6, height: 28, background: "#646cff" }}
-        aria-hidden
-      />
-      <h3 className="h5 m-0 text-uppercase text-white-50">{label}</h3>
-    </div>
-  );
-}
-
-function convertAssetsForHTML(assets: LeaderboardAssets | null) {
-  if (!assets) return undefined;
-
-  const carsMap: Record<string, string> = {};
-  const tracksMap: Record<string, string> = {};
-
-  assets.cars.forEach((c) => {
-    // Index by both name and ID
-    carsMap[c.name] = c.iconUrl || "";
-    carsMap[c.id] = c.iconUrl || "";
-  });
-
-  assets.tracks.forEach((t) => {
-    // Index by both name and ID
-    tracksMap[t.name] = t.iconUrl || "";
-    tracksMap[t.id] = t.iconUrl || "";
-  });
-
-  return { cars: carsMap, tracks: tracksMap };
-}
+import SectionTitle from "../components/SectionTitle";
 
 function buildRaceKey(race: ParsedRace): string {
   const classInfo = race.slots.find(

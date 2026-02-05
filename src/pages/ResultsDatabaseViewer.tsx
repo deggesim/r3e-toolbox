@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useGameDataStore } from "../store/gameDataStore";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import type { ChampionshipEntry } from "../types";
 import {
   downloadHTML,
@@ -22,18 +23,7 @@ import {
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import ProcessingLog from "../components/ProcessingLog";
 import ChampionshipCard from "../components/ChampionshipCard";
-
-function SectionTitle({ label }: { readonly label: string }) {
-  return (
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <div
-        style={{ width: 6, height: 28, background: "#646cff" }}
-        aria-hidden
-      />
-      <h3 className="h5 m-0 text-uppercase text-white-50">{label}</h3>
-    </div>
-  );
-}
+import SectionTitle from "../components/SectionTitle";
 
 export default function ResultsDatabaseViewer() {
   const navigate = useNavigate();
@@ -95,29 +85,7 @@ export default function ResultsDatabaseViewer() {
 
   const totalRaces = championships.reduce((sum, champ) => sum + champ.races, 0);
 
-  const convertAssetsForHTML = () => {
-    if (!leaderboardAssets) return undefined;
-
-    const carsMap: Record<string, string> = {};
-    const tracksMap: Record<string, string> = {};
-    const carNamesMap: Record<string, string> = {};
-
-    leaderboardAssets.cars.forEach((c) => {
-      carsMap[c.id] = c.iconUrl || "";
-      carNamesMap[c.id] = c.name;
-    });
-
-    leaderboardAssets.tracks.forEach((t) => {
-      tracksMap[t.name] = t.iconUrl || "";
-      tracksMap[t.id] = t.iconUrl || "";
-    });
-
-    return {
-      cars: carsMap,
-      tracks: tracksMap,
-      carNames: carNamesMap,
-    };
-  };
+  const htmlAssets = convertAssetsForHTML(leaderboardAssets, true);
 
   const handleDownloadChampionship = (championship: ChampionshipEntry) => {
     if (!championship.raceData || championship.raceData.length === 0) {
@@ -129,7 +97,7 @@ export default function ResultsDatabaseViewer() {
     }
 
     const races = championship.raceData;
-    const assetsForHTML = convertAssetsForHTML();
+    const assetsForHTML = htmlAssets;
     const html = generateStandingsHTML(
       races,
       championship.alias,
