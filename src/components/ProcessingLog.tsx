@@ -11,7 +11,7 @@ const ProcessingLog = ({
   logs,
   getLogVariant,
   logsEndRef,
-}: Readonly<ProcessingLogProps>) {
+}: Readonly<ProcessingLogProps>) => {
   if (logs.length === 0) {
     return null;
   }
