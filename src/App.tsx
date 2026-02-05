@@ -1,14 +1,14 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useGameDataStore } from "./store/gameDataStore";
-import Layout from "./components/Layout";
-import GameDataOnboarding from "./components/GameDataOnboarding";
-import AIManagement from "./components/AIManagement";
-import FixQualyTimes from "./components/FixQualyTimes";
-import BuildResultsDatabase from "./components/BuildResultsDatabase";
-import ResultsDatabaseViewer from "./components/ResultsDatabaseViewer";
-import ResultsDatabaseDetail from "./components/ResultsDatabaseDetail";
-import Settings from "./components/Settings";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
+import Layout from "./components/Layout";
+import AIManagement from "./pages/AIManagement";
+import BuildResultsDatabase from "./pages/BuildResultsDatabase";
+import FixQualyTimes from "./pages/FixQualyTimes";
+import GameDataOnboarding from "./pages/GameDataOnboarding";
+import ResultsDatabaseDetail from "./pages/ResultsDatabaseDetail";
+import ResultsDatabaseViewer from "./pages/ResultsDatabaseViewer";
+import Settings from "./pages/Settings";
+import { useGameDataStore } from "./store/gameDataStore";
 
 // Protected route component
 function ProtectedRoute({ element }: { element: React.ReactElement }) {

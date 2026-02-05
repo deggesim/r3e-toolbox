@@ -16,9 +16,9 @@ import { useConfigStore } from "../store/configStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useElectronAPI } from "../hooks/useElectronAPI";
-import ProcessingLog from "./ProcessingLog";
-import FileUploadSection from "./FileUploadSection";
-import AISelectionTable from "./AISelectionTable";
+import ProcessingLog from "../components/ProcessingLog";
+import FileUploadSection from "../components/FileUploadSection";
+import AISelectionTable from "../components/AISelectionTable";
 
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)

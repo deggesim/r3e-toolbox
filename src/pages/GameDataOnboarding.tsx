@@ -5,7 +5,7 @@ import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useGameDataStore } from "../store/gameDataStore";
 import type { RaceRoomData } from "../types";
 import { validateR3eData } from "../utils/r3eDataValidator";
-import ProcessingLog from "./ProcessingLog";
+import ProcessingLog from "../components/ProcessingLog";
 
 export default function GameDataOnboarding() {
   const electron = useElectronAPI();

@@ -24,7 +24,7 @@ import {
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
 import { parseResultFiles } from "../utils/raceResultParser";
-import ProcessingLog from "./ProcessingLog";
+import ProcessingLog from "../components/ProcessingLog";
 
 function SectionTitle({ label }: { readonly label: string }) {
   return (

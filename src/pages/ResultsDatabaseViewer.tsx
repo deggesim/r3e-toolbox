@@ -20,8 +20,8 @@ import {
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
 import { useProcessingLog } from "../hooks/useProcessingLog";
-import ProcessingLog from "./ProcessingLog";
-import ChampionshipCard from "./ChampionshipCard";
+import ProcessingLog from "../components/ProcessingLog";
+import ChampionshipCard from "../components/ChampionshipCard";
 
 function SectionTitle({ label }: { readonly label: string }) {
   return (

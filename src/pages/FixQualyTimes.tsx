@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLog } from "../hooks/useProcessingLog";
-import ProcessingLog from "./ProcessingLog";
+import ProcessingLog from "../components/ProcessingLog";
 
 export default function FixQualyTimes() {
   const [qualFile, setQualFile] = useState<File | null>(null);
