@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import {
   Alert,
   Badge,
@@ -229,7 +236,7 @@ const BuildResultsDatabase = () => {
   }, [htmlOverride]);
 
   const handleFolderChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
       setChampionshipAlias(""); // Reset alias when files are selected
@@ -324,7 +331,7 @@ const BuildResultsDatabase = () => {
   }, [parsedRaces, resolveCarName, resolveCarIcon]);
 
   const handleRestoreDatabase = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 

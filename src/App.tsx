@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/Layout";
@@ -11,7 +12,7 @@ import Settings from "./pages/Settings";
 import { useGameDataStore } from "./store/gameDataStore";
 
 // Protected route component
-const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
+const ProtectedRoute = ({ element }: { element: ReactElement }) => {
   const isLoaded = useGameDataStore((state) => state.isLoaded);
 
   if (!isLoaded) {

@@ -1,10 +1,11 @@
+import type { RefObject } from "react";
 import { Badge, Card } from "react-bootstrap";
 import type { LogEntry } from "../hooks/useProcessingLog";
 
 interface ProcessingLogProps {
   logs: LogEntry[];
   getLogVariant: (type: LogEntry["type"]) => string;
-  logsEndRef: React.RefObject<HTMLDivElement | null>;
+  logsEndRef: RefObject<HTMLDivElement | null>;
 }
 
 const ProcessingLog = ({

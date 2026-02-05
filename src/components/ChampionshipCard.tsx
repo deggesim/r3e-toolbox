@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Card, Button, ListGroup, Badge, Modal } from "react-bootstrap";
+import { useState, type MouseEvent } from "react";
+import { Badge, Button, Card, ListGroup, Modal } from "react-bootstrap";
 import type { ChampionshipEntry } from "../types";
 
 interface ChampionshipCardProps {
@@ -17,13 +17,13 @@ const ChampionshipCard = ({
 }: ChampionshipCardProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
     onDelete(championship.alias);
     setShowDeleteModal(false);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: MouseEvent) => {
     e.stopPropagation();
     setShowDeleteModal(true);
   };

@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
+import ProcessingLog from "../components/ProcessingLog";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useGameDataStore } from "../store/gameDataStore";
 import type { RaceRoomData } from "../types";
 import { validateR3eData } from "../utils/r3eDataValidator";
-import ProcessingLog from "../components/ProcessingLog";
 
 const GameDataOnboarding = () => {
   const electron = useElectronAPI();
@@ -91,9 +91,7 @@ const GameDataOnboarding = () => {
     autoLoadGameData();
   }, [electron.isElectron]);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 

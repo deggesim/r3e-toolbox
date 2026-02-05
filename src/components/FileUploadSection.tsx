@@ -1,17 +1,17 @@
-import React from "react";
+import type { ChangeEvent, RefObject } from "react";
 import { Form } from "react-bootstrap";
 import type { Assets } from "../types";
 
 interface FileUploadSectionProps {
-  onXmlUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onXmlUpload: (event: ChangeEvent<HTMLInputElement>) => void;
   assets: Assets | null;
-  xmlInputRef: React.RefObject<HTMLInputElement | null>;
+  xmlInputRef: RefObject<HTMLInputElement | null>;
 }
 
-const FileUploadSection: React.FC<FileUploadSectionProps> = ({
+const FileUploadSection = ({
   onXmlUpload,
   xmlInputRef,
-}) => {
+}: FileUploadSectionProps) => {
   return (
     <Form>
       <h5 className="mb-3">File Upload</h5>

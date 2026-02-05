@@ -1,5 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Card, Container, Modal, Button } from "react-bootstrap";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+import { Button, Card, Container, Modal } from "react-bootstrap";
+import AISelectionTable from "../components/AISelectionTable";
+import FileUploadSection from "../components/FileUploadSection";
+import ProcessingLog from "../components/ProcessingLog";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { useProcessingLog } from "../hooks/useProcessingLog";
+import { useConfigStore } from "../store/configStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import type {
   Assets,
   Database,
@@ -12,13 +25,6 @@ import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
-import { useConfigStore } from "../store/configStore";
-import { useGameDataStore } from "../store/gameDataStore";
-import { useProcessingLog } from "../hooks/useProcessingLog";
-import { useElectronAPI } from "../hooks/useElectronAPI";
-import ProcessingLog from "../components/ProcessingLog";
-import FileUploadSection from "../components/FileUploadSection";
-import AISelectionTable from "../components/AISelectionTable";
 
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
@@ -69,7 +75,7 @@ const recalculateClassMinMax = (classData: DatabaseClass): void => {
   }
 };
 
-const AIManagement: React.FC = () => {
+const AIManagement = () => {
   const { config } = useConfigStore();
   const electron = useElectronAPI();
   const gameData = useGameDataStore((state) => state.gameData);
@@ -182,7 +188,7 @@ const AIManagement: React.FC = () => {
   // ============ FILE UPLOAD HANDLERS ============
 
   const handleXmlUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
