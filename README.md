@@ -2,6 +2,12 @@
 
 A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience** (R3E). This web application provides three essential utilities for managing AI difficulty, correcting race results, and building championship standings.
 
+## 📥 Download
+
+**[⬇️ Download Latest Release (Windows Installer)](https://github.com/deggesim/r3e-toolbox/releases/latest)**
+
+Alternatively, download directly from the [Releases page](https://github.com/deggesim/r3e-toolbox/releases) for other versions or formats.
+
 ## What Does It Do?
 
 The toolbox combines multiple standalone tools into a single, user-friendly interface:
@@ -529,6 +535,37 @@ package.json                  # Dependencies & scripts
 | Result files not parsing          | Unknown track/class in r3e-data   | Update `r3e-data.json` from primer tool             |
 | HTML preview not loading          | Browser blocked iframe            | Export and open HTML file directly                  |
 | Missing championship alias        | Field left empty                  | Enter name in Step 3 before export                  |
+
+## 🚀 Releasing New Versions (For Maintainers)
+
+To create a new release with automatic installers on GitHub:
+
+```bash
+# 1. Make sure everything is committed
+git add .
+git commit -m "Release v1.0.0"
+
+# 2. Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+
+# 3. GitHub Actions will automatically build and create the release
+# Installers will appear at: https://github.com/deggesim/r3e-toolbox/releases
+```
+
+The automated workflow:
+
+- ✅ Builds the Electron app for Windows (add macOS/Linux in the workflow if needed)
+- ✅ Creates installer packages (`.exe`, `.dmg`, `.AppImage`, `.deb`)
+- ✅ Creates GitHub Release with attached installers
+- ✅ Generates release notes automatically from commits
+
+To release manually without GitHub Actions:
+
+```bash
+npm run build:electron
+# Installers will be in dist-electron/
+```
 
 ## Development Guidelines
 
