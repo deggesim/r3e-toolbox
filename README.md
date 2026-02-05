@@ -574,3 +574,12 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for AI ag
 ```
 
 ```
+
+## Disclaimer
+
+This project is a personal, independent initiative developed in my personal time and with personal equipment.
+
+It is not affiliated with, sponsored by, or related to my employer in any way.
+No proprietary information, confidential materials, or company resources have been used in its development.
+
+The software is provided free of charge, without any warranty or obligation of support.
