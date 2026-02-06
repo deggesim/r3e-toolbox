@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/deggesim/r3e-toolbox/compare/v0.2.1...v0.2.2) (2026-02-06)
+
+
+### Bug Fixes
+
+* update icon paths and replace favicon images ([416c724](https://github.com/deggesim/r3e-toolbox/commit/416c724663eb5bb24ef206909a4dd8c3e6d75940))
+
 ## [0.2.1](https://github.com/deggesim/r3e-toolbox/compare/v0.2.0...v0.2.1) (2026-02-06)
 
 
