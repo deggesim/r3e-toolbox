@@ -41,7 +41,6 @@ jobs:
   build:
     needs: release
     if: success()
-    runs-on: windows-latest
     runs-on: ${{ matrix.os }}
 
     strategy:
