@@ -69,7 +69,7 @@
         "nsis",
         "portable"
       ],
-      "icon": "public/icon.ico",
+      "icon": "public/favicon.ico",
       "signAndEditExecutable": false
     },
     "nsis": {
@@ -82,7 +82,7 @@
         "snap"
       ],
       "category": "Utility",
-      "icon": "public/icon.png"
+      "icon": "public/favicon-32x32.png"
     }
   }
 }

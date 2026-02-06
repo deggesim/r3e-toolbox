@@ -38,7 +38,6 @@ const Layout = ({ children }: PropsWithChildren<{}>) => {
           <div className="sidebar">
             <div className="sidebar-header border-bottom border-secondary text-center">
               <img src={logoUrl} alt="R3E Toolbox" className="sidebar-logo" />
-              <h1 className="h5 mb-2 mt-2 text-gradient">R3E Toolbox</h1>
             </div>
             <Nav className="flex-column p-2">
               {menuItems.map((item) => (
