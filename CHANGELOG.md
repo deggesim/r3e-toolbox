@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/deggesim/r3e-toolbox/compare/v0.2.0...v0.2.1) (2026-02-06)
+
+
+### Bug Fixes
+
+* use master branch in build job checkout ([eafc627](https://github.com/deggesim/r3e-toolbox/commit/eafc62773353e9e2f24045dc35eb84c844006e74))
+
 # [0.2.0](https://github.com/deggesim/r3e-toolbox/compare/v0.1.0...v0.2.0) (2026-02-06)
 
 
