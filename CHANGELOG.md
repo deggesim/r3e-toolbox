@@ -1,3 +1,10 @@
+## [0.2.3](https://github.com/deggesim/r3e-toolbox/compare/v0.2.2...v0.2.3) (2026-02-06)
+
+
+### Bug Fixes
+
+* correct asset paths and remove semantic-release github assets config ([609e32d](https://github.com/deggesim/r3e-toolbox/commit/609e32d6892c48ad7676aba686757ebc798083ae))
+
 ## [0.2.2](https://github.com/deggesim/r3e-toolbox/compare/v0.2.1...v0.2.2) (2026-02-06)
 
 
