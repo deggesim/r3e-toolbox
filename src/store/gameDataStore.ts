@@ -29,7 +29,7 @@ export const useGameDataStore = create<GameDataState>()(
     }),
     {
       name: "game-data-store",
-      storage: createJSONStorage(() => sessionStorage), // Use sessionStorage so it persists in tab but not across browser restarts
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );
