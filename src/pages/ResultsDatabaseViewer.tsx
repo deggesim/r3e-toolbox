@@ -29,6 +29,7 @@ const ResultsDatabaseViewer = () => {
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
+  const renameChampionship = useChampionshipStore((state) => state.rename);
   const clearAll = useChampionshipStore((state) => state.clear);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
   const gameData = useGameDataStore((state) => state.gameData);
@@ -256,6 +257,7 @@ const ResultsDatabaseViewer = () => {
                     <ChampionshipCard
                       championship={championship}
                       onDelete={removeChampionship}
+                      onRename={renameChampionship}
                       onClick={handleCardClick}
                       onDownload={handleDownloadChampionship}
                     />
