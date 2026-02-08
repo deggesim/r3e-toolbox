@@ -32,7 +32,9 @@ const AIModifications = ({
       !selectedTrackId ||
       (selectedAILevel === null && !hasModifiedPlayerTimes)
     ) {
-      return <p>Select class, track, and AI level or modify player times</p>;
+      return (
+        <span>Select class, track, and AI level or modify player times</span>
+      );
     }
 
     let aiText = <></>;
@@ -42,17 +44,18 @@ const AIModifications = ({
       const trackName =
         assets?.tracks[selectedTrackId]?.name || selectedTrackId;
       aiText = (
-        <p>{`${className} - ${trackName} : ${aifrom} - ${aito} (step: ${spacing})`}</p>
+        <span>{`${className} - ${trackName} : ${aifrom} - ${aito} (step: ${spacing})`}</span>
       );
     }
 
     let playerTimesText = <></>;
     if (hasModifiedPlayerTimes) {
-      playerTimesText = <p>Player times modified</p>;
+      playerTimesText = <span>Player times modified</span>;
     }
     return (
       <>
         {aiText}
+        <br />
         {playerTimesText}
       </>
     );
