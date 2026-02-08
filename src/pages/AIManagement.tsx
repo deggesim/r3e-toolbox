@@ -655,7 +655,7 @@ const AIManagement = () => {
               <Card bg="dark" text="white" className="border-secondary mb-3">
                 <Card.Body>
                   <Row className="g-3 mb-4">
-                    <Col lg={4} md={6} xs={12}>
+                    <Col xl={3} lg={6} md={12}>
                       <Classes
                         availableClasses={availableClasses}
                         selectedClassId={selectedClassId}
@@ -665,7 +665,7 @@ const AIManagement = () => {
                       />
                     </Col>
 
-                    <Col lg={4} md={6} xs={12}>
+                    <Col xl={3} lg={6} md={12}>
                       <Tracks
                         availableTracks={availableTracks}
                         selectedClassId={selectedClassId}
@@ -676,7 +676,7 @@ const AIManagement = () => {
                       />
                     </Col>
 
-                    <Col lg={4} md={6} xs={12}>
+                    <Col xl={3} lg={6} md={12}>
                       <PlayerTimesTable
                         playerTimes={playerTimes}
                         selectedClassId={selectedClassId}
@@ -697,15 +697,17 @@ const AIManagement = () => {
                       />
                     </Col>
 
-                    <Col md={6} xs={12}>
+                    <Col xl={3} lg={6} md={12}>
                       <AILevels
                         aiLevels={aiLevels}
                         selectedAILevel={selectedAILevel}
+                        spacing={spacing}
                         onSelectAILevel={setSelectedAILevel}
+                        onSpacingChange={setSpacing}
                       />
                     </Col>
 
-                    <Col md={6} xs={12}>
+                    <Col xs={12}>
                       <AIModifications
                         assets={assets}
                         selectedClassId={selectedClassId}
@@ -715,7 +717,6 @@ const AIManagement = () => {
                         aifrom={aifrom}
                         aito={aito}
                         hasModifiedPlayerTimes={hasModifiedPlayerTimes()}
-                        onSpacingChange={setSpacing}
                         onApply={() => setShowApplyModal(true)}
                         onRestorePlayerTimes={handleRestorePlayerTimes}
                       />

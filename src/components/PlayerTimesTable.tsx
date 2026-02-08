@@ -121,7 +121,6 @@ const PlayerTimesTable = ({
             </strong>
             ?
           </p>
-          <p className="text-muted">This action cannot be undone.</p>
         </Modal.Body>
         <Modal.Footer className="bg-dark border-secondary">
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
@@ -148,7 +147,6 @@ const PlayerTimesTable = ({
             time(s).
           </p>
           <p>Only the best time ({makeTime(minTime!, ":")}) will be kept.</p>
-          <p className="text-muted">This action cannot be undone.</p>
         </Modal.Body>
         <Modal.Footer className="bg-dark border-secondary">
           <Button
