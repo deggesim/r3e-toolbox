@@ -1,3 +1,18 @@
+# [0.3.0](https://github.com/deggesim/r3e-toolbox/compare/v0.2.3...v0.3.0) (2026-02-08)
+
+
+### Bug Fixes
+
+* change storage from sessionStorage to localStorage for game data persistence ([5b6fc15](https://github.com/deggesim/r3e-toolbox/commit/5b6fc15be46aca5c3ad7c5b95ecf8ddb364a2d9d))
+
+
+### Features
+
+* add AI management components including AILevels, AIModifications, Classes, and Tracks; remove AISelectionTable ([dc0bd96](https://github.com/deggesim/r3e-toolbox/commit/dc0bd96bd3605e9fad6a36143b8b8b99d01d55cd))
+* add rename functionality to ChampionshipCard and championship store ([3a7c490](https://github.com/deggesim/r3e-toolbox/commit/3a7c4902efab63841a4760b5fe25ac384378ff2f))
+* enhance AILevels and AIManagement components with spacing control; remove redundant spacing logic from AIModifications ([cc88776](https://github.com/deggesim/r3e-toolbox/commit/cc887768fd9966446cbffb580c2b3d622bf4d7e7))
+* integrate PlayerTimesTable component and enhance player times management in AISelectionTable and AIManagement ([1f52f7f](https://github.com/deggesim/r3e-toolbox/commit/1f52f7f1557d100e8598acc6a678ca889f9bb1f4))
+
 ## [0.2.3](https://github.com/deggesim/r3e-toolbox/compare/v0.2.2...v0.2.3) (2026-02-06)
 
 
