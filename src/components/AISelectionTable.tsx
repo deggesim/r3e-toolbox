@@ -1,6 +1,7 @@
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
 import { makeTime } from "../utils/timeUtils";
+import PlayerTimesTable from "./PlayerTimesTable";
 
 interface AISelectionTableProps {
   assets: Assets | null;
@@ -23,6 +24,15 @@ interface AISelectionTableProps {
   showApplyModal: boolean;
   onHideApplyModal: () => void;
   onConfirmApply: () => void;
+  playerTimesModifications: Array<{
+    classId: string;
+    className: string;
+    trackId: string;
+    trackName: string;
+    removedCount: number;
+  }>;
+  onDeletePlayerTime: (timeIndex: number) => void;
+  onDeleteAllButMinPlayerTime: () => void;
 }
 
 const AISelectionTable = ({
@@ -46,6 +56,9 @@ const AISelectionTable = ({
   showApplyModal,
   onHideApplyModal,
   onConfirmApply,
+  playerTimesModifications,
+  onDeletePlayerTime,
+  onDeleteAllButMinPlayerTime,
 }: AISelectionTableProps) => {
   // Calculate available classes and tracks
   const availableClasses =
@@ -108,7 +121,7 @@ const AISelectionTable = ({
           </div>
 
           <Row className="g-3 mb-4">
-            <Col lg={4}>
+            <Col lg={3} md={6} xs={12}>
               <Card bg="secondary" text="white" className="h-100">
                 <Card.Header className="fw-semibold">Classes</Card.Header>
                 <Card.Body className="p-0">
@@ -148,7 +161,7 @@ const AISelectionTable = ({
               </Card>
             </Col>
 
-            <Col lg={5}>
+            <Col lg={3} md={6} xs={12}>
               <Card bg="secondary" text="white" className="h-100">
                 <Card.Header className="fw-semibold">Tracks</Card.Header>
                 <Card.Body className="p-0">
@@ -199,7 +212,7 @@ const AISelectionTable = ({
               </Card>
             </Col>
 
-            <Col lg={3}>
+            <Col lg={3} md={6} xs={12}>
               <Card bg="secondary" text="white" className="h-100">
                 <Card.Header className="fw-semibold">AI Levels</Card.Header>
                 <Card.Body className="p-0">
@@ -237,6 +250,16 @@ const AISelectionTable = ({
                   </div>
                 </Card.Body>
               </Card>
+            </Col>
+
+            <Col lg={3} md={6} xs={12}>
+              <PlayerTimesTable
+                playerTimes={playertimes}
+                selectedClassId={selectedClassId}
+                selectedTrackId={selectedTrackId}
+                onDeleteTime={onDeletePlayerTime}
+                onDeleteAllButMin={onDeleteAllButMinPlayerTime}
+              />
             </Col>
           </Row>
 
@@ -295,25 +318,44 @@ const AISelectionTable = ({
           <Modal.Title>Apply Modification</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-dark text-white">
-          {selectedClassId && selectedTrackId && (
+          <p>You are about to apply the following modifications:</p>
+
+          {selectedClassId && selectedTrackId && selectedAILevel !== null && (
             <>
-              <p>You are about to apply the following modification:</p>
+              <h6 className="mt-3 mb-2">AI Generation:</h6>
               <ul>
                 <li>
-                  <strong>Class:</strong> {assets.classes[selectedClassId].name}
+                  <strong>Class:</strong>{" "}
+                  {assets?.classes?.[selectedClassId]?.name || selectedClassId}
                 </li>
                 <li>
-                  <strong>Track:</strong> {assets.tracks[selectedTrackId].name}
+                  <strong>Track:</strong>{" "}
+                  {assets?.tracks?.[selectedTrackId]?.name || selectedTrackId}
                 </li>
                 <li>
                   <strong>AI Range:</strong> {aifrom} - {aito} (step: {spacing})
                 </li>
               </ul>
-              <p className="text-muted">
-                This will download the modified aiadaptation.xml file.
-              </p>
             </>
           )}
+
+          {playerTimesModifications.length > 0 && (
+            <>
+              <h6 className="mt-3 mb-2">Player Times Removed:</h6>
+              <ul className="mb-0">
+                {playerTimesModifications.map((mod, idx) => (
+                  <li key={idx}>
+                    <strong>{mod.className}</strong> - {mod.trackName}:{" "}
+                    {mod.removedCount} time(s) removed
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <p className="text-muted mt-3 mb-0">
+            This will download the modified aiadaptation.xml file.
+          </p>
         </Modal.Body>
         <Modal.Footer className="bg-dark border-secondary">
           <Button variant="secondary" onClick={onHideApplyModal}>

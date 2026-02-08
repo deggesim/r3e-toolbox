@@ -23,6 +23,7 @@ import type {
 } from "../types";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
+import { makeTime } from "../utils/timeUtils";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
 
@@ -96,6 +97,9 @@ const AIManagement = () => {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [xmlAutoLoaded, setXmlAutoLoaded] = useState(false);
+  const [originalPlayerTimes, setOriginalPlayerTimes] = useState<PlayerTimes>({
+    classes: {},
+  });
 
   // Refs
   const xmlInputRef = useRef<HTMLInputElement>(null);
@@ -160,6 +164,7 @@ const AIManagement = () => {
             if (added) {
               setDatabase(newDatabase);
               setPlayerTimes(newPlayerTimes);
+              setOriginalPlayerTimes(structuredClone(newPlayerTimes));
               setXmlAutoLoaded(true);
               addLog(
                 "success",
@@ -200,6 +205,7 @@ const AIManagement = () => {
         if (added) {
           setDatabase(newDatabase);
           setPlayerTimes(newPlayerTimes);
+          setOriginalPlayerTimes(structuredClone(newPlayerTimes));
           addLog("success", "✔ AI Adaptation XML loaded successfully");
         }
       } catch (error) {
@@ -236,6 +242,49 @@ const AIManagement = () => {
   );
 
   // ============ APPLY MODIFICATION ============
+
+  const handleConfirmApply = () => {
+    setShowApplyModal(false);
+    setLogs([]);
+
+    let updatedDb = database;
+    let updatedPt = playerTimes;
+
+    // Apply AI modification if AI level is selected
+    if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
+      updatedDb = handleApplyModification(
+        selectedClassId,
+        selectedTrackId,
+        aifrom,
+        aito,
+        spacing,
+      );
+    }
+
+    // Apply player times modification (always use current playerTimes)
+    updatedPt = playerTimes;
+
+    // Download the merged results
+    if (assets && updatedDb) {
+      try {
+        const xmlContent = buildXML(updatedDb, updatedPt, assets);
+        const blob = new Blob([xmlContent], {
+          type: "application/xml",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "aiadaptation.xml";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        addLog("success", "📥 Downloaded modified aiadaptation.xml");
+      } catch (error) {
+        addLog("error", "❌ Error generating XML file");
+      }
+    }
+  };
 
   const handleApplyModification = useCallback(
     (
@@ -318,45 +367,48 @@ const AIManagement = () => {
     [database, processed, assets, addLog, setLogs],
   );
 
-  const handleApplyClick = useCallback(
-    (
-      classid: string,
-      trackid: string,
-      aifrom: number,
-      aito: number,
-      aiSpacing: number,
-    ) => {
-      const updatedDb = handleApplyModification(
-        classid,
-        trackid,
-        aifrom,
-        aito,
-        aiSpacing,
-      );
+  // ============ REMOVE GENERATED ============
 
-      if (assets && updatedDb) {
-        try {
-          const xmlContent = buildXML(
-            updatedDb,
-            playerTimes || { classes: {} },
-            assets,
-          );
-          const blob = new Blob([xmlContent], { type: "application/xml" });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "aiadaptation.xml";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          URL.revokeObjectURL(url);
-          addLog("success", "📥 Downloaded modified aiadaptation.xml");
-        } catch (error) {
-          addLog("error", "❌ Error generating XML file");
-        }
+  const handleDeletePlayerTime = useCallback(
+    (classid: string, trackid: string, timeIndex: number) => {
+      const newPlayerTimes = structuredClone(playerTimes);
+      const track = newPlayerTimes.classes[classid]?.tracks[trackid];
+      if (!track || !track.playertimes) return;
+
+      const deletedTime = track.playertimes[timeIndex];
+      track.playertimes.splice(timeIndex, 1);
+
+      // Recalculate playertime (minimum)
+      if (track.playertimes.length > 0) {
+        track.playertime = Math.min(...track.playertimes);
+      } else {
+        delete track.playertime;
       }
+
+      setPlayerTimes(newPlayerTimes);
+      addLog("success", `✔ Deleted player time: ${makeTime(deletedTime, ":")}`);
     },
-    [assets, playerTimes, handleApplyModification, addLog],
+    [playerTimes, addLog],
+  );
+
+  const handleDeleteAllButMinPlayerTime = useCallback(
+    (classid: string, trackid: string) => {
+      const newPlayerTimes = structuredClone(playerTimes);
+      const track = newPlayerTimes.classes[classid]?.tracks[trackid];
+      if (!track || !track.playertimes || track.playertimes.length <= 1) return;
+
+      const minTime = Math.min(...track.playertimes);
+      const deletedCount = track.playertimes.length - 1;
+      track.playertimes = [minTime];
+      track.playertime = minTime;
+
+      setPlayerTimes(newPlayerTimes);
+      addLog(
+        "success",
+        `✔ Deleted ${deletedCount} player time(s), kept best: ${makeTime(minTime, ":")}`,
+      );
+    },
+    [playerTimes, addLog],
   );
 
   // ============ REMOVE GENERATED ============
@@ -438,10 +490,91 @@ const AIManagement = () => {
     }
   }, [downloadXml, playerTimes, addLog, setLogs]);
 
+  // ============ CHECK IF PLAYER TIMES MODIFIED ============
+
+  const hasModifiedPlayerTimes = useCallback((): boolean => {
+    // Check if current playerTimes differs from original
+    for (const [classId, classData] of Object.entries(playerTimes.classes)) {
+      const origClass = originalPlayerTimes.classes[classId];
+      if (!origClass) return true; // New class added
+
+      for (const [trackId, trackData] of Object.entries(classData.tracks)) {
+        const origTrack = origClass.tracks[trackId];
+        if (!origTrack) return true; // New track added
+
+        // Compare number of times and actual values
+        if (
+          !trackData.playertimes ||
+          !origTrack.playertimes ||
+          trackData.playertimes.length !== origTrack.playertimes.length
+        ) {
+          return true; // Different number of times
+        }
+
+        // Check if arrays are identical
+        if (
+          !trackData.playertimes.every(
+            (t, i) => t === origTrack.playertimes![i],
+          )
+        ) {
+          return true; // Different times
+        }
+      }
+    }
+    return false;
+  }, [playerTimes, originalPlayerTimes]);
+
+  const getPlayerTimesModifications = useCallback((): Array<{
+    classId: string;
+    className: string;
+    trackId: string;
+    trackName: string;
+    removedCount: number;
+  }> => {
+    const modifications: Array<{
+      classId: string;
+      className: string;
+      trackId: string;
+      trackName: string;
+      removedCount: number;
+    }> = [];
+
+    for (const [classId, classData] of Object.entries(playerTimes.classes)) {
+      const origClass = originalPlayerTimes.classes[classId];
+      if (!origClass) continue;
+
+      for (const [trackId, trackData] of Object.entries(classData.tracks)) {
+        const origTrack = origClass.tracks[trackId];
+        if (!origTrack) continue;
+
+        const currentCount = trackData.playertimes?.length || 0;
+        const originalCount = origTrack.playertimes?.length || 0;
+        const removedCount = originalCount - currentCount;
+
+        if (removedCount > 0) {
+          modifications.push({
+            classId,
+            className: assets?.classes?.[classId]?.name || classId,
+            trackId,
+            trackName: assets?.tracks?.[trackId]?.name || trackId,
+            removedCount,
+          });
+        }
+      }
+    }
+
+    return modifications;
+  }, [playerTimes, originalPlayerTimes, assets]);
+
   // ============ RENDER ============
 
   const isApplyDisabled =
     !selectedClassId || !selectedTrackId || selectedAILevel === null;
+
+  // Apply button is enabled if:
+  // 1. User selected AI level for generation, OR
+  // 2. User modified player times
+  const isApplyButtonEnabled = !isApplyDisabled || hasModifiedPlayerTimes();
 
   return (
     <Container fluid className="py-4">
@@ -477,27 +610,23 @@ const AIManagement = () => {
             onRemoveGenerated={handleRemoveGenerated}
             onResetAll={handleResetAll}
             onApply={() => setShowApplyModal(true)}
-            isApplyDisabled={isApplyDisabled}
+            isApplyDisabled={!isApplyButtonEnabled}
             aifrom={aifrom}
             aito={aito}
             showApplyModal={showApplyModal}
             onHideApplyModal={() => setShowApplyModal(false)}
-            onConfirmApply={() => {
-              setShowApplyModal(false);
-              if (
-                selectedClassId &&
-                selectedTrackId &&
-                selectedAILevel !== null
-              ) {
-                handleApplyClick(
-                  selectedClassId,
-                  selectedTrackId,
-                  aifrom,
-                  aito,
-                  spacing,
-                );
-              }
-            }}
+            onConfirmApply={handleConfirmApply}
+            playerTimesModifications={getPlayerTimesModifications()}
+            onDeletePlayerTime={(timeIndex) =>
+              handleDeletePlayerTime(
+                selectedClassId,
+                selectedTrackId,
+                timeIndex,
+              )
+            }
+            onDeleteAllButMinPlayerTime={() =>
+              handleDeleteAllButMinPlayerTime(selectedClassId, selectedTrackId)
+            }
           />
 
           <ProcessingLog
