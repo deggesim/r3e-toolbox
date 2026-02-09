@@ -1,29 +1,36 @@
 import type { PropsWithChildren } from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
+import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
+import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
+import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import "./Layout.css";
 import logoUrl from "/logo.png";
 
 interface MenuItemData {
   path: string;
   label: string;
-  icon: string;
+  icon: IconDefinition;
 }
 
 const menuItems: MenuItemData[] = [
-  { path: "/ai-management", label: "AI Management", icon: "🤖" },
-  { path: "/fix-qualy-times", label: "Fix Qualy Times", icon: "⏱️" },
+  { path: "/ai-management", label: "AI Management", icon: faRobot },
+  { path: "/fix-qualy-times", label: "Fix Qualy Times", icon: faClock },
   {
     path: "/build-results-database",
     label: "Build Results Database",
-    icon: "💾",
+    icon: faDatabase,
   },
   {
     path: "/results-database",
     label: "Results Database Viewer",
-    icon: "📊",
+    icon: faChartBar,
   },
-  { path: "/settings", label: "Settings", icon: "⚙️" },
+  { path: "/settings", label: "Settings", icon: faGear },
 ];
 
 const Layout = ({ children }: PropsWithChildren<{}>) => {
@@ -50,7 +57,9 @@ const Layout = ({ children }: PropsWithChildren<{}>) => {
                     }`
                   }
                 >
-                  <span className="menu-icon fs-5">{item.icon}</span>
+                  <span className="menu-icon">
+                    <FontAwesomeIcon icon={item.icon} />
+                  </span>
                   <span className="menu-label">{item.label}</span>
                 </NavLink>
               ))}

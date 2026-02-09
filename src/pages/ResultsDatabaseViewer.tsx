@@ -1,3 +1,9 @@
+import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import {
   Alert,
@@ -10,20 +16,20 @@ import {
   Row,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import ChampionshipCard from "../components/ChampionshipCard";
+import ProcessingLog from "../components/ProcessingLog";
+import SectionTitle from "../components/SectionTitle";
+import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
-import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useGameDataStore } from "../store/gameDataStore";
-import { convertAssetsForHTML } from "../utils/assetConverter";
+import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import type { ChampionshipEntry } from "../types";
+import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   downloadHTML,
   generateChampionshipIndexHTML,
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
-import { useProcessingLog } from "../hooks/useProcessingLog";
-import ProcessingLog from "../components/ProcessingLog";
-import ChampionshipCard from "../components/ChampionshipCard";
-import SectionTitle from "../components/SectionTitle";
 
 const ResultsDatabaseViewer = () => {
   const navigate = useNavigate();
@@ -92,7 +98,8 @@ const ResultsDatabaseViewer = () => {
     if (!championship.raceData || championship.raceData.length === 0) {
       addLog(
         "error",
-        "❌ No race data stored for this championship. Create or update it first.",
+        "No race data stored for this championship. Create or update it first.",
+        faXmark,
       );
       return;
     }
@@ -107,22 +114,26 @@ const ResultsDatabaseViewer = () => {
     );
 
     downloadHTML(html, championship.fileName);
-    addLog("success", `📥 Downloaded ${championship.fileName}`);
+    addLog("success", `Downloaded ${championship.fileName}`);
   };
 
   const handleDownloadIndex = () => {
     if (championships.length === 0) {
-      addLog("warning", "⚠ No championships available to create index");
+      addLog(
+        "warning",
+        "No championships available to create index",
+        faExclamationTriangle,
+      );
       return;
     }
     const html = generateChampionshipIndexHTML(championships);
     downloadHTML(html, "index.html");
-    addLog("success", "📥 Downloaded index.html");
+    addLog("success", "Downloaded index.html");
   };
 
   const handleDownloadDatabase = () => {
     if (championships.length === 0) {
-      addLog("warning", "⚠ No championships to download");
+      addLog("warning", "No championships to download", faExclamationTriangle);
       return;
     }
 
@@ -136,14 +147,15 @@ const ResultsDatabaseViewer = () => {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    addLog("success", "📥 Downloaded championship database");
+    addLog("success", "Downloaded championship database");
   };
 
   return (
     <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
-          📊 Results Database Viewer
+          <FontAwesomeIcon icon={faChartBar} className="me-2" />
+          Results Database Viewer
         </Card.Header>
         <Card.Body>
           <Card.Text className="text-white-50 mb-4">
@@ -242,13 +254,15 @@ const ResultsDatabaseViewer = () => {
                   disabled={championships.length === 0}
                   variant="secondary"
                 >
-                  ⬇️ Download database
+                  <FontAwesomeIcon icon={faDownload} className="me-2" />
+                  Download database
                 </Button>
                 <Button
                   onClick={handleDownloadIndex}
                   disabled={championships.length === 0}
                 >
-                  ⬇️ Download index.html
+                  <FontAwesomeIcon icon={faDownload} className="me-2" />
+                  Download index.html
                 </Button>
               </div>
               <Row className="g-3">
@@ -270,7 +284,8 @@ const ResultsDatabaseViewer = () => {
                   onClick={() => setShowClearAllModal(true)}
                   disabled={championships.length === 0}
                 >
-                  🗑️ Clear All Championships
+                  <FontAwesomeIcon icon={faTrashCan} className="me-2" />
+                  Clear All Championships
                 </Button>
               </div>
             </>

@@ -289,7 +289,7 @@ export const parseAndValidateR3eData = (content: string): RaceRoomData => {
     const errorMessage = [
       "Invalid r3e-data.json structure:",
       "",
-      ...validation.errors.map((err) => `  ❌ ${err}`),
+      ...validation.errors.map((err) => err),
     ].join("\n");
 
     throw new Error(errorMessage);

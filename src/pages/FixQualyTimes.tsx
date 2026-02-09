@@ -1,7 +1,13 @@
+import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
+import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRef, useState } from "react";
 import { Button, Card, Container, Form, Modal } from "react-bootstrap";
-import { useProcessingLog } from "../hooks/useProcessingLog";
 import ProcessingLog from "../components/ProcessingLog";
+import { useProcessingLog } from "../hooks/useProcessingLog";
 
 const FixQualyTimes = () => {
   const [qualFile, setQualFile] = useState<File | null>(null);
@@ -45,33 +51,34 @@ const FixQualyTimes = () => {
       // Validation 1: event equality
       if (!eventsAreEqual(qual.event, race.event)) {
         throw new TypeError(
-          "❌ ERROR: 'event' attributes differ between qualification and race file.",
+          "EVENT: event attributes differ between qualification and race file.",
         );
       }
-      addLog("success", "✔ 'event' attribute is identical.");
+      addLog("success", "event attribute is identical.", faCheck);
 
       // Validation 2: bestLapTimeMs must be valid
       qual.drivers.forEach((d: any) => {
         if (typeof d.bestLapTimeMs !== "number" || d.bestLapTimeMs <= -1) {
           throw new TypeError(
-            `❌ ERROR: Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
+            `Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
           );
         }
       });
       addLog(
         "success",
-        "✔ All qualification drivers have valid bestLapTimeMs.",
+        "All qualification drivers have valid bestLapTimeMs.",
+        faCheck,
       );
 
       // Validation 3: raceTimeMs must be > -1
       race.drivers.forEach((d: any) => {
         if (typeof d.raceTimeMs !== "number" || d.raceTimeMs <= -1) {
           throw new TypeError(
-            `❌ ERROR: Driver '${d.name}' has invalid raceTimeMs: ${d.raceTimeMs}`,
+            `Driver '${d.name}' has invalid raceTimeMs: ${d.raceTimeMs}`,
           );
         }
       });
-      addLog("success", "✔ All race drivers have valid raceTimeMs.");
+      addLog("success", "All race drivers have valid raceTimeMs.", faCheck);
 
       // Build map from name → bestLapTimeMs
       const qualTimesMap = new Map(
@@ -86,7 +93,8 @@ const FixQualyTimes = () => {
         if (qualTime === undefined) {
           addLog(
             "warning",
-            `⚠ WARNING: Driver '${driver.name}' is not present in qualification file.`,
+            `Driver '${driver.name}' is not present in qualification file.`,
+            faExclamationTriangle,
           );
         } else if (driver.qualTimeMs === -1 || driver.qualTimeMs !== qualTime) {
           driver.qualTimeMs = qualTime;
@@ -94,13 +102,17 @@ const FixQualyTimes = () => {
         }
       });
 
-      addLog("success", `✔ Updated ${updatedCount} driver(s) in race file.`);
+      addLog(
+        "success",
+        `Updated ${updatedCount} driver(s) in race file.`,
+        faCheck,
+      );
 
       // Generate output filename
       const raceFileName = raceFile.name.replace(/\.(txt|json)$/i, "");
       const outputFileName = `${raceFileName}_fix.txt`;
 
-      addLog("success", `🎉 Processing completed successfully!`);
+      addLog("success", `Processing completed successfully!`, faCheck);
 
       // Prepare download data and show modal
       setDownloadData({
@@ -111,7 +123,7 @@ const FixQualyTimes = () => {
       setShowDownloadModal(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      addLog("error", errorMessage);
+      addLog("error", errorMessage, faXmark);
     } finally {
       setIsProcessing(false);
     }
@@ -142,7 +154,7 @@ const FixQualyTimes = () => {
     a.remove();
     URL.revokeObjectURL(url);
 
-    addLog("success", `📥 File downloaded: ${downloadData.fileName}`);
+    addLog("success", `File downloaded: ${downloadData.fileName}`, faCheck);
     setShowDownloadModal(false);
   };
 
@@ -155,7 +167,8 @@ const FixQualyTimes = () => {
     <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
-          ⏱️ Fix Qualy Times
+          <FontAwesomeIcon icon={faClock} className="me-2" />
+          Fix Qualy Times
         </Card.Header>
         <Card.Body>
           <Card.Text className="text-white-50 mb-4">
@@ -177,7 +190,7 @@ const FixQualyTimes = () => {
               />
               {qualFile && (
                 <Form.Text className="text-success">
-                  ✓ Selected: {qualFile.name}
+                  Selected: {qualFile.name}
                 </Form.Text>
               )}
             </Form.Group>
@@ -195,7 +208,7 @@ const FixQualyTimes = () => {
               />
               {raceFile && (
                 <Form.Text className="text-success">
-                  ✓ Selected: {raceFile.name}
+                  Selected: {raceFile.name}
                 </Form.Text>
               )}
             </Form.Group>
@@ -239,7 +252,7 @@ const FixQualyTimes = () => {
         <Modal.Body className="bg-dark text-white">
           {downloadData && (
             <>
-              <p>✅ Processing completed successfully!</p>
+              <p>Processing completed successfully!</p>
               <ul>
                 <li>
                   <strong>Updated drivers:</strong> {downloadData.updatedCount}
@@ -259,6 +272,7 @@ const FixQualyTimes = () => {
             Cancel
           </Button>
           <Button variant="primary" onClick={handleDownload}>
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
             Download
           </Button>
         </Modal.Footer>

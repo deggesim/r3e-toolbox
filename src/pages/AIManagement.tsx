@@ -1,3 +1,7 @@
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
+import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
+import { faThumbsUp } from "@fortawesome/free-solid-svg-icons/faThumbsUp";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   useCallback,
   useEffect,
@@ -171,10 +175,7 @@ const AIManagement = () => {
               setPlayerTimes(newPlayerTimes);
               setOriginalPlayerTimes(structuredClone(newPlayerTimes));
               setXmlAutoLoaded(true);
-              addLog(
-                "success",
-                `✔ Loaded aiadaptation.xml from: ${result.path}`,
-              );
+              addLog("success", `Loaded aiadaptation.xml from: ${result.path}`);
             }
           } catch (error) {
             setXmlAutoLoaded(false);
@@ -185,10 +186,10 @@ const AIManagement = () => {
           }
         } else {
           setXmlAutoLoaded(false);
-          addLog("info", `ℹ aiadaptation.xml not found in UserData paths`);
+          addLog("info", `aiadaptation.xml not found in UserData paths`);
         }
       } catch (error) {
-        addLog("error", `❌ Auto-load of aiadaptation.xml failed: ${error}`);
+        addLog("error", `Auto-load of aiadaptation.xml failed: ${error}`);
       }
     };
 
@@ -211,10 +212,10 @@ const AIManagement = () => {
           setDatabase(newDatabase);
           setPlayerTimes(newPlayerTimes);
           setOriginalPlayerTimes(structuredClone(newPlayerTimes));
-          addLog("success", "✔ AI Adaptation XML loaded successfully");
+          addLog("success", "AI Adaptation XML loaded successfully");
         }
       } catch (error) {
-        addLog("error", "❌ Error parsing XML file");
+        addLog("error", "Error parsing XML file");
       }
     },
     [database, playerTimes, addLog],
@@ -225,7 +226,7 @@ const AIManagement = () => {
   const downloadXml = useCallback(
     (db: Database, pt: PlayerTimes) => {
       if (!assets) {
-        addLog("error", "❌ Please load RaceRoom data before exporting XML");
+        addLog("error", "Please load RaceRoom data before exporting XML");
         return;
       }
       try {
@@ -240,7 +241,7 @@ const AIManagement = () => {
         link.remove();
         URL.revokeObjectURL(url);
       } catch (error) {
-        addLog("error", "❌ Error generating XML file");
+        addLog("error", "Error generating XML file");
       }
     },
     [assets, addLog],
@@ -284,9 +285,13 @@ const AIManagement = () => {
         link.click();
         link.remove();
         URL.revokeObjectURL(url);
-        addLog("success", "📥 Downloaded modified aiadaptation.xml");
+        addLog(
+          "success",
+          "📥 Downloaded modified aiadaptation.xml",
+          faDownload,
+        );
       } catch (error) {
-        addLog("error", "❌ Error generating XML file");
+        addLog("error", "Error generating XML file");
       }
     }
   };
@@ -311,11 +316,11 @@ const AIManagement = () => {
       if (!processed.classes[classid]?.tracks[trackid]) {
         addLog(
           "error",
-          "❌ No processed data available for this class/track combination",
+          "No processed data available for this class/track combination",
         );
         return database;
       }
-      addLog("success", "✔ Processed data found");
+      addLog("success", "Processed data found");
 
       // Create a deep copy of the current database to avoid mutating state directly
       const newDatabase = structuredClone(database);
@@ -349,7 +354,7 @@ const AIManagement = () => {
         }
       }
 
-      addLog("success", `✔ Generated ${addedCount} AI level(s)`);
+      addLog("success", `Generated ${addedCount} AI level(s)`);
 
       // Update min/max AI for the track based on newly added levels
       const aiLevels = Object.keys(track.ailevels).map(Number);
@@ -364,7 +369,7 @@ const AIManagement = () => {
       classData.minAI = Math.min(...allTrackAIs);
       classData.maxAI = Math.max(...allTrackAIs);
 
-      addLog("success", "🎉 Modification applied successfully");
+      addLog("success", "Modification applied successfully", faThumbsUp);
 
       setDatabase(newDatabase);
       return newDatabase;
@@ -391,7 +396,7 @@ const AIManagement = () => {
       }
 
       setPlayerTimes(newPlayerTimes);
-      addLog("success", `✔ Deleted player time: ${makeTime(deletedTime, ":")}`);
+      addLog("success", `Deleted player time: ${makeTime(deletedTime, ":")}`);
     },
     [playerTimes, addLog],
   );
@@ -410,7 +415,7 @@ const AIManagement = () => {
       setPlayerTimes(newPlayerTimes);
       addLog(
         "success",
-        `✔ Deleted ${deletedCount} player time(s), kept best: ${makeTime(minTime, ":")}`,
+        `Deleted ${deletedCount} player time(s), kept best: ${makeTime(minTime, ":")}`,
       );
     },
     [playerTimes, addLog],
@@ -418,7 +423,7 @@ const AIManagement = () => {
 
   const handleRestorePlayerTimes = useCallback(() => {
     setPlayerTimes(structuredClone(originalPlayerTimes));
-    addLog("success", "✔ Player times restored to original state");
+    addLog("success", "Player times restored to original state");
   }, [originalPlayerTimes, addLog]);
 
   // ============ REMOVE GENERATED ============
@@ -440,7 +445,7 @@ const AIManagement = () => {
           const trackLabel = assets?.tracks?.[trackId]?.name || trackId;
           addLog(
             "success",
-            `✔ Removed ${removed} generated levels from ${classLabel} - ${trackLabel}`,
+            `Removed ${removed} generated levels from ${classLabel} - ${trackLabel}`,
           );
         }
 
@@ -457,7 +462,8 @@ const AIManagement = () => {
     } else {
       addLog(
         "success",
-        `🎉 Successfully removed ${removedCount} generated AI level(s)`,
+        `Successfully removed ${removedCount} generated AI level(s)`,
+        faThumbsUp,
       );
     }
 
@@ -489,11 +495,11 @@ const AIManagement = () => {
     const emptyDb: Database = { classes: {} };
     setDatabase(emptyDb);
     setProcessed({ classes: {} });
-    addLog("success", "✔ All AI data cleared from database");
+    addLog("success", "All AI data cleared from database");
 
     downloadXml(emptyDb, playerTimes);
     addLog("success", "📥 Downloaded reset aiadaptation.xml");
-    addLog("success", "🎉 All AI times have been reset successfully");
+    addLog("success", "All AI times have been reset successfully", faThumbsUp);
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
@@ -622,7 +628,8 @@ const AIManagement = () => {
     <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary mb-4">
         <Card.Header as="h2" className="text-center page-header-gradient">
-          🤖 AI Management
+          <FontAwesomeIcon icon={faRobot} className="me-2" />
+          AI Management
         </Card.Header>
         <Card.Body>
           <Card.Text className="text-white-50 mb-4">

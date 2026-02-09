@@ -1,3 +1,5 @@
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMemo } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import type { Config } from "../config";
@@ -97,7 +99,10 @@ const Settings = () => {
     <Container className="py-4">
       <Card bg="dark" text="white" className="border-secondary mb-4">
         <Card.Header as="h2" className="text-center page-header-gradient">
-          ⚙️ Settings
+          <span className="menu-icon me-2">
+            <FontAwesomeIcon icon={faGear} />
+          </span>
+          Settings
         </Card.Header>
         <Card.Body>
           <Card.Text className="text-white-50 mb-4">

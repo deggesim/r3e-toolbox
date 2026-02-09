@@ -1,8 +1,12 @@
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
+import { faPencil } from "@fortawesome/free-solid-svg-icons/faPencil";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   useState,
-  type MouseEvent,
   type ChangeEvent,
   type FormEvent,
+  type MouseEvent,
 } from "react";
 import {
   Alert,
@@ -152,7 +156,8 @@ const ChampionshipCard = ({
               title="Rename championship"
               className="text-nowrap px-2 flex-fill"
             >
-              ✏️ Rename
+              <FontAwesomeIcon icon={faPencil} className="me-2" />
+              Rename
             </Button>
             <Button
               variant="danger"
@@ -161,7 +166,8 @@ const ChampionshipCard = ({
               title="Delete championship"
               className="text-nowrap px-2 flex-fill"
             >
-              🗑️ Remove
+              <FontAwesomeIcon icon={faTrashCan} className="me-2" />
+              Remove
             </Button>
           </div>
           <Button
@@ -176,7 +182,8 @@ const ChampionshipCard = ({
             }
             className="text-nowrap px-2 w-100"
           >
-            ⬇️ Download as HTML
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
+            Download as HTML
           </Button>
         </Card.Body>
       </Card>

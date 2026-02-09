@@ -1,6 +1,9 @@
 import { Fragment, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Alert, Button, Container } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { makeTime } from "../utils/timeUtils";
@@ -490,7 +493,8 @@ const ResultsDatabaseDetail = () => {
         onClick={() => navigate("/results-database")}
         className="back-button"
       >
-        ← Back to Database
+        <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+        Back to Database
       </Button>
 
       <div className="results-header">
@@ -513,7 +517,8 @@ const ResultsDatabaseDetail = () => {
         </p>
         <div className="mt-3">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
-            ⬇️ Download as HTML
+            <FontAwesomeIcon icon={faDownload} className="me-2" />
+            Download as HTML
           </Button>
         </div>
       </div>
