@@ -154,7 +154,7 @@ const AIManagement = () => {
       if (!electron.isElectron) {
         addLog(
           "warning",
-          "⚠ aiadaptation.xml can only be auto-loaded in Electron mode",
+          "aiadaptation.xml can only be auto-loaded in Electron mode",
         );
         return;
       }
@@ -181,7 +181,7 @@ const AIManagement = () => {
             setXmlAutoLoaded(false);
             addLog(
               "warning",
-              `⚠ Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`,
+              `Failed to parse aiadaptation.xml from RaceRoom UserData: ${error}`,
             );
           }
         } else {
@@ -468,7 +468,7 @@ const AIManagement = () => {
     }
 
     downloadXml(newDatabase, playerTimes);
-    addLog("success", "📥 Downloaded modified aiadaptation.xml");
+    addLog("success", "Downloaded modified aiadaptation.xml", faDownload);
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
@@ -498,7 +498,7 @@ const AIManagement = () => {
     addLog("success", "All AI data cleared from database");
 
     downloadXml(emptyDb, playerTimes);
-    addLog("success", "📥 Downloaded reset aiadaptation.xml");
+    addLog("success", "Downloaded reset aiadaptation.xml", faDownload);
     addLog("success", "All AI times have been reset successfully", faThumbsUp);
 
     if (xmlInputRef.current) {

@@ -1,3 +1,5 @@
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { Button, Card, Modal, Table } from "react-bootstrap";
 import type { PlayerTimes } from "../types";
@@ -77,11 +79,11 @@ const PlayerTimesTable = ({
                     <td className="text-center">
                       <Button
                         size="sm"
-                        variant="outline-danger"
+                        variant="danger"
                         onClick={() => handleDeleteClick(index)}
                         disabled={time === minTime && times.length === 1}
                       >
-                        ✕
+                        <FontAwesomeIcon icon={faTrashCan} />
                       </Button>
                     </td>
                   </tr>

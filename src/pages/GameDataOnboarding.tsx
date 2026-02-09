@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
-import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
-import { faClipboardList } from "@fortawesome/free-solid-svg-icons/faClipboardList";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import ProcessingLog from "../components/ProcessingLog";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
@@ -51,7 +50,7 @@ const GameDataOnboarding = () => {
             `Found r3e-data.json at: ${result.path || "auto-detected path"}`,
             faCheck,
           );
-          addLog("info", "Validating file structure...", faClipboardList);
+          addLog("info", "Validating file structure...");
 
           // Validate and parse the data
           const parsed = JSON.parse(result.data);
@@ -112,12 +111,11 @@ const GameDataOnboarding = () => {
 
     setLoadSuccess(false);
     setIsLoading(true);
-    addLog("info", `Loading file: ${file.name}`, faClipboardList);
+    addLog("info", `Loading file: ${file.name}`);
 
     try {
       const text = await file.text();
-      addLog("info", "Validating file structure...", faClipboardList);
-
+      addLog("info", "Validating file structure...");
       // Validate and parse the uploaded file
       const parsed = JSON.parse(text);
       const validation = validateR3eData(parsed);
