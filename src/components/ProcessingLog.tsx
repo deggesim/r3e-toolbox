@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { Badge, Card } from "react-bootstrap";
 import type { LogEntry } from "../hooks/useProcessingLog";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface ProcessingLogProps {
   logs: LogEntry[];
@@ -44,7 +45,10 @@ const ProcessingLog = ({
             <Badge bg={getLogVariant(log.type)} className="me-2">
               {log.type.toUpperCase()}
             </Badge>
-            <span style={{ color: "#e8e8e8" }}>{log.message}</span>
+            <span style={{ color: "#e8e8e8" }}>
+              {log.icon && <FontAwesomeIcon icon={log.icon} className="me-2" />}
+              {log.message}
+            </span>
           </div>
         ))}
         <div ref={logsEndRef} />

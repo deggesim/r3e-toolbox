@@ -20,6 +20,11 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
 import ProcessingLog from "../components/ProcessingLog";
 import SectionTitle from "../components/SectionTitle";
 import { useProcessingLog } from "../hooks/useProcessingLog";
@@ -361,7 +366,7 @@ const BuildResultsDatabase = () => {
         setShowRestoreModal(true);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        addLog("error", `❌ Error reading database file: ${message}`);
+        addLog("error", `Error reading database file: ${message}`, faXmark);
         if (databaseInputRef.current) {
           databaseInputRef.current.value = "";
         }
@@ -377,9 +382,10 @@ const BuildResultsDatabase = () => {
     setAllChampionships(pendingRestoreFile);
     addLog(
       "success",
-      `✔ Database restored with ${pendingRestoreFile.length} championship(s)`,
+      `Database restored with ${pendingRestoreFile.length} championship(s)`,
+      faCheck,
     );
-    addLog("success", "🎉 Database restoration complete");
+    addLog("success", "Database restoration complete", faCheck);
     setPendingRestoreFile(null);
 
     // Reset file input
@@ -401,14 +407,14 @@ const BuildResultsDatabase = () => {
       if (!aliasTrimmed) {
         throw new Error("Championship alias cannot be empty");
       }
-      addLog("success", "✔ Championship alias is valid");
+      addLog("success", "Championship alias is valid", faCheck);
 
       if (parsedRaces.length === 0) {
         throw new Error(
           "No races parsed. Select at least one RaceRoom result file",
         );
       }
-      addLog("success", `✔ ${parsedRaces.length} race(s) parsed`);
+      addLog("success", `${parsedRaces.length} race(s) parsed`, faCheck);
 
       // Check for existing championship
       const existing = championships.find(
@@ -448,7 +454,8 @@ const BuildResultsDatabase = () => {
 
       addLog(
         "success",
-        `✔ ${newRacesCount} new race configuration(s) added, ${parsedRaces.length - newRacesCount} duplicate(s) skipped`,
+        `${newRacesCount} new race configuration(s) added, ${parsedRaces.length - newRacesCount} duplicate(s) skipped`,
+        faCheck,
       );
 
       const { carName, carIcon } = resolveCarInfo();
@@ -466,11 +473,12 @@ const BuildResultsDatabase = () => {
 
       addLog(
         "success",
-        `🎉 Championship ${existing ? "updated" : "created"} successfully with ${mergedRaces.length} total race(s)`,
+        `Championship ${existing ? "updated" : "created"} successfully with ${mergedRaces.length} total race(s)`,
+        faCheck,
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      addLog("error", `❌ ${errorMessage}`);
+      addLog("error", errorMessage, faXmark);
     } finally {
       setIsProcessing(false);
     }
@@ -486,7 +494,8 @@ const BuildResultsDatabase = () => {
     <Container fluid className="py-4">
       <Card bg="dark" text="white" className="border-secondary">
         <Card.Header as="h2" className="text-center page-header-gradient">
-          💾 Build Results Database
+          <FontAwesomeIcon icon={faDatabase} className="me-2" />
+          Build Results Database
         </Card.Header>
         <Card.Body className="p-4">
           <SectionTitle label="Step 1 · Download leaderboard icons" />
@@ -569,7 +578,17 @@ const BuildResultsDatabase = () => {
                           bg={cachedAssets ? "success" : "info"}
                           className="py-1 px-2"
                         >
-                          {cachedAssets ? "💾 Cached in localStorage" : "Fresh"}
+                          {cachedAssets ? (
+                            <>
+                              <FontAwesomeIcon
+                                icon={faDatabase}
+                                className="me-2"
+                              />
+                              Cached in localStorage
+                            </>
+                          ) : (
+                            "Fresh"
+                          )}
                         </Badge>
                       </div>
                       <div className="d-flex gap-3 mb-2">
@@ -698,12 +717,12 @@ const BuildResultsDatabase = () => {
           </Row>
           {parsedRaces.length === 0 && (
             <Alert variant="info" className="mt-3">
-              ℹ️ Select RaceRoom result files in Step 2 to continue.
+              Select RaceRoom result files in Step 2 to continue.
             </Alert>
           )}
           {parsedRaces.length > 0 && !championshipAlias && (
             <Alert variant="info" className="mt-3">
-              ℹ️ Enter a championship alias in Step 2 to enable saving.
+              Enter a championship alias in Step 2 to enable saving.
             </Alert>
           )}
 
@@ -726,7 +745,8 @@ const BuildResultsDatabase = () => {
         </Modal.Header>
         <Modal.Body className="bg-dark text-white">
           <p className="text-danger">
-            ⚠️ <strong>Warning:</strong> This action cannot be undone.
+            <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+            <strong>Warning:</strong> This action cannot be undone.
           </p>
           <p>
             You are about to restore your championship database from a backup

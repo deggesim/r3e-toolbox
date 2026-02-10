@@ -1,3 +1,7 @@
+import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import ProcessingLog from "../components/ProcessingLog";
@@ -32,57 +36,67 @@ const GameDataOnboarding = () => {
       }
 
       setIsLoading(true);
-      addLog("info", "🔍 Searching for r3e-data.json in standard paths...");
+      addLog(
+        "info",
+        "Searching for r3e-data.json in standard paths...",
+        faSearch,
+      );
 
       try {
         const result = await electron.findR3eDataFile();
         if (result.success && result.data) {
           addLog(
             "success",
-            `✔ Found r3e-data.json at: ${result.path || "auto-detected path"}`,
+            `Found r3e-data.json at: ${result.path || "auto-detected path"}`,
+            faCheck,
           );
-          addLog("info", "📋 Validating file structure...");
+          addLog("info", "Validating file structure...");
 
           // Validate and parse the data
           const parsed = JSON.parse(result.data);
           const validation = validateR3eData(parsed);
 
           if (validation.valid) {
-            addLog("success", "✔ File structure is valid");
+            addLog("success", "File structure is valid");
 
             // Log stats
             const classCount = Object.keys(parsed.classes).length;
             const trackCount = Object.keys(parsed.tracks).length;
             addLog(
               "info",
-              `📊 Loaded ${classCount} classes and ${trackCount} tracks`,
+              `Loaded ${classCount} classes and ${trackCount} tracks`,
             );
 
             // Log warnings if any
             if (validation.warnings.length > 0) {
               validation.warnings.forEach((warning) => {
-                addLog("warning", `⚠ ${warning}`);
+                addLog("warning", warning, faExclamationTriangle);
               });
             }
 
             setGameData(parsed as RaceRoomData);
             setLoadSuccess(true);
-            addLog("success", "✅ Game data loaded successfully!");
+            addLog("success", "Game data loaded successfully!", faCheck);
           } else {
             validation.errors.forEach((error) => {
-              addLog("error", `❌ ${error}`);
+              addLog("error", error, faXmark);
             });
-            addLog("error", "Failed to load game data: validation errors");
+            addLog(
+              "error",
+              "Failed to load game data: validation errors",
+              faXmark,
+            );
           }
         } else {
           addLog(
             "warning",
-            "⚠ r3e-data.json not found in standard paths. Please upload it manually.",
+            "r3e-data.json not found in standard paths. Please upload it manually.",
+            faExclamationTriangle,
           );
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        addLog("error", `❌ Failed to load game data: ${message}`);
+        addLog("error", `Failed to load game data: ${message}`, faXmark);
       } finally {
         setIsLoading(false);
       }
@@ -97,46 +111,42 @@ const GameDataOnboarding = () => {
 
     setLoadSuccess(false);
     setIsLoading(true);
-    addLog("info", `📂 Loading file: ${file.name}`);
+    addLog("info", `Loading file: ${file.name}`);
 
     try {
       const text = await file.text();
-      addLog("info", "📋 Validating file structure...");
-
+      addLog("info", "Validating file structure...");
       // Validate and parse the uploaded file
       const parsed = JSON.parse(text);
       const validation = validateR3eData(parsed);
 
       if (validation.valid) {
-        addLog("success", "✔ File structure is valid");
+        addLog("success", "File structure is valid");
 
         // Log stats
         const classCount = Object.keys(parsed.classes).length;
         const trackCount = Object.keys(parsed.tracks).length;
-        addLog(
-          "info",
-          `📊 Loaded ${classCount} classes and ${trackCount} tracks`,
-        );
+        addLog("info", `Loaded ${classCount} classes and ${trackCount} tracks`);
 
         // Log warnings if any
         if (validation.warnings.length > 0) {
           validation.warnings.forEach((warning) => {
-            addLog("warning", `⚠ ${warning}`);
+            addLog("warning", warning, faExclamationTriangle);
           });
         }
 
         setGameData(parsed as RaceRoomData);
         setLoadSuccess(true);
-        addLog("success", "✅ Game data loaded successfully!");
+        addLog("success", "Game data loaded successfully!", faCheck);
       } else {
         validation.errors.forEach((error) => {
-          addLog("error", `❌ ${error}`);
+          addLog("error", error, faXmark);
         });
-        addLog("error", "Failed to load game data: validation errors");
+        addLog("error", "Failed to load game data: validation errors", faXmark);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      addLog("error", `❌ Failed to parse file: ${message}`);
+      addLog("error", `Failed to parse file: ${message}`, faXmark);
     } finally {
       setIsLoading(false);
     }
