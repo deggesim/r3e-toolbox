@@ -10,8 +10,9 @@
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "dev:vite": "vite",
     "dev:electron": "electron .",
+    "clean": "rimraf dist",
     "build": "tsc -b && vite build",
-    "build:electron": "tsc -b && vite build && electron-builder",
+    "build:electron": "npm run clean && tsc -b && vite build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -51,6 +52,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "rimraf": "^6.1.2",
     "semantic-release": "^24.2.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
@@ -73,8 +75,8 @@
         "nsis",
         "portable"
       ],
-      "icon": "public/android-chrome-512x512.png",
-      "signAndEditExecutable": false
+      "icon": "public/icon.png",
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,
