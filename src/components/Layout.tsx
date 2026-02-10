@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,6 +8,8 @@ import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
 import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
 import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { faBars } from "@fortawesome/free-solid-svg-icons/faBars";
+import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
 import "./Layout.css";
 import logoUrl from "/logo.png";
 
@@ -34,13 +36,32 @@ const menuItems: MenuItemData[] = [
 ];
 
 const Layout = ({ children }: PropsWithChildren<{}>) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
+        {/* Mobile hamburger button */}
+        <button
+          className="mobile-menu-button d-md-none"
+          onClick={toggleSidebar}
+          aria-label="Toggle menu"
+        >
+          <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} />
+        </button>
+
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div className="sidebar-overlay d-md-none" onClick={closeSidebar} />
+        )}
+
         <Col
           xs={12}
           md={3}
-          className="bg-dark border-end border-secondary sidebar-col"
+          className={`bg-dark border-end border-secondary sidebar-col ${sidebarOpen ? "sidebar-open" : ""}`}
         >
           <div className="sidebar">
             <div className="sidebar-header border-bottom border-secondary text-center">
@@ -51,6 +72,7 @@ const Layout = ({ children }: PropsWithChildren<{}>) => {
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  onClick={closeSidebar}
                   className={({ isActive }) =>
                     `menu-item d-flex align-items-center gap-2 rounded text-decoration-none ${
                       isActive ? "active" : ""

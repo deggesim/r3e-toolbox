@@ -12,8 +12,10 @@
 }
 
 .results-table-wrapper {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 30px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .results-title {
@@ -34,6 +36,7 @@
   border-collapse: collapse;
   background: var(--bg-card);
   margin: 0;
+  min-width: 800px;
 }
 
 .results-table caption {
@@ -240,4 +243,45 @@
   font-weight: 700;
   font-size: 0.95em;
   color: #fff;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 767px) {
+  .results-title {
+    font-size: 1.5rem;
+  }
+
+  .results-header {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .results-table-wrapper {
+    margin-bottom: 20px;
+    border-radius: 8px;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 8px 6px;
+    font-size: 0.9rem;
+  }
+
+  .results-table caption {
+    font-size: 1.1em;
+    padding: 12px;
+  }
+
+  .track-header img {
+    max-width: 60px;
+  }
+
+  .back-button {
+    margin-bottom: 15px;
+  }
+
+  /* Improve touch targets for buttons */
+  .btn {
+    min-height: 44px;
+  }
 }
