@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/deggesim/r3e-toolbox/compare/v0.4.1...v0.4.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* implement mobile sidebar and responsive styles for results database ([16834d5](https://github.com/deggesim/r3e-toolbox/commit/16834d55ccbf3f968d72762207618579920c2d5b))
+
 ## [0.4.1](https://github.com/deggesim/r3e-toolbox/compare/v0.4.0...v0.4.1) (2026-02-10)
 
 
