@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/deggesim/r3e-toolbox/compare/v0.4.0...v0.4.1) (2026-02-10)
+
+
+### Bug Fixes
+
+* add application icon and update site manifest for better branding ([58d27f8](https://github.com/deggesim/r3e-toolbox/commit/58d27f816052bb479a4d8dd47243dbfb0fa80b16))
+
 # [0.4.0](https://github.com/deggesim/r3e-toolbox/compare/v0.3.0...v0.4.0) (2026-02-10)
 
 

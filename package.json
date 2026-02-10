@@ -1,7 +1,7 @@
 {
   "name": "r3e-toolbox",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Comprehensive toolkit for RaceRoom Racing Experience (R3E) - AI management, race results, and championship standings",
   "author": "Simone De Gennaro",
   "type": "module",
