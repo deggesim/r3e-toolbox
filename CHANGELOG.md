@@ -1,3 +1,11 @@
+# [0.4.0](https://github.com/deggesim/r3e-toolbox/compare/v0.3.0...v0.4.0) (2026-02-10)
+
+
+### Features
+
+* enhance UI with Font Awesome icons and improve log messages in AIManagement and GameDataOnboarding ([48e6323](https://github.com/deggesim/r3e-toolbox/commit/48e632383f966e42b264af8c7ba7871840763e60))
+* integrate Font Awesome icons throughout the application ([e29963b](https://github.com/deggesim/r3e-toolbox/commit/e29963bd5f7b2e8300e4e628435eb7e9a6ad0800))
+
 # [0.3.0](https://github.com/deggesim/r3e-toolbox/compare/v0.2.3...v0.3.0) (2026-02-08)
 
 
