@@ -156,7 +156,7 @@ const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
 
 ### Prerequisites
 
-- Node.js (version 18 or higher)
+- Node.js (version 24.x or higher)
 - npm or pnpm
 - RaceRoom Racing Experience installation with `aiadaptation.xml` file
 
@@ -305,11 +305,11 @@ aiadaptation.xml
 - Numerical stability: avoids floating-point errors in normal equations
 - Interface supports future extensions (e.g., parabolic fitting with coefficient `c`)
 
-#### 4. **UI Dashboard** (`src/components/AIDashboard.tsx`)
+#### 4. **AI Management Page** ([src/pages/AIManagement.tsx](src/pages/AIManagement.tsx))
 
 - Load `r3e-data.json` for track/class metadata
 - File I/O: Import XML → Parse → Process → Render → Export XML
-- State management: React hooks (no Redux)
+- State management: Zustand stores for persistence
 - Features: Track/class selection, AI level visualization, parameter controls
 
 #### 5. **XML Builder** (`src/utils/xmlBuilder.ts`)
@@ -419,6 +419,7 @@ package.json                  # Dependencies & scripts
 - **React 19** - UI framework with hooks
 - **React Router 7** - Client-side routing (pages + detail views)
 - **React Bootstrap 2.10** - UI component library (Cards, Buttons, Forms, etc.)
+- **Font Awesome 7.1** - Comprehensive icon library (solid SVG icons throughout UI)
 - **Vite 7** - Build tool (handles JSX, dev server, hot reload, bundling)
 - **TypeScript 5.9** - Type safety and IntelliSense
 
@@ -426,6 +427,12 @@ package.json                  # Dependencies & scripts
 
 - **Electron 40** - Desktop runtime with native file dialogs and filesystem access
 - **electron-builder 26** - Packaging for Windows/Linux/macOS installers
+
+### Responsive Design
+
+- **Mobile-first approach**: Sidebar menu automatically collapses on mobile devices
+- **Bootstrap responsive utilities**: Flexbox-based layout scales from mobile to desktop
+- **Touch-friendly UI**: All buttons and inputs sized for touch interaction
 
 ### State Management
 
@@ -563,9 +570,9 @@ package.json                  # Dependencies & scripts
 ### Extending the UI
 
 1. Create new component in `src/components/` (e.g., `ChartVisualization.tsx`)
-2. Use React hooks for state management
-3. Import in `AIDashboard.tsx` and integrate into render tree
-4. No Redux or external state management needed (keep simple)
+2. Use Zustand stores for state management (see [src/store/](src/store/))
+3. Import in appropriate page component (e.g., `src/pages/AIManagement.tsx`)
+4. Maintain consistency with existing UI patterns (Layout, ProcessingLog, FileUploadSection)
 
 ## Integration with RaceRoom
 
@@ -653,7 +660,7 @@ To release manually without GitHub Actions:
 
 ```bash
 npm run build:electron
-# Installers will be in dist-electron/
+# Installers will be in dist/
 ```
 
 ## Development Guidelines

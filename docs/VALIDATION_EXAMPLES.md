@@ -1,371 +1,486 @@
-# Esempi di Validazione r3e-data.json
+# r3e-data.json Validation Examples
 
-Questo documento contiene esempi pratici di utilizzo del sistema di validazione.
+This document contains practical examples of using the validation system.
 
-## Esempio 1: File Valido Completo
+## Using the Validation API
 
-```json
-{
-  "classes": {
-    "1860": {
-      "Id": 1860,
-      "Name": "GT3",
-      "Cars": [{ "Id": 3422 }, { "Id": 4518 }]
-    },
-    "1867": {
-      "Id": 1867,
-      "Name": "DTM 2014",
-      "Cars": [{ "Id": 2264 }]
-    }
-  },
-  "tracks": {
-    "262": {
-      "Id": 262,
-      "Name": "RaceRoom Raceway",
-      "layouts": [
-        {
-          "Id": 263,
-          "Name": "Grand Prix",
-          "Track": 262,
-          "MaxNumberOfVehicles": 38
-        },
-        {
-          "Id": 266,
-          "Name": "Bridge",
-          "Track": 262,
-          "MaxNumberOfVehicles": 38
-        }
-      ]
-    },
-    "1670": {
-      "Id": 1670,
-      "Name": "Monza Circuit",
-      "layouts": [
-        {
-          "Id": 1671,
-          "Name": "Grand Prix",
-          "Track": 1670,
-          "MaxNumberOfVehicles": 58
-        }
-      ]
-    }
-  },
-  "cars": {
-    "3422": {
-      "Name": "Audi R8 LMS",
-      "Class": 1860
-    }
-  }
-}
-```
-
-**Output:**
-
-```
-✅ Validazione riuscita
-⚠️  Warnings (non bloccanti):
-  - Nessun warning
-```
-
-## Esempio 2: File con Errore - Classe Senza Id
-
-```json
-{
-  "classes": {
-    "1860": {
-      "Name": "GT3"
-      // ❌ Manca il campo "Id"
-    }
-  },
-  "tracks": {
-    "262": {
-      "Id": 262,
-      "Name": "RaceRoom Raceway",
-      "layouts": [
-        {
-          "Id": 263,
-          "Name": "Grand Prix"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Output:**
-
-```
-❌ Errore di validazione
-Invalid r3e-data.json structure:
-
-  ❌ Class 1860: missing or invalid 'Id' field
-```
-
-## Esempio 3: File con Warning - ID Mismatch
-
-```json
-{
-  "classes": {
-    "1860": {
-      "Id": 1999,
-      "Name": "GT3"
-      // ⚠️ Chiave è 1860 ma Id è 1999
-    }
-  },
-  "tracks": {
-    "262": {
-      "Id": 262,
-      "Name": "RaceRoom Raceway",
-      "layouts": [
-        {
-          "Id": 263,
-          "Name": "Grand Prix"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Output:**
-
-```
-✅ Validazione riuscita con warnings
-⚠️  Class 1860: ID mismatch (key: 1860, Id: 1999)
-```
-
-## Esempio 4: File con Track Senza Layouts
-
-```json
-{
-  "classes": {
-    "1860": {
-      "Id": 1860,
-      "Name": "GT3"
-    }
-  },
-  "tracks": {
-    "262": {
-      "Id": 262,
-      "Name": "RaceRoom Raceway",
-      "layouts": []
-      // ❌ Array vuoto non permesso
-    }
-  }
-}
-```
-
-**Output:**
-
-```
-⚠️  Track 262 (RaceRoom Raceway): no layouts defined
-```
-
-## Esempio 5: JSON Malformato
-
-```json
-{
-  "classes": {
-    "1860": {
-      "Id": 1860,
-      "Name": "GT3",
-    }
-  // ❌ Manca parentesi graffa di chiusura
-```
-
-**Output:**
-
-```
-❌ Errore di parsing
-Failed to parse JSON: Unexpected token } in JSON at position 72
-```
-
-## Esempio 6: File Minimo Valido
-
-```json
-{
-  "classes": {
-    "1": {
-      "Id": 1,
-      "Name": "Test Class"
-    }
-  },
-  "tracks": {
-    "1": {
-      "Id": 1,
-      "Name": "Test Track",
-      "layouts": [
-        {
-          "Id": 1,
-          "Name": "Test Layout"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Output:**
-
-```
-✅ Validazione riuscita
-```
-
-## Uso nel Codice
-
-### Esempio A: Validazione Diretta
+### Example 1: Loading Game Data with Error Handling
 
 ```typescript
-import { validateR3eData } from "./utils/r3eDataValidator";
+import { parseAndValidateR3eData } from "../utils/r3eDataValidator";
 
-const data = JSON.parse(fileContent);
-const validation = validateR3eData(data);
-
-if (!validation.valid) {
-  console.error("Errori:", validation.errors);
-  // Mostra errori all'utente
-  return;
+async function loadGameData(fileContent: string) {
+  try {
+    const gameData = parseAndValidateR3eData(fileContent);
+    console.log("✅ Game data loaded successfully");
+    console.log(`Classes: ${Object.keys(gameData.classes).length}`);
+    console.log(`Tracks: ${Object.keys(gameData.tracks).length}`);
+    return gameData;
+  } catch (error) {
+    console.error("❌ Failed to load game data:", error.message);
+    return null;
+  }
 }
-
-if (validation.warnings.length > 0) {
-  console.warn("Warnings:", validation.warnings);
-  // Continua comunque
-}
-
-// Usa i dati validati
-useGameData(data);
 ```
 
-### Esempio B: Parse e Validazione Combinati
+### Example 2: Validating Data with Detailed Messages
 
 ```typescript
-import { parseAndValidateR3eData } from "./utils/r3eDataValidator";
+import { validateR3eData } from "../utils/r3eDataValidator";
 
-try {
-  const gameData = parseAndValidateR3eData(fileContent);
-  // gameData è tipizzato come RaceRoomData
-  setGameData(gameData);
-} catch (error) {
-  // Gestisci errore
-  alert(`Errore nel file: ${error.message}`);
+function validateAndReport(data: unknown) {
+  const result = validateR3eData(data);
+
+  if (!result.valid) {
+    console.error("❌ Validation failed:");
+    result.errors.forEach((err) => console.error(`  - ${err}`));
+  }
+
+  if (result.warnings.length > 0) {
+    console.warn("⚠️ Warnings:");
+    result.warnings.forEach((warn) => console.warn(`  - ${warn}`));
+  }
+
+  return result.valid;
 }
 ```
 
-### Esempio C: Check Rapido
+### Example 3: Quick Structure Check
 
 ```typescript
-import { isValidR3eDataStructure } from "./utils/r3eDataValidator";
+import { isValidR3eDataStructure } from "../utils/r3eDataValidator";
 
-const data = JSON.parse(fileContent);
-
-if (!isValidR3eDataStructure(data)) {
-  alert("File non valido: struttura base mancante");
-  return;
+function canUseFile(parsedJson: unknown): boolean {
+  if (!isValidR3eDataStructure(parsedJson)) {
+    console.warn("File structure not compatible");
+    return false;
+  }
+  // Proceed with full validation
+  return true;
 }
-
-// Procedi con validazione completa
-const fullValidation = validateR3eData(data);
 ```
 
-## Testing con File Reali
+## Integration with Components
 
-Per testare la validazione con un file r3e-data.json reale:
+### GameDataOnboarding Component Integration
+
+```typescript
+const handleFileUpload = async (file: File) => {
+  const fileContent = await file.text();
+
+  try {
+    const gameData = parseAndValidateR3eData(fileContent);
+    setGameData(gameData);
+    setError(null);
+    addLog("success", "Game data loaded successfully");
+  } catch (error) {
+    setError(error.message);
+    addLog("error", error.message);
+  }
+};
+```
+
+### Store Integration
+
+```typescript
+import { useGameDataStore } from "../store/gameDataStore";
+
+function MyComponent() {
+  const { gameData, setGameData } = useGameDataStore();
+
+  if (!gameData) {
+    return <p>Game data not loaded. Use GameDataOnboarding to load it.</p>;
+  }
+
+  return (
+    <div>
+      <h3>Loaded Game Data</h3>
+      <p>Classes: {Object.keys(gameData.classes).length}</p>
+      <p>Tracks: {Object.keys(gameData.tracks).length}</p>
+    </div>
+  );
+}
+```
+
+## Testing Validation
+
+### Running Tests
 
 ```bash
-# 1. Copia il file dal gioco
-cp "C:\Program Files (x86)\Steam\steamapps\common\raceroom racing experience\Game\GameData\General\r3e-data.json" test-data.json
+# Run all tests
+npm test
 
-# 2. Testa nel browser o con Node.js
-node -e "
-const fs = require('fs');
-const { parseAndValidateR3eData } = require('./src/utils/r3eDataValidator');
-const content = fs.readFileSync('test-data.json', 'utf-8');
+# Run only validation tests
+npm test src/utils/__tests__/r3eDataValidator.test.ts
+
+# Run with watch mode
+npm test -- --watch
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Testing with Real Files
+
+```bash
+# Extract your real r3e-data.json
+# Location: RaceRoom Racing Experience/Game/GameData/General/r3e-data.json
+
+# In a Node.js REPL or test file:
+const fs = require("fs");
+const { parseAndValidateR3eData } = require("./src/utils/r3eDataValidator");
+
+const content = fs.readFileSync("./r3e-data.json", "utf-8");
 try {
   const data = parseAndValidateR3eData(content);
-  console.log('✅ File valido!');
-  console.log('Classi:', Object.keys(data.classes).length);
-  console.log('Tracks:', Object.keys(data.tracks).length);
-} catch (err) {
-  console.error('❌ Errore:', err.message);
-}
-"
-```
-
-## Risoluzione Problemi Comuni
-
-### Problema: "Missing or invalid 'classes' property"
-
-**Causa:** Il JSON non ha la proprietà `classes` o non è un oggetto.
-
-**Soluzione:**
-
-```json
-// ❌ Sbagliato
-{
-  "class": { ... }
-}
-
-// ✅ Corretto
-{
-  "classes": { ... }
+  console.log("✅ Real file valid");
+} catch (error) {
+  console.error("❌", error.message);
 }
 ```
 
-### Problema: "Track X: missing or invalid 'layouts' array"
+## Practical Examples
 
-**Causa:** Il track non ha la proprietà `layouts` o non è un array.
+### Example 1: Valid File - Minimal Structure
 
-**Soluzione:**
+**File content:**
 
 ```json
-// ❌ Sbagliato
 {
-  "tracks": {
-    "262": {
-      "Id": 262,
-      "Name": "Track"
+  "classes": {
+    "1": {
+      "Id": 1,
+      "Name": "GT3"
     }
-  }
-}
-
-// ✅ Corretto
-{
+  },
   "tracks": {
     "262": {
       "Id": 262,
-      "Name": "Track",
+      "Name": "RaceRoom Raceway",
       "layouts": [
-        { "Id": 263, "Name": "Layout 1" }
+        {
+          "Id": 263,
+          "Name": "Grand Prix"
+        }
       ]
     }
   }
 }
 ```
 
-### Problema: "Class X: ID mismatch"
+**Result:**
 
-**Causa:** La chiave dell'oggetto non corrisponde al campo `Id`.
+```
+✅ Validation passed
+  - Classes: 1
+  - Tracks: 1
+  - Layouts: 1
+```
 
-**Soluzione:**
+### Example 2: Class Missing ID Field
+
+**File content:**
 
 ```json
-// ⚠️ Warning (funziona ma inconsistente)
 {
   "classes": {
-    "1860": {
-      "Id": 1999,
+    "1": {
       "Name": "GT3"
+      // ❌ Missing "Id" field
     }
-  }
+  },
+  "tracks": { ... }
 }
+```
 
-// ✅ Meglio (consistente)
+**Expected output:**
+
+```
+❌ Invalid r3e-data.json structure:
+  - Class 1: missing or invalid 'Id' field
+```
+
+**Error code (TypeScript):**
+
+```typescript
+const result = validateR3eData(data);
+// result.valid = false
+// result.errors[0] = "Class 1: missing or invalid 'Id' field"
+```
+
+### Example 3: Track ID Mismatch
+
+**File content:**
+
+```json
 {
-  "classes": {
-    "1860": {
-      "Id": 1860,
-      "Name": "GT3"
+  "classes": { ... },
+  "tracks": {
+    "1": {
+      "Id": 262,  // ⚠️ Mismatch: key is "1", Id is "262"
+      "Name": "RaceRoom Raceway",
+      "layouts": [{ "Id": 263, "Name": "Grand Prix" }]
     }
   }
 }
 ```
+
+**Expected output:**
+
+```
+⚠️ Track 1: ID mismatch (key: 1, Id: 262)
+```
+
+**Behavior:**
+
+- File is still valid (validation passes)
+- Warning logged for developer awareness
+- Component can still use the data
+
+### Example 4: Empty Layouts Array
+
+**File content:**
+
+```json
+{
+  "classes": { ... },
+  "tracks": {
+    "262": {
+      "Id": 262,
+      "Name": "RaceRoom Raceway",
+      "layouts": []  // ❌ Empty array
+    }
+  }
+}
+```
+
+**Expected output:**
+
+```
+⚠️ Track 262: empty layouts array
+```
+
+**Note:** This is a warning, not a blocking error. The track exists but has no usable layouts.
+
+### Example 5: Malformed JSON
+
+**File content:**
+
+```json
+{
+  "classes": {
+    "1": {
+      "Id": 1,
+      "Name": "GT3"
+    }
+  },
+  "tracks": {
+    "262": {
+      "Id": 262,
+      "Name": "RaceRoom Raceway",
+      "layouts": [
+        {
+          "Id": 263,
+          "Name": "Grand Prix"
+          // ❌ Missing closing brace for this object
+      ]
+    }
+  }
+}
+```
+
+**Expected output:**
+
+```
+❌ JSON parsing failed: Unexpected end of JSON input
+```
+
+**Error handling:**
+
+```typescript
+try {
+  const data = parseAndValidateR3eData(content);
+} catch (error) {
+  // error.message contains the JSON parsing error message
+}
+```
+
+### Example 6: Real-World Complex File
+
+**Simplified excerpt of real r3e-data.json:**
+
+```json
+{
+  "classes": {
+    "1": {
+      "Id": 1,
+      "Name": "GT3",
+      "Cars": [
+        { "Id": 4, "Name": "Aston Martin Vantage GT3" },
+        { "Id": 5, "Name": "BMW M6 GT3" }
+      ]
+    },
+    "2": {
+      "Id": 2,
+      "Name": "IMSA GTE",
+      "Cars": [{ "Id": 13, "Name": "Aston Martin Vantage GTE" }]
+    }
+  },
+  "tracks": {
+    "262": {
+      "Id": 262,
+      "Name": "RaceRoom Raceway",
+      "layouts": [
+        { "Id": 263, "Name": "Grand Prix", "MaxNumberOfVehicles": 45 },
+        { "Id": 264, "Name": "Short Circuit", "MaxNumberOfVehicles": 45 },
+        { "Id": 265, "Name": "National", "MaxNumberOfVehicles": 45 }
+      ]
+    },
+    "274": {
+      "Id": 274,
+      "Name": "Red Bull Ring",
+      "layouts": [
+        { "Id": 275, "Name": "Grand Prix", "MaxNumberOfVehicles": 30 }
+      ]
+    }
+  }
+}
+```
+
+**Validation result:**
+
+```
+✅ Validation passed
+  - Classes: 2
+    - 1: GT3 (2 cars)
+    - 2: IMSA GTE (1 car)
+  - Tracks: 2
+    - 262: RaceRoom Raceway (3 layouts)
+    - 274: Red Bull Ring (1 layout)
+  - Total layouts: 4
+```
+
+## Common Troubleshooting
+
+### Problem: "No valid classes found in data"
+
+**Cause:** Classes are present but structurally invalid
+
+**Diagnosis:**
+
+```typescript
+const data = JSON.parse(fileContent);
+console.log("Classes type:", typeof data.classes); // Should be "object"
+console.log("Keys:", Object.keys(data.classes)); // Should have entries
+for (const [key, cls] of Object.entries(data.classes)) {
+  console.log(`Class ${key}:`, {
+    hasId: "Id" in cls,
+    idType: typeof cls.Id,
+    hasName: "Name" in cls,
+    nameType: typeof cls.Name,
+  });
+}
+```
+
+**Solution:**
+
+- Ensure each class has numeric `Id` and string `Name`
+- Verify no extra characters or typos in field names
+
+### Problem: Validation passes but data seems incomplete
+
+**Cause:** Warnings about missing optional fields
+
+**Solution:**
+
+```typescript
+const validation = validateR3eData(data);
+if (validation.warnings.length > 0) {
+  console.warn("Data loaded but with warnings:");
+  validation.warnings.forEach((w) => console.warn(`  - ${w}`));
+}
+// Data is still usable, just inform the user
+```
+
+### Problem: JSON type errors when using game data
+
+**Cause:** Type definitions not matching runtime data
+
+**Solution:**
+
+```typescript
+// Always validate before using
+const result = validateR3eData(untrustedData);
+if (!result.valid) {
+  throw new Error("Invalid game data structure");
+}
+// Now safely cast
+const gameData = untrustedData as RaceRoomData;
+```
+
+### Problem: File loads in browser but crashes in Electron
+
+**Cause:** File encoding or permissions issues
+
+**Solution:**
+
+Use Electron's built-in file dialog:
+
+```typescript
+const { ipcRenderer } = require("electron");
+
+const handleLoadFile = async () => {
+  try {
+    const content = await ipcRenderer.invoke("fs:readFile", filePath);
+    const gameData = parseAndValidateR3eData(content);
+    // File loaded successfully through Electron
+  } catch (error) {
+    console.error("Electron file load failed:", error);
+  }
+};
+```
+
+## Performance Considerations
+
+### Large Files (>10 MB)
+
+```typescript
+// For very large r3e-data.json files, consider lazy loading:
+async function loadGameDataAsync(fileContent: string) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        const data = parseAndValidateR3eData(fileContent);
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    }, 0); // Yield to event loop
+  });
+}
+```
+
+### Caching Validated Data
+
+```typescript
+// Use Zustand store to avoid re-validation
+const useGameDataStore = create<GameDataState>()(
+  persist(
+    (set) => ({
+      gameData: null,
+      setGameData: (data: RaceRoomData) => set({ gameData: data }),
+    }),
+    { name: "r3e-toolbox-gamedata" },
+  ),
+);
+
+// Load once, reuse everywhere
+if (!gameDataStore.getState().gameData) {
+  const data = parseAndValidateR3eData(content);
+  gameDataStore.setState({ gameData: data });
+}
+```
+
+---
+
+**Last Updated:** February 11, 2026 | **Version:** 0.4.3

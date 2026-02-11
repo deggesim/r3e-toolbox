@@ -74,7 +74,8 @@ useLeaderboardAssetsStore().setAssets(assets);
 const isLoading = useLeaderboardAssetsStore((state) => state.isLoading);
 
 // Get specific icon URLs
-const classIconUrl = useLeaderboardAssetsStore().getClassIconUrl("porsche911gt2rs");
+const classIconUrl =
+  useLeaderboardAssetsStore().getClassIconUrl("porsche911gt2rs");
 const trackIconUrl = useLeaderboardAssetsStore().getTrackIconUrl("donington");
 
 // Clear all cached data
@@ -91,12 +92,28 @@ useLeaderboardAssetsStore().clearAssets();
         "sourceUrl": "https://game.raceroom.com/leaderboard",
         "fetchedAt": "2026-01-23T14:30:45.123Z",
         "classes": [
-          { "id": "porsche911gt2rs", "name": "Porsche 911 GT2 RS", "iconUrl": "https://..." },
-          { "id": "mclaren720s", "name": "McLaren 720S", "iconUrl": "https://..." }
+          {
+            "id": "porsche911gt2rs",
+            "name": "Porsche 911 GT2 RS",
+            "iconUrl": "https://..."
+          },
+          {
+            "id": "mclaren720s",
+            "name": "McLaren 720S",
+            "iconUrl": "https://..."
+          }
         ],
         "tracks": [
-          { "id": "donington", "name": "Donington Park", "iconUrl": "https://..." },
-          { "id": "silverstone", "name": "Silverstone", "iconUrl": "https://..." }
+          {
+            "id": "donington",
+            "name": "Donington Park",
+            "iconUrl": "https://..."
+          },
+          {
+            "id": "silverstone",
+            "name": "Silverstone",
+            "iconUrl": "https://..."
+          }
         ]
       },
       "isLoading": false,
@@ -119,6 +136,7 @@ useLeaderboardAssetsStore().clearAssets();
 ### Clear Cache Workflow
 
 When user clicks "Clear cache" button:
+
 ```typescript
 clearAssets()  // Calls Zustand action
   ↓
@@ -132,3 +150,7 @@ UI resets to "No assets loaded" state
 ```
 
 Next data fetch will force a fresh network request from the leaderboard.
+
+---
+
+**Ultimo aggiornamento**: 11 Febbraio 2026 | **Versione**: 0.4.3

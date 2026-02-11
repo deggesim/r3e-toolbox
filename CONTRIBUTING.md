@@ -1,8 +1,8 @@
-# Convenzione Commit per Versioning Automatico
+# Commit Convention for Automatic Versioning
 
-Questo progetto usa [Conventional Commits](https://www.conventionalcommits.org/) con **semantic-release** per il versioning automatico.
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) with **semantic-release** for automatic versioning.
 
-## Formato Commit
+## Commit Format
 
 ```
 <type>(<scope>): <subject>
@@ -12,114 +12,114 @@ Questo progetto usa [Conventional Commits](https://www.conventionalcommits.org/)
 [optional footer(s)]
 ```
 
-## Tipi di Commit e Versioning
+## Commit Types and Versioning
 
 ### 🐛 fix: → PATCH version (0.0.x)
 
-**Correzione di bug**
+**Bug fix**
 
 ```bash
-git commit -m "fix: risolto errore nel parsing XML dei tempi qualifica"
-git commit -m "fix(ai-management): corretto calcolo regressione lineare"
+git commit -m "fix: resolved error in XML parsing of qualification times"
+git commit -m "fix(ai-management): corrected linear regression calculation"
 ```
 
 ### ✨ feat: → MINOR version (0.x.0)
 
-**Nuova funzionalità**
+**New feature**
 
 ```bash
-git commit -m "feat: aggiunto export CSV per standings"
-git commit -m "feat(championship): supporto per calcolo punti personalizzati"
+git commit -m "feat: added CSV export for standings"
+git commit -m "feat(championship): support for custom points calculation"
 ```
 
 ### 💥 BREAKING CHANGE: → MAJOR version (x.0.0)
 
-**Modifica architetturale incompatibile**
+**Incompatible architectural change**
 
 ```bash
-git commit -m "feat!: rimosso supporto per vecchio formato XML
+git commit -m "feat!: removed support for legacy XML format
 
-BREAKING CHANGE: Il formato XML precedente alla versione 1.0 non è più supportato"
+BREAKING CHANGE: XML format prior to version 1.0 is no longer supported"
 ```
 
-Oppure nel footer:
+Or in footer:
 
 ```bash
-git commit -m "refactor: ristrutturato sistema di cache assets
+git commit -m "refactor: restructured asset caching system
 
-BREAKING CHANGE: La cache localStorage ora usa una nuova struttura.
-Gli utenti devono ricaricare manualmente i leaderboard assets."
+BREAKING CHANGE: localStorage cache now uses new structure.
+Users must manually reload leaderboard assets."
 ```
 
-## Altri Tipi (non causano release)
+## Other Types (do not trigger release)
 
-- **docs**: Modifiche alla documentazione
-- **style**: Formattazione codice (spazi, virgole, etc.)
-- **refactor**: Refactoring senza fix o feature → PATCH
-- **perf**: Miglioramenti performance → PATCH
-- **test**: Aggiunta/modifica test
-- **build**: Modifiche al sistema di build
-- **ci**: Modifiche ai workflow CI/CD
-- **chore**: Manutenzione generica
+- **docs**: Documentation changes
+- **style**: Code formatting (spaces, commas, etc.)
+- **refactor**: Refactoring without fix or feature → PATCH
+- **perf**: Performance improvements → PATCH
+- **test**: Test addition/modification
+- **build**: Build system changes
+- **ci**: CI/CD workflow changes
+- **chore**: General maintenance
 
-## Esempi Reali
+## Real Examples
 
 ```bash
 # Patch: 0.1.0 → 0.1.1
-git commit -m "fix: gestione corretta dei file senza extension"
+git commit -m "fix: correct handling of files without extension"
 
 # Minor: 0.1.1 → 0.2.0
-git commit -m "feat: aggiunto supporto per campionati multi-classe"
+git commit -m "feat: added support for multi-class championships"
 
 # Major: 0.2.0 → 1.0.0
-git commit -m "feat!: nuovo formato database championship
+git commit -m "feat!: new championship database format
 
-BREAKING CHANGE: Il formato salvato in localStorage è incompatibile con versioni precedenti"
+BREAKING CHANGE: Format saved in localStorage is incompatible with previous versions"
 
-# Multiple commits in una PR
-git commit -m "fix: corretto bug nel calcolo punti"
-git commit -m "feat: aggiunto filtro per track"
-git commit -m "docs: aggiornato README con esempi"
-# → Risultato: MINOR version bump (0.2.0 → 0.3.0)
+# Multiple commits in a PR
+git commit -m "fix: corrected bug in points calculation"
+git commit -m "feat: added filter for track"
+git commit -m "docs: updated README with examples"
+# → Result: MINOR version bump (0.2.0 → 0.3.0)
 ```
 
-## Scope Suggeriti
+## Suggested Scopes
 
 - `ai-management`: AI Management feature
 - `fix-qualy`: Fix Qualy Times
 - `championship`: Build Results Database
 - `parser`: XML/JSON parsing utilities
-- `fitting`: Fitting statistico
-- `assets`: Gestione asset e cache
-- `ui`: Componenti UI
+- `fitting`: Statistical fitting
+- `assets`: Asset management and caching
+- `ui`: UI components
 - `electron`: Electron main/preload
 
-## Workflow Automatico
+## Automatic Workflow
 
-1. **Push su `master`**: Attiva semantic-release
-2. **Analisi commit**: Determina version bump
-3. **Aggiornamento**: package.json + CHANGELOG.md
-4. **Tag Git**: Crea tag v1.2.3
-5. **GitHub Release**: Pubblica release con note
-6. **Build Electron**: Compila e allega installer
+1. **Push to `master`**: Triggers semantic-release
+2. **Commit Analysis**: Determines version bump
+3. **Update**: package.json + CHANGELOG.md
+4. **Git Tag**: Creates tag v1.2.3
+5. **GitHub Release**: Publishes release with notes
+6. **Build Electron**: Compiles and attaches installer
 
-## Comandi Utili
+## Useful Commands
 
 ```bash
-# Verifica commit prima di push
+# Verify commits before push
 npm run lint
 
-# Simula release (dry-run)
+# Simulate release (dry-run)
 npx semantic-release --dry-run
 
-# Forzare una patch manualmente (se necessario)
+# Force patch manually (if needed)
 npm version patch -m "chore(release): %s"
 ```
 
-## Note Importanti
+## Important Notes
 
-- ⚠️ Il commit deve essere nel branch `master` per attivare la release
-- 🚀 La release è completamente automatica, non serve creare tag manualmente
-- 📝 Il CHANGELOG.md viene generato automaticamente
-- 🔖 I tag seguono il formato `v1.2.3`
-- ⏭️ I commit con `[skip ci]` non attivano il workflow
+- ⚠️ Commit must be on `master` branch to trigger release
+- 🚀 Release is fully automatic, no need to create tags manually
+- 📝 CHANGELOG.md is generated automatically
+- 🔖 Tags follow format `v1.2.3`
+- ⏭️ Commits with `[skip ci]` do not trigger workflow

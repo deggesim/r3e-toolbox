@@ -1,32 +1,32 @@
-# Validazione r3e-data.json
+# r3e-data.json Validation
 
-## Panoramica
+## Overview
 
-Il sistema di validazione garantisce che il file `r3e-data.json` caricato (manualmente o automaticamente) rispetti la struttura corretta richiesta dall'applicazione R3E Toolbox.
+The validation system ensures that the `r3e-data.json` file loaded (manually or automatically) respects the correct structure required by the R3E Toolbox application.
 
-## Architettura
+## Architecture
 
-### File Principale
+### Main File
 
-- **`src/utils/r3eDataValidator.ts`**: Contiene tutte le funzioni di validazione
+- **`src/utils/r3eDataValidator.ts`**: Contains all validation functions
 
-### Punti di Integrazione
+### Integration Points
 
-- **`src/components/GameDataOnboarding.tsx`**: Caricamento iniziale (automatico e manuale)
-- **`src/store/gameDataStore.ts`**: Store Zustand per i dati validati
+- **`src/components/GameDataOnboarding.tsx`**: Initial loading (automatic and manual)
+- **`src/store/gameDataStore.ts`**: Zustand store for validated data
 
-## Struttura Validata
+## Validated Structure
 
-### Proprietà Obbligatorie
+### Required Properties
 
 ```typescript
 {
-  classes: Record<string, RaceRoomClass>,  // Almeno 1 classe richiesta
-  tracks: Record<string, RaceRoomTrack>    // Almeno 1 track richiesto
+  classes: Record<string, RaceRoomClass>,  // At least 1 class required
+  tracks: Record<string, RaceRoomTrack>    // At least 1 track required
 }
 ```
 
-### Proprietà Opzionali
+### Optional Properties
 
 ```typescript
 {
@@ -37,127 +37,127 @@ Il sistema di validazione garantisce che il file `r3e-data.json` caricato (manua
 }
 ```
 
-## Validazione Classi
+## Class Validation
 
-Ogni classe deve avere:
+Each class must have:
 
-- **`Id`** (number): ID numerico univoco
-- **`Name`** (string): Nome della classe
-- **`Cars`** (array, opzionale): Lista di auto con `Id` numerico
+- **`Id`** (number): Unique numeric ID
+- **`Name`** (string): Class name
+- **`Cars`** (array, optional): List of cars with numeric `Id`
 
-### Controlli Eseguiti
+### Checks Performed
 
-1. ✅ Presenza di `Id` e `Name`
-2. ✅ Tipi corretti (number per Id, string per Name)
-3. ⚠️ Consistenza ID (la chiave deve corrispondere a `Id`)
-4. ⚠️ Validità array Cars (se presente)
+1. ✅ Presence of `Id` and `Name`
+2. ✅ Correct types (number for Id, string for Name)
+3. ⚠️ ID consistency (key must match `Id`)
+4. ⚠️ Cars array validity (if present)
 
-## Validazione Tracks
+## Track Validation
 
-Ogni track deve avere:
+Each track must have:
 
-- **`Id`** (number): ID numerico univoco
-- **`Name`** (string): Nome del circuito
-- **`layouts`** (array): Almeno un layout definito
+- **`Id`** (number): Unique numeric ID
+- **`Name`** (string): Circuit name
+- **`layouts`** (array): At least one layout defined
 
-Ogni layout deve avere:
+Each layout must have:
 
-- **`Id`** (number): ID numerico univoco del layout
-- **`Name`** (string): Nome del layout
-- **`Track`** (number, opzionale): Riferimento al track padre
-- **`MaxNumberOfVehicles`** (number, opzionale): Numero massimo veicoli
+- **`Id`** (number): Unique numeric layout ID
+- **`Name`** (string): Layout name
+- **`Track`** (number, optional): Reference to parent track
+- **`MaxNumberOfVehicles`** (number, optional): Maximum number of vehicles
 
-### Controlli Eseguiti
+### Checks Performed
 
-1. ✅ Presenza di `Id`, `Name`, `layouts`
-2. ✅ Tipi corretti per tutti i campi
-3. ✅ Array layouts non vuoto
-4. ✅ Ogni layout ha `Id` e `Name` validi
-5. ⚠️ Consistenza ID track/layout
-6. ⚠️ Validità campi opzionali
+1. ✅ Presence of `Id`, `Name`, `layouts`
+2. ✅ Correct types for all fields
+3. ✅ Non-empty layouts array
+4. ✅ Each layout has valid `Id` and `Name`
+5. ⚠️ Track/layout ID consistency
+6. ⚠️ Optional fields validity
 
-## Funzioni API
+## API Functions
 
 ### `validateR3eData(data: unknown): ValidationResult`
 
-Valida la struttura completa dei dati.
+Validates the complete data structure.
 
-**Parametri:**
+**Parameters:**
 
-- `data`: Oggetto da validare (tipo `unknown`)
+- `data`: Object to validate (type `unknown`)
 
-**Ritorna:**
+**Returns:**
 
 ```typescript
 {
-  valid: boolean,           // true se nessun errore critico
-  errors: string[],         // Errori bloccanti
-  warnings: string[]        // Avvisi non bloccanti
+  valid: boolean,           // true if no critical errors
+  errors: string[],         // Blocking errors
+  warnings: string[]        // Non-blocking warnings
 }
 ```
 
-**Esempio:**
+**Example:**
 
 ```typescript
 const validation = validateR3eData(jsonData);
 if (!validation.valid) {
-  console.error("Errori:", validation.errors);
+  console.error("Errors:", validation.errors);
 }
 if (validation.warnings.length > 0) {
-  console.warn("Avvisi:", validation.warnings);
+  console.warn("Warnings:", validation.warnings);
 }
 ```
 
 ### `parseAndValidateR3eData(content: string): RaceRoomData`
 
-Parsifica JSON e valida in un'unica operazione. Lancia un'eccezione se la validazione fallisce.
+Parses JSON and validates in a single operation. Throws an exception if validation fails.
 
-**Parametri:**
+**Parameters:**
 
-- `content`: Stringa JSON del file r3e-data.json
+- `content`: JSON string of the r3e-data.json file
 
-**Ritorna:**
+**Returns:**
 
-- `RaceRoomData`: Dati validati e tipizzati
+- `RaceRoomData`: Validated and typed data
 
-**Lancia:**
+**Raises:**
 
-- `Error`: Con messaggio dettagliato se parsing o validazione falliscono
+- `Error`: With detailed message if parsing or validation fails
 
-**Esempio:**
+**Example:**
 
 ```typescript
 try {
   const gameData = parseAndValidateR3eData(fileContent);
-  // Usa gameData validato
+  // Use validated gameData
 } catch (error) {
-  console.error("Validazione fallita:", error.message);
+  console.error("Validation failed:", error.message);
 }
 ```
 
 ### `isValidR3eDataStructure(data: unknown): boolean`
 
-Controllo rapido di validità senza messaggi dettagliati.
+Quick validity check without detailed messages.
 
-**Parametri:**
+**Parameters:**
 
-- `data`: Oggetto da verificare
+- `data`: Object to verify
 
-**Ritorna:**
+**Returns:**
 
-- `boolean`: true se struttura minima valida
+- `boolean`: true if minimum structure is valid
 
-**Esempio:**
+**Example:**
 
 ```typescript
 if (isValidR3eDataStructure(parsedJson)) {
-  // Procedi con validazione completa
+  // Proceed with full validation
 }
 ```
 
-## Flusso di Validazione
+## Validation Flow
 
-### Caricamento Automatico (Electron)
+### Automatic Loading (Electron)
 
 ```
 ┌─────────────────────────┐
@@ -167,34 +167,34 @@ if (isValidR3eDataStructure(parsedJson)) {
             │
             v
 ┌─────────────────────────┐
-│ File trovato in path    │
-│ standard RaceRoom       │
+│ File found in standard  │
+│ RaceRoom path           │
 └───────────┬─────────────┘
             │
             v
 ┌─────────────────────────┐
 │ parseAndValidateR3eData │
 │ - Parse JSON            │
-│ - Valida struttura      │
+│ - Validate structure    │
 │ - Log warnings          │
 └───────────┬─────────────┘
             │
        ┌────┴────┐
-       │ Errore? │
+       │ Error?  │
        └────┬────┘
-       No   │   Sì
+       No   │   Yes
             v    v
     ┌───────┐  ┌──────────────┐
-    │ Store │  │ Mostra errore│
-    │ dati  │  │ all'utente   │
+    │ Store │  │ Show error   │
+    │ data  │  │ to user      │
     └───────┘  └──────────────┘
 ```
 
-### Caricamento Manuale (Upload File)
+### Manual Loading (File Upload)
 
 ```
 ┌─────────────────────────┐
-│ Utente seleziona file   │
+│ User selects file       │
 │ r3e-data.json           │
 └───────────┬─────────────┘
             │
@@ -207,66 +207,66 @@ if (isValidR3eDataStructure(parsedJson)) {
 ┌─────────────────────────┐
 │ parseAndValidateR3eData │
 │ - Parse JSON            │
-│ - Valida struttura      │
+│ - Validate structure    │
 │ - Log warnings          │
 └───────────┬─────────────┘
             │
        ┌────┴────┐
-       │ Errore? │
+       │ Error?  │
        └────┬────┘
-       No   │   Sì
+       No   │   Yes
             v    v
     ┌───────┐  ┌──────────────┐
-    │ Store │  │ Mostra errore│
-    │ dati  │  │ nel form     │
+    │ Store │  │ Show error   │
+    │ data  │  │ in form      │
     └───────┘  └──────────────┘
 ```
 
-## Messaggi di Errore
+## Error Messages
 
-### Errori Critici (Bloccanti)
+### Critical Errors (Blocking)
 
-| Errore                                        | Descrizione                             | Azione                       |
-| --------------------------------------------- | --------------------------------------- | ---------------------------- |
-| `Invalid data: must be a valid JSON object`   | Dati non sono un oggetto JSON valido    | Verificare formato file      |
-| `Missing or invalid 'classes' property`       | Proprietà classes assente o non oggetto | Verificare struttura JSON    |
-| `Missing or invalid 'tracks' property`        | Proprietà tracks assente o non oggetto  | Verificare struttura JSON    |
-| `Class X: missing or invalid 'Id' field`      | Classe senza ID numerico                | Aggiungere ID alla classe    |
-| `Track X: missing or invalid 'layouts' array` | Track senza layouts                     | Aggiungere almeno un layout  |
-| `No valid classes found in data`              | Nessuna classe valida presente          | Verificare contenuto classes |
-| `No valid tracks found in data`               | Nessun track valido presente            | Verificare contenuto tracks  |
+| Error                                         | Description                            | Action                  |
+| --------------------------------------------- | -------------------------------------- | ----------------------- |
+| `Invalid data: must be a valid JSON object`   | Data is not a valid JSON object        | Verify file format      |
+| `Missing or invalid 'classes' property`       | classes property missing or not object | Verify JSON structure   |
+| `Missing or invalid 'tracks' property`        | tracks property missing or not object  | Verify JSON structure   |
+| `Class X: missing or invalid 'Id' field`      | Class without numeric ID               | Add ID to class         |
+| `Track X: missing or invalid 'layouts' array` | Track without layouts                  | Add at least one layout |
+| `No valid classes found in data`              | No valid class present                 | Verify classes content  |
+| `No valid tracks found in data`               | No valid track present                 | Verify tracks content   |
 
-### Avvisi (Non Bloccanti)
+### Warnings (Non-blocking)
 
-| Avviso                                   | Descrizione                | Impatto                             |
-| ---------------------------------------- | -------------------------- | ----------------------------------- |
-| `Class X: ID mismatch`                   | Chiave diversa da campo Id | Può causare confusione, ma funziona |
-| `Track X: no layouts defined`            | Track senza layouts        | Track non utilizzabile              |
-| `Class X: N cars with invalid structure` | Cars malformati            | Auto potrebbero non apparire        |
+| Warning                                  | Description           | Impact                         |
+| ---------------------------------------- | --------------------- | ------------------------------ |
+| `Class X: ID mismatch`                   | Key different from Id | May cause confusion, but works |
+| `Track X: no layouts defined`            | Track without layouts | Track not usable               |
+| `Class X: N cars with invalid structure` | Malformed cars        | Cars may not appear            |
 
-## Test
+## Testing
 
-Eseguire i test di validazione:
+Run validation tests:
 
 ```bash
 npm run test src/utils/__tests__/r3eDataValidator.test.ts
 ```
 
-### Copertura Test
+### Test Coverage
 
-- ✅ Validazione struttura corretta
-- ✅ Reiezione dati null/undefined
-- ✅ Reiezione proprietà mancanti
-- ✅ Validazione classi (Id, Name, Cars)
-- ✅ Validazione tracks (Id, Name, layouts)
-- ✅ Rilevamento ID mismatch
-- ✅ Parsing JSON con validazione
-- ✅ Gestione JSON malformati
-- ✅ Check rapido struttura
+- ✅ Correct structure validation
+- ✅ Rejection of null/undefined data
+- ✅ Rejection of missing properties
+- ✅ Class validation (Id, Name, Cars)
+- ✅ Track validation (Id, Name, layouts)
+- ✅ ID mismatch detection
+- ✅ JSON parsing with validation
+- ✅ Handling of malformed JSON
+- ✅ Quick structure check
 
-## Esempi Pratici
+## Practical Examples
 
-### File Valido Minimo
+### Minimal Valid File
 
 ```json
 {
@@ -291,34 +291,34 @@ npm run test src/utils/__tests__/r3eDataValidator.test.ts
 }
 ```
 
-### File con Errore (Id Mancante)
+### File with Error (Missing Id)
 
 ```json
 {
   "classes": {
     "1": {
       "Name": "GT3"
-      // ❌ Manca Id
+      // ❌ Missing Id
     }
   },
   "tracks": { ... }
 }
 ```
 
-**Errore restituito:**
+**Returned error:**
 
 ```
 Invalid r3e-data.json structure:
   ❌ Class 1: missing or invalid 'Id' field
 ```
 
-### File con Warning (ID Mismatch)
+### File with Warning (ID Mismatch)
 
 ```json
 {
   "classes": {
     "1": {
-      "Id": 2,  // ⚠️ Chiave è "1", ma Id è 2
+      "Id": 2,  // ⚠️ Key is "1", but Id is 2
       "Name": "GT3"
     }
   },
@@ -326,63 +326,63 @@ Invalid r3e-data.json structure:
 }
 ```
 
-**Warning restituito:**
+**Returned warning:**
 
 ```
 ⚠️ Class 1: ID mismatch (key: 1, Id: 2)
 ```
 
-## Manutenzione
+## Maintenance
 
-### Aggiungere Nuove Validazioni
+### Adding New Validations
 
-1. Aggiornare funzioni in `r3eDataValidator.ts`
-2. Aggiungere test corrispondenti in `__tests__/r3eDataValidator.test.ts`
-3. Documentare nuove regole in questo file
-4. Eseguire test: `npm run test`
+1. Update functions in `r3eDataValidator.ts`
+2. Add corresponding tests in `__tests__/r3eDataValidator.test.ts`
+3. Document new rules in this file
+4. Run tests: `npm run test`
 
-### Modificare Struttura Validata
+### Modifying Validated Structure
 
-Se la struttura di `RaceRoomData` cambia:
+If the structure of `RaceRoomData` changes:
 
-1. Aggiornare `src/types.ts`
-2. Aggiornare logica validazione in `r3eDataValidator.ts`
-3. Aggiornare test
-4. Aggiornare questa documentazione
+1. Update `src/types.ts`
+2. Update validation logic in `r3eDataValidator.ts`
+3. Update tests
+4. Update this documentation
 
 ## Best Practices
 
-1. **Sempre validare**: Non fare mai `JSON.parse()` diretto senza validazione
-2. **Gestire errori**: Mostrare messaggi chiari all'utente
-3. **Log warnings**: Gli avvisi vanno in console, non bloccano
-4. **Test edge cases**: Testare con file reali del gioco
-5. **Backup dati**: Incoraggiare utenti a fare backup prima di modifiche
+1. **Always validate**: Never do direct `JSON.parse()` without validation
+2. **Handle errors**: Show clear messages to the user
+3. **Log warnings**: Warnings go to console, don't block
+4. **Test edge cases**: Test with real game files
+5. **Back up data**: Encourage users to back up before modifications
 
-## Risoluzione Problemi
+## Troubleshooting
 
 ### "Missing or invalid 'classes' property"
 
-- Verificare che il JSON abbia `"classes": { ... }`
-- Assicurarsi che sia un oggetto, non un array
+- Verify that the JSON has `"classes": { ... }`
+- Make sure it's an object, not an array
 
 ### "No valid classes found in data"
 
-- Verificare che ogni classe abbia `Id` (number) e `Name` (string)
-- Controllare formato JSON con uno strumento online
+- Verify that each class has `Id` (number) and `Name` (string)
+- Check JSON format with an online tool
 
 ### "Track X: missing or invalid 'layouts' array"
 
-- Ogni track deve avere array `layouts`
-- Array non può essere vuoto (warning) ma deve esistere
+- Each track must have `layouts` array
+- Array cannot be empty (warning) but must exist
 
-### File r3e-data.json Corrotto
+### Corrupted r3e-data.json File
 
-1. Scaricare nuovamente da installazione RaceRoom
-2. Path standard: `RaceRoom Racing Experience/Game/GameData/General/r3e-data.json`
-3. Usare tool di validazione JSON online per verificare sintassi
+1. Download again from RaceRoom installation
+2. Standard path: `RaceRoom Racing Experience/Game/GameData/General/r3e-data.json`
+3. Use online JSON validation tool to verify syntax
 
-## Link Utili
+## Useful Links
 
-- [Documentazione TypeScript Types](../types.ts)
+- [TypeScript Types Documentation](../types.ts)
 - [GameDataOnboarding Component](../../components/GameDataOnboarding.tsx)
 - [Game Data Store](../../store/gameDataStore.ts)

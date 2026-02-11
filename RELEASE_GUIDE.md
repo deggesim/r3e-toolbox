@@ -63,7 +63,7 @@ If you want to test the installer locally before releasing:
 npm run build:electron
 ```
 
-Installers will be generated in `dist-electron/`:
+Installers will be generated in `dist/`:
 
 - **Windows**: `R3E Toolbox Setup X.X.X.exe` (NSIS installer) + portable version
 - **Linux**: `r3e-toolbox-X.X.X.AppImage` (if you add Linux to the workflow)
