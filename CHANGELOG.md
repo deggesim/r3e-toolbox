@@ -1,3 +1,10 @@
+## [0.4.3](https://github.com/deggesim/r3e-toolbox/compare/v0.4.2...v0.4.3) (2026-02-11)
+
+
+### Bug Fixes
+
+* enhance mobile sidebar functionality and styles for better user experience ([5edf71a](https://github.com/deggesim/r3e-toolbox/commit/5edf71af75daee3f54f0aed6345b471cd65c8d6a))
+
 ## [0.4.2](https://github.com/deggesim/r3e-toolbox/compare/v0.4.1...v0.4.2) (2026-02-10)
 
 
