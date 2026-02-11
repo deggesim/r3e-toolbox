@@ -22,16 +22,19 @@
 @media (max-width: 767px) {
   .sidebar-col {
     position: fixed;
-    top: 0;
-    left: -100%;
-    width: 280px;
-    height: 100vh;
+    bottom: -100vh;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
     z-index: 1000;
-    transition: left 0.3s ease;
+    transition: bottom 0.4s ease;
+    overflow-y: auto;
   }
 
   .sidebar-col.sidebar-open {
-    left: 0;
+    bottom: 0;
   }
 
   .sidebar-logo {
@@ -39,31 +42,66 @@
     height: auto;
     object-fit: contain;
   }
+
+  .sidebar {
+    height: auto;
+    position: static;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+  }
+
+  .sidebar-header {
+    order: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    width: 100%;
+  }
 }
 
 /* Mobile hamburger button */
 .mobile-menu-button {
-  position: fixed;
-  bottom: 0rem;
-  left: 0rem;
-  z-index: 999;
-  background-color: #3a3f5c;
-  color: white;
-  border: none;
-  border-radius: 0.375rem 0.375rem 0 0;
-  padding: 0.75rem 1rem;
-  font-size: 1.25rem;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: background-color 0.2s ease;
+  display: none;
 }
 
-.mobile-menu-button:hover {
-  background-color: #4a4f6c;
-}
+@media (max-width: 767px) {
+  .mobile-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    width: 50px;
+    height: 50px;
+    background-color: #3a3f5c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 1.25rem;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    z-index: 1001;
+  }
 
-.mobile-menu-button:active {
-  background-color: #2a2f4c;
+  .mobile-menu-button:hover {
+    background-color: #4a4f6c;
+    transform: scale(1.1);
+  }
+
+  .mobile-menu-button:active {
+    background-color: #2a2f4c;
+    transform: scale(0.95);
+  }
 }
 
 /* Sidebar overlay */
@@ -124,11 +162,7 @@
   flex: 1;
 }
 
-@media (max-width: 767px) {
-  .main-content-col {
-    padding-bottom: 80px;
-  }
-}
+
 
 .main-content {
   min-height: 100%;
