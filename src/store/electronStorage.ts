@@ -8,7 +8,28 @@ export const isElectron = Boolean(
 );
 
 /**
+ * Sanitizes values for IPC by filtering out non-serializable properties
+ * (functions, symbols, undefined values, etc.)
+ */
+const sanitizeForIPC = (value: any): any => {
+  return JSON.parse(
+    JSON.stringify(value, (_key, val) => {
+      // Filter out functions, symbols, and undefined
+      if (
+        typeof val === "function" ||
+        typeof val === "symbol" ||
+        val === undefined
+      ) {
+        return undefined;
+      }
+      return val;
+    }),
+  );
+};
+
+/**
  * electron-store adapter (async via IPC).
+ * Sanitizes values to ensure only serializable data crosses the IPC boundary.
  */
 export const electronStoreAdapter = {
   async getItem(name: string): Promise<any | null> {
@@ -22,7 +43,10 @@ export const electronStoreAdapter = {
   },
   async setItem(name: string, value: any): Promise<void> {
     try {
-      const result = await globalThis.electron.storeSet(name, value);
+      const result = await globalThis.electron.storeSet(
+        name,
+        sanitizeForIPC(value),
+      );
       if (result && !result.success) {
         console.warn("[electronStoreAdapter] Set failed:", result.error);
       }
