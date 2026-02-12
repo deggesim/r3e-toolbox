@@ -426,7 +426,8 @@ package.json                  # Dependencies & scripts
 ### Desktop & Packaging
 
 - **Electron 40** - Desktop runtime with native file dialogs and filesystem access
-- **electron-builder 26** - Packaging for Windows/Linux/macOS installers
+- **electron-builder 26** - Packaging for Windows installers
+- **macOS/Linux** - Use the web version published on Railway.app
 
 ### Responsive Design
 
@@ -651,8 +652,8 @@ git push origin v1.0.0
 
 The automated workflow:
 
-- ✅ Builds the Electron app for Windows (add macOS/Linux in the workflow if needed)
-- ✅ Creates installer packages (`.exe`, `.dmg`, `.AppImage`, `.deb`)
+- ✅ Builds the Electron app for Windows
+- ✅ Creates installer packages (`.exe`)
 - ✅ Creates GitHub Release with attached installers
 - ✅ Generates release notes automatically from commits
 

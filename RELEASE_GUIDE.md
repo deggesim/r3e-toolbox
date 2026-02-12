@@ -66,8 +66,7 @@ npm run build:electron
 Installers will be generated in `dist/`:
 
 - **Windows**: `R3E Toolbox Setup X.X.X.exe` (NSIS installer) + portable version
-- **Linux**: `r3e-toolbox-X.X.X.AppImage` (if you add Linux to the workflow)
-- **macOS**: `R3E Toolbox-X.X.X.dmg` (if you add macOS to the workflow)
+- **macOS/Linux**: Use the web version published on Railway.app
 
 ## Automatically Generated Formats
 
@@ -77,27 +76,6 @@ With the current configuration, each release includes:
 
 - **NSIS Installer** (`.exe`): Standard installer with wizard
 - **Portable** (`.exe`): Standalone version without installation
-
-### Linux (if you add to the workflow)
-
-- **AppImage**: Standalone executable
-- **Snap**: Package for Ubuntu/Debian
-
-### macOS (if you add to the workflow)
-
-- **DMG**: Disk image for drag-and-drop installation
-
-## Multi-Platform Build
-
-To build for multiple operating systems, edit `.github/workflows/release.yml`:
-
-```yaml
-strategy:
-  matrix:
-    os: [windows-latest, ubuntu-latest, macos-latest]
-```
-
-**Note**: macOS build requires Apple certificates for signing (optional but recommended).
 
 ## Troubleshooting
 

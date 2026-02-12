@@ -81,14 +81,6 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "snap"
-      ],
-      "category": "Utility",
-      "icon": "public/favicon-32x32.png"
     }
   }
 }
