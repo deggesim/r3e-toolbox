@@ -1,3 +1,5 @@
+## [0.4.4](https://github.com/deggesim/r3e-toolbox/compare/v0.4.3...v0.4.4) (2026-02-12)
+
 ## [0.4.3](https://github.com/deggesim/r3e-toolbox/compare/v0.4.2...v0.4.3) (2026-02-11)
 
 
