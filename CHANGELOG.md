@@ -1,3 +1,10 @@
+## [0.4.5](https://github.com/deggesim/r3e-toolbox/compare/v0.4.4...v0.4.5) (2026-02-12)
+
+
+### Bug Fixes
+
+* update store name for consistency in game data management ([9a34197](https://github.com/deggesim/r3e-toolbox/commit/9a34197a452b6182af0e40214d03ee6593938126))
+
 ## [0.4.4](https://github.com/deggesim/r3e-toolbox/compare/v0.4.3...v0.4.4) (2026-02-12)
 
 ## [0.4.3](https://github.com/deggesim/r3e-toolbox/compare/v0.4.2...v0.4.3) (2026-02-11)
