@@ -10,6 +10,7 @@ import GameDataOnboarding from "./pages/GameDataOnboarding";
 import ResultsDatabaseDetail from "./pages/ResultsDatabaseDetail";
 import ResultsDatabaseViewer from "./pages/ResultsDatabaseViewer";
 import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import { useConfigStore } from "./store/configStore";
 import { useGameDataStore } from "./store/gameDataStore";
 
@@ -64,6 +65,7 @@ const App = () => {
               element={<ProtectedRoute element={<ResultsDatabaseDetail />} />}
             />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
           </Routes>
         </Layout>
       ) : (

@@ -31,5 +31,8 @@ declare global {
       value: any,
     ) => Promise<{ success: boolean; error?: string }>;
     storeDelete: (key: string) => Promise<{ success: boolean; error?: string }>;
+    openExternal: (
+      url: string,
+    ) => Promise<{ success: boolean; error?: string }>;
   };
 }

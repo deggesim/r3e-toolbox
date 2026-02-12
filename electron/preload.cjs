@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Application operations
   findR3eDataFile: () => ipcRenderer.invoke('app:findR3eDataFile'),
   findAiadaptationFile: () => ipcRenderer.invoke('app:findAiadaptationFile'),
+  openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
 
   // electron-store operations
   storeGet: (key) => ipcRenderer.invoke('store:get', key),

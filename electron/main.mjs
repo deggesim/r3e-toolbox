@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
 import Store from "electron-store";
 import isDev from "electron-is-dev";
 import { existsSync } from "node:fs";
@@ -343,6 +343,17 @@ ipcMain.handle("store:delete", async (event, key) => {
     return { success: true };
   } catch (error) {
     console.error("[store:delete] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Open external URL in system browser
+ipcMain.handle("app:openExternal", async (event, url) => {
+  try {
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (error) {
+    console.error("[app:openExternal] Error:", error);
     return { success: false, error: error.message };
   }
 });

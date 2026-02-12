@@ -116,6 +116,16 @@ export const useElectronAPI = () => {
           throw new Error(result.error || "Failed to delete value from store");
         }
       },
+
+      async openExternal(url: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.openExternal(url);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to open external link");
+        }
+      },
     }),
     [isElectron],
   );
