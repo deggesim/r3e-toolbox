@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { LeaderboardAssets } from "../types";
+import { getStorage } from "./electronStorage";
 
 interface LeaderboardAssetsState {
   assets: LeaderboardAssets | null;
@@ -39,12 +40,12 @@ export const useLeaderboardAssetsStore = create<LeaderboardAssetsState>()(
     }),
     {
       name: "r3e-toolbox-leaderboard-assets",
-      storage: createJSONStorage(() => localStorage),
+      storage: getStorage(),
       version: 1,
-      partialize: (state) => ({
-        assets: state.assets,
-      }),
+      partialize: (state) =>
+        ({
+          assets: state.assets,
+        }) as LeaderboardAssetsState,
     },
   ),
 );
-

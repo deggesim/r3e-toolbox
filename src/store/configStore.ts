@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { Config } from "../config";
 import { CFG } from "../config";
+import { getStorage } from "./electronStorage";
 
 interface ConfigState {
   config: Config;
@@ -19,7 +20,7 @@ export const useConfigStore = create<ConfigState>()(
     }),
     {
       name: "r3e-toolbox-config",
-      storage: createJSONStorage(() => localStorage),
+      storage: getStorage(),
       version: 1,
     },
   ),

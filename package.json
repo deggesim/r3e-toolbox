@@ -23,6 +23,7 @@
     "@types/react-router-dom": "^5.3.3",
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
+    "electron-store": "^11.0.2",
     "fast-xml-parser": "^5.3.3",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",

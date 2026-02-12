@@ -89,6 +89,33 @@ export const useElectronAPI = () => {
         }
         return globalThis.electron.findAiadaptationFile();
       },
+
+      async storeGet(key: string): Promise<any> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        return globalThis.electron.storeGet(key);
+      },
+
+      async storeSet(key: string, value: any): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.storeSet(key, value);
+        if (result && !result.success) {
+          throw new Error(result.error || "Failed to set value in store");
+        }
+      },
+
+      async storeDelete(key: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.storeDelete(key);
+        if (result && !result.success) {
+          throw new Error(result.error || "Failed to delete value from store");
+        }
+      },
     }),
     [isElectron],
   );

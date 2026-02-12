@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { RaceRoomData } from "../types";
+import { getStorage } from "./electronStorage";
 
 interface GameDataState {
   gameData: RaceRoomData | null;
@@ -29,7 +30,7 @@ export const useGameDataStore = create<GameDataState>()(
     }),
     {
       name: "r3e-toolbox-game-data-store",
-      storage: createJSONStorage(() => localStorage),
+      storage: getStorage(),
     },
   ),
 );

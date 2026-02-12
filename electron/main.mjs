@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
+import Store from "electron-store";
 import isDev from "electron-is-dev";
 import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
@@ -6,6 +7,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const store = new Store();
 
 let mainWindow;
 
@@ -312,4 +315,34 @@ ipcMain.handle("app:findAiadaptationFile", async () => {
     success: false,
     error: "aiadaptation.xml not found in standard RaceRoom UserData paths",
   };
+});
+
+// IPC Handlers for electron-store
+ipcMain.handle("store:get", async (event, key) => {
+  try {
+    return store.get(key);
+  } catch (error) {
+    console.error("[store:get] Error:", error);
+    return null;
+  }
+});
+
+ipcMain.handle("store:set", async (event, key, value) => {
+  try {
+    store.set(key, value);
+    return { success: true };
+  } catch (error) {
+    console.error("[store:set] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("store:delete", async (event, key) => {
+  try {
+    store.delete(key);
+    return { success: true };
+  } catch (error) {
+    console.error("[store:delete] Error:", error);
+    return { success: false, error: error.message };
+  }
 });
