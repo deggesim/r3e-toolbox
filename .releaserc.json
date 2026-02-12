@@ -1,5 +1,5 @@
 {
-  "branches": ["main", "master"],
+  "branches": ["master"],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
@@ -13,7 +13,7 @@
           { "type": "test", "release": false },
           { "type": "build", "release": false },
           { "type": "ci", "release": false },
-          { "type": "chore", "release": false }
+          { "type": "chore", "release": "patch" }
         ]
       }
     ],
