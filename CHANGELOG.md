@@ -1,3 +1,29 @@
+# [1.0.0](https://github.com/deggesim/r3e-toolbox/compare/v0.4.5...v1.0.0) (2026-02-13)
+
+
+* feat!: release stable version 1.0.0 ([01621d6](https://github.com/deggesim/r3e-toolbox/commit/01621d63f89c2b609ca9279544ea020000d456bb))
+
+
+### Features
+
+* add Help page with user guide and external link support ([4edee6d](https://github.com/deggesim/r3e-toolbox/commit/4edee6d518b32b3dbf33343cfabbc9be7ff54fd9))
+* enhance electron-store adapter with IPC sanitization for non-serializable values ([cf05a6b](https://github.com/deggesim/r3e-toolbox/commit/cf05a6b1c9c7e27ce5108b94ce6b9c79877fbb20))
+* enhance Settings page with game data management and configuration handling ([982991e](https://github.com/deggesim/r3e-toolbox/commit/982991edb82bec371449c1dfa0b7688b858f0d27))
+* implement config initialization on app startup and enhance config store with initialization logic ([222ce28](https://github.com/deggesim/r3e-toolbox/commit/222ce28dd8258dcd0a2c516b32fea67b1ca54042))
+* integrate electron-store for persistent state management ([ab7f1be](https://github.com/deggesim/r3e-toolbox/commit/ab7f1be7a1e8ff194ec28b1d0c0320fe096cff77))
+
+
+### BREAKING CHANGES
+
+* Official stable release with all core features finalized.
+
+This marks the transition from beta (0.x) to stable (1.x) version.
+All features are production-ready:
+- AI Management with statistical fitting
+- Race results processing and qualification time fixing
+- Championship standings with leaderboard assets
+- Full Electron desktop integration
+
 ## [0.4.5](https://github.com/deggesim/r3e-toolbox/compare/v0.4.4...v0.4.5) (2026-02-12)
 
 
