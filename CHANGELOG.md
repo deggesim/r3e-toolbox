@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/deggesim/r3e-toolbox/compare/v1.0.1...v1.0.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* update release rules for docs and style to trigger patch releases [skip ci] ([431805b](https://github.com/deggesim/r3e-toolbox/commit/431805b0a6d1d2060c7ee10dd22f4450983aeb33))
+
 ## [1.0.1](https://github.com/deggesim/r3e-toolbox/compare/v1.0.0...v1.0.1) (2026-02-13)
 
 
