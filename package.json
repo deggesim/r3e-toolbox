@@ -7,9 +7,9 @@
   "type": "module",
   "main": "electron/main.mjs",
   "scripts": {
-    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron --inspect=5858 .\"",
     "dev:vite": "vite",
-    "dev:electron": "electron .",
+    "dev:electron": "electron --inspect=5858 .",
     "clean": "rimraf dist",
     "build": "tsc -b && vite build",
     "build:electron": "npm run clean && tsc -b && vite build && electron-builder",
