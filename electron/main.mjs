@@ -1,4 +1,5 @@
-import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
+import Store from "electron-store";
 import isDev from "electron-is-dev";
 import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
@@ -6,6 +7,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const store = new Store();
 
 let mainWindow;
 
@@ -129,7 +132,6 @@ ipcMain.handle("fs:readdir", async (event, dirPath) => {
 });
 
 ipcMain.handle("app:findR3eDataFile", async () => {
-  const documentsDir = app.getPath("documents");
   const possiblePaths = [
     // Windows common paths
     path.join(
@@ -174,75 +176,6 @@ ipcMain.handle("app:findR3eDataFile", async () => {
     // Windows alternate Steam paths
     String.raw`C:\Steam\steamapps\common\RaceRoom Racing Experience\Game\GameData\General\r3e-data.json`,
     String.raw`C:\Program Files\Steam\steamapps\common\RaceRoom Racing Experience\Game\GameData\General\r3e-data.json`,
-    // User Documents paths
-    path.join(
-      documentsDir,
-      "My Games",
-      "SimBin",
-      "RaceRoom Racing Experience",
-      "r3e-data.json",
-    ),
-    // Direct install paths
-    String.raw`C:\RaceRoom Racing Experience\GameData\General\r3e-data.json`,
-    // macOS paths
-    path.join(
-      process.env.HOME || "",
-      "Library",
-      "Application Support",
-      "RaceRoom Racing Experience",
-      "GameData",
-      "General",
-      "r3e-data.json",
-    ),
-    // macOS Steam paths
-    path.join(
-      process.env.HOME || "",
-      "Library",
-      "Application Support",
-      "Steam",
-      "steamapps",
-      "common",
-      "RaceRoom Racing Experience",
-      "GameData",
-      "General",
-      "r3e-data.json",
-    ),
-    // Linux paths
-    path.join(
-      process.env.HOME || "",
-      ".local",
-      "share",
-      "RaceRoom Racing Experience",
-      "GameData",
-      "General",
-      "r3e-data.json",
-    ),
-    // Linux Steam paths
-    path.join(
-      process.env.HOME || "",
-      ".steam",
-      "steam",
-      "steamapps",
-      "common",
-      "RaceRoom Racing Experience",
-      "GameData",
-      "General",
-      "r3e-data.json",
-    ),
-    path.join(
-      process.env.HOME || "",
-      ".var",
-      "app",
-      "com.valvesoftware.Steam",
-      "data",
-      "Steam",
-      "steamapps",
-      "common",
-      "RaceRoom Racing Experience",
-      "GameData",
-      "General",
-      "r3e-data.json",
-    ),
   ];
 
   for (const filePath of possiblePaths) {
@@ -275,26 +208,6 @@ ipcMain.handle("app:findAiadaptationFile", async () => {
       "Player1",
       "aiadaptation.xml",
     ),
-    // macOS UserData/Player1 path
-    path.join(
-      process.env.HOME || "",
-      "Library",
-      "Application Support",
-      "RaceRoom Racing Experience",
-      "UserData",
-      "Player1",
-      "aiadaptation.xml",
-    ),
-    // Linux UserData/Player1 path
-    path.join(
-      process.env.HOME || "",
-      ".local",
-      "share",
-      "RaceRoom Racing Experience",
-      "UserData",
-      "Player1",
-      "aiadaptation.xml",
-    ),
   ];
 
   for (const filePath of possiblePaths) {
@@ -312,4 +225,45 @@ ipcMain.handle("app:findAiadaptationFile", async () => {
     success: false,
     error: "aiadaptation.xml not found in standard RaceRoom UserData paths",
   };
+});
+
+// IPC Handlers for electron-store
+ipcMain.handle("store:get", async (event, key) => {
+  try {
+    return store.get(key);
+  } catch (error) {
+    console.error("[store:get] Error:", error);
+    return null;
+  }
+});
+
+ipcMain.handle("store:set", async (event, key, value) => {
+  try {
+    store.set(key, value);
+    return { success: true };
+  } catch (error) {
+    console.error("[store:set] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("store:delete", async (event, key) => {
+  try {
+    store.delete(key);
+    return { success: true };
+  } catch (error) {
+    console.error("[store:delete] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Open external URL in system browser
+ipcMain.handle("app:openExternal", async (event, url) => {
+  try {
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (error) {
+    console.error("[app:openExternal] Error:", error);
+    return { success: false, error: error.message };
+  }
 });

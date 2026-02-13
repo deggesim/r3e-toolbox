@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { ChampionshipEntry } from "../types";
+import { getStorage } from "./electronStorage";
 
 interface ChampionshipState {
   championships: ChampionshipEntry[];
@@ -13,7 +14,7 @@ interface ChampionshipState {
 
 export const useChampionshipStore = create<ChampionshipState>()(
   persist(
-    (set, _get) => ({
+    (set, get) => ({
       championships: [],
 
       addOrUpdate: (entry) =>
@@ -44,7 +45,7 @@ export const useChampionshipStore = create<ChampionshipState>()(
           return false;
         }
 
-        const state = _get();
+        const state = get();
         const existingIndex = state.championships.findIndex(
           (c) => c.alias.toLowerCase() === oldAlias.toLowerCase(),
         );
@@ -87,7 +88,7 @@ export const useChampionshipStore = create<ChampionshipState>()(
     }),
     {
       name: "r3e-toolbox-championships",
-      storage: createJSONStorage(() => localStorage),
+      storage: getStorage(),
     },
   ),
 );

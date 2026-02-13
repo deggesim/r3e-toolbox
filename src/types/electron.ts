@@ -25,5 +25,14 @@ declare global {
       path?: string;
       error?: string;
     }>;
+    storeGet: (key: string) => Promise<any>;
+    storeSet: (
+      key: string,
+      value: any,
+    ) => Promise<{ success: boolean; error?: string }>;
+    storeDelete: (key: string) => Promise<{ success: boolean; error?: string }>;
+    openExternal: (
+      url: string,
+    ) => Promise<{ success: boolean; error?: string }>;
   };
 }

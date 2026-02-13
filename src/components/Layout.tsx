@@ -10,6 +10,7 @@ import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faBars } from "@fortawesome/free-solid-svg-icons/faBars";
 import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
+import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons/faCircleQuestion";
 import "./Layout.css";
 import logoUrl from "/logo.png";
 
@@ -33,6 +34,7 @@ const menuItems: MenuItemData[] = [
     icon: faChartBar,
   },
   { path: "/settings", label: "Settings", icon: faGear },
+  { path: "/help", label: "Help", icon: faCircleQuestion },
 ];
 
 const Layout = ({ children }: PropsWithChildren<{}>) => {

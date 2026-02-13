@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useEffect } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/Layout";
@@ -9,6 +10,8 @@ import GameDataOnboarding from "./pages/GameDataOnboarding";
 import ResultsDatabaseDetail from "./pages/ResultsDatabaseDetail";
 import ResultsDatabaseViewer from "./pages/ResultsDatabaseViewer";
 import Settings from "./pages/Settings";
+import Help from "./pages/Help";
+import { useConfigStore } from "./store/configStore";
 import { useGameDataStore } from "./store/gameDataStore";
 
 // Protected route component
@@ -25,6 +28,12 @@ const ProtectedRoute = ({ element }: { element: ReactElement }) => {
 const App = () => {
   const isLoaded = useGameDataStore((state) => state.isLoaded);
   const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
+  const initializeConfig = useConfigStore((state) => state.initializeConfig);
+
+  // Initialize config settings on app startup
+  useEffect(() => {
+    initializeConfig();
+  }, [initializeConfig]);
 
   return (
     <HashRouter>
@@ -56,6 +65,7 @@ const App = () => {
               element={<ProtectedRoute element={<ResultsDatabaseDetail />} />}
             />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
           </Routes>
         </Layout>
       ) : (
