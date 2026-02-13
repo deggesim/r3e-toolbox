@@ -16,9 +16,71 @@ R3E Toolbox is a comprehensive toolkit for **RaceRoom Racing Experience** (R3E).
 
 ---
 
+## 0. Game Data Management
+
+Before using any feature, you need to load the RaceRoom game database (`r3e-data.json`).
+
+### First Launch
+
+**Electron Desktop App** (recommended):
+
+- The app automatically searches for `r3e-data.json` in standard RaceRoom installation paths
+- If found, it's loaded automatically with validation
+- If not found, you'll see the onboarding screen to upload manually
+
+**Web Browser**:
+
+- Manual upload required on first launch
+- Use the file picker to select your `r3e-data.json` file
+
+### Reloading Game Data
+
+You may need to reload the game database when:
+
+- RaceRoom adds new content (tracks, cars, layouts)
+- You update to a newer database version
+- You want to switch between different game installations
+
+**How to reload**:
+
+1. Open **Settings** from the left menu
+2. Enable **"Show Game Data Onboarding"** (development mode only)
+   - Or navigate directly to the URL: `/game-data-onboarding`
+3. Choose reload method:
+   - **Electron mode**: Click to re-trigger auto-detection from game installation
+   - **Web/Electron**: Use "Upload File" to select a new `r3e-data.json` file
+4. Wait for validation to complete
+5. Check the processing log for:
+   - ✓ Number of classes and tracks loaded
+   - ⚠ Any validation warnings
+   - ✗ Errors if file structure is invalid
+
+### Data Storage
+
+- **Electron App**: Game data stored in `electron-store` (persistent native storage)
+  - Location (Windows): `%APPDATA%\r3e-toolbox\config.json`
+  - Survives app restarts and updates
+  - No size limitations
+- **Web Browser**: Game data stored in browser `localStorage`
+  - Cleared when browser data is cleared
+  - 5-10MB size limit
+
+### Validation
+
+All loaded files are automatically validated:
+
+- Checks for required fields: `classes`, `tracks`, `layouts`
+- Validates data structure and IDs
+- Shows detailed errors if validation fails
+- Logs non-critical warnings (e.g., name/ID mismatches)
+
+---
+
 ## 1. AI Management
 
 Optimize AI difficulty settings by analyzing your race data with statistical fitting.
+
+> **Note**: The AI fitting algorithms are based on the [r3e-adaptive-ai-primer](https://github.com/pixeljetstream/r3e-adaptive-ai-primer) project by pixeljetstream.
 
 ### How It Works
 
@@ -96,12 +158,14 @@ You have a race session file where drivers' qualification times are missing or s
 
 Generate professional championship standings with car and track icons from official RaceRoom leaderboard.
 
+> **Note**: Championship standings logic is inspired by the [r3e-open-championship](https://github.com/pixeljetstream/r3e-open-championship) project by pixeljetstream.
+
 ### How It Works
 
 #### Step 1: Download Assets
 
 - Click **"Download and analyze"** to fetch official assets (car icons, track images)
-- Icons are cached in localStorage for faster future use
+- Icons are cached in persistent storage for faster future use
 - Shows "💾 Cached" indicator when data is already available
 - Use "Clear cache" to force a fresh download
 
@@ -190,9 +254,15 @@ Configure how the app behaves and tune statistical fitting parameters.
 
 ### Cache Management
 
-- **Clear All Assets**: Removes cached car/track icons from localStorage
+- **Clear All Assets**: Removes cached car/track icons from localStorage/electron-store
 - Useful if images aren't displaying correctly
 - Assets will be re-downloaded on next use
+
+### Game Data Management
+
+- **Show Game Data Onboarding**: Enables access to the game data reload screen
+- Use this when you need to update or reload `r3e-data.json`
+- Available in development mode or via direct URL navigation
 
 ---
 

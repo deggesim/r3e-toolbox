@@ -1,3 +1,10 @@
+/**
+ * Database processor: applies statistical fitting to AI lap time data.
+ *
+ * Validation logic based on r3e-adaptive-ai-primer by pixeljetstream:
+ * https://github.com/pixeljetstream/r3e-adaptive-ai-primer
+ */
+
 import type { Database, ProcessedDatabase } from "../types";
 import { fitLinear, computeTime } from "./fitting";
 import type { Config } from "../config";

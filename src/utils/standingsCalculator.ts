@@ -1,3 +1,10 @@
+/**
+ * Championship standings calculator.
+ *
+ * Logic inspired by r3e-open-championship by pixeljetstream:
+ * https://github.com/pixeljetstream/r3e-open-championship
+ */
+
 import {
   DEFAULT_POINTS_SYSTEM,
   type ParsedRace,

@@ -1,3 +1,10 @@
+/**
+ * Statistical fitting functions for AI lap time prediction.
+ *
+ * Based on algorithms from r3e-adaptive-ai-primer by pixeljetstream:
+ * https://github.com/pixeljetstream/r3e-adaptive-ai-primer
+ */
+
 import { create, all } from "mathjs";
 
 // MathJS instance for linear algebra operations (matrix multiply, solve, transpose)

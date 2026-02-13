@@ -1,3 +1,10 @@
+/**
+ * HTML generator for championship standings export.
+ *
+ * Based on concepts from r3e-open-championship by pixeljetstream:
+ * https://github.com/pixeljetstream/r3e-open-championship
+ */
+
 import type { ChampionshipEntry } from "../types";
 import type { ParsedRace, RaceSlot } from "../types/raceResults";
 

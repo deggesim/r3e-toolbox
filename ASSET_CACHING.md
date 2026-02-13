@@ -18,7 +18,7 @@
     ┌─────────────────────┐    ┌──────────────────────┐
     │ cachedAssets from   │    │ fetchLeaderboard     │
     │ Zustand Store       │    │ AssetsWithCache()    │
-    │ (localStorage)      │    │ (on button click)    │
+    │ (electron-store or   │    │ (on button click)    │
     └─────────────────────┘    └──────────────────────┘
                                         │
                                         ▼
@@ -39,7 +39,8 @@
                                      ▼
                     ┌────────────────────────────┐
                     │ Update Zustand Store       │
-                    │ + localStorage             │
+                    │ + Storage (electron-store  │
+                    │   or localStorage)         │
                     │ (via persist middleware)   │
                     └────────────────────────────┘
                                      │
@@ -55,10 +56,11 @@
 
 1. **Component Mount** → `useEffect` loads cached assets from Zustand store
 2. **User clicks "Download and analyze"** → calls `fetchLeaderboardAssetsWithCache()`
-3. **Cache Check** → Zustand store queries localStorage:
+3. **Cache Check** → Zustand store queries persistent storage:
+   - Backend: electron-store (Electron) or localStorage (web)
    - **Hit**: Returns `state.assets` immediately
    - **Miss**: Calls `fetchLeaderboardAssets()` → network request
-4. **Data Storage** → `setAssets()` persists to store (auto-saves to localStorage)
+4. **Data Storage** → `setAssets()` persists to store (auto-saves via storage backend)
 5. **UI Feedback** → Shows badge indicating cache source and updates icon count
 
 ### Zustand Store Methods
@@ -82,7 +84,7 @@ const trackIconUrl = useLeaderboardAssetsStore().getTrackIconUrl("donington");
 useLeaderboardAssetsStore().clearAssets();
 ```
 
-### localStorage Format
+### Storage Format (electron-store / localStorage)
 
 ```json
 {
@@ -127,9 +129,10 @@ useLeaderboardAssetsStore().clearAssets();
 ### Benefits
 
 ✅ **No redundant network requests** - Assets fetched once, reused across sessions  
-✅ **Instant load times** - Cached data loads from localStorage without latency  
+✅ **Instant load times** - Cached data loads from storage backend without latency  
 ✅ **User control** - "Clear cache" button allows manual refresh  
 ✅ **Automatic persistence** - Zustand persist middleware handles storage automatically  
+✅ **Dual-mode storage** - electron-store (Electron) or localStorage (web), same API  
 ✅ **Error handling** - Store tracks loading/error states for UI feedback  
 ✅ **Type-safe** - Full TypeScript validation of cached data structure
 
@@ -144,7 +147,7 @@ state.assets = null
 state.error = null
 state.isLoading = false
   ↓
-localStorage updated (automatic via persist middleware)
+Storage updated (automatic via persist middleware → electron-store or localStorage)
   ↓
 UI resets to "No assets loaded" state
 ```

@@ -2,6 +2,15 @@
 
 Practical guide to set up the development environment and contribute to the R3E Toolbox project.
 
+## Credits
+
+This project builds upon the excellent work from **pixeljetstream**:
+
+- **AI Management**: Fitting algorithms and `aiadaptation.xml` generation based on [r3e-adaptive-ai-primer](https://github.com/pixeljetstream/r3e-adaptive-ai-primer)
+- **Championship Standings**: Standings calculation and HTML export inspired by [r3e-open-championship](https://github.com/pixeljetstream/r3e-open-championship)
+
+This toolbox implements those concepts with a modern GUI, TypeScript type safety, and additional features.
+
 ## Initial Setup
 
 ### Prerequisites
@@ -97,8 +106,8 @@ src/
   - Flexbox-based layout for small screens
   - Touch-friendly button sizing
 
-- 💾 **Asset Caching**: Zustand + localStorage
-  - Leaderboard icons cached in localStorage
+- 💾 **Asset Caching**: Zustand + persistent storage (electron-store/localStorage)
+  - Leaderboard icons cached in persistent storage
   - Cache status indicator badge
   - "Clear cache" button for manual reset
 
@@ -282,7 +291,7 @@ const setData = useMyStore((state) => state.setData);
 - ✅ Use `useMemo` for complex props
 - ✅ Use `useCallback` for event handlers
 - ✅ Lazy-load route components: `React.lazy()`
-- ✅ Cache big assets in localStorage (Zustand persist)
+- ✅ Cache big assets in persistent storage (Zustand persist with electron-store/localStorage)
 - ✅ Profile with Chrome DevTools → Performance tab
 - ❌ Avoid re-renders: memoize Zustand selectors
 

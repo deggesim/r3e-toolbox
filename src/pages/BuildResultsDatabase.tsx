@@ -584,7 +584,7 @@ const BuildResultsDatabase = () => {
                                 icon={faDatabase}
                                 className="me-2"
                               />
-                              Cached in localStorage
+                              Cached
                             </>
                           ) : (
                             "Fresh"

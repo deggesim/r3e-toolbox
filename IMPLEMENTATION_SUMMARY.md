@@ -2,6 +2,15 @@
 
 ## 📊 Current Version: 0.4.3 (February 2026)
 
+### 🙏 Credits & Acknowledgments
+
+This project builds upon the excellent work from **pixeljetstream**:
+
+- **AI Management**: Fitting algorithms and `aiadaptation.xml` generation are based on [r3e-adaptive-ai-primer](https://github.com/pixeljetstream/r3e-adaptive-ai-primer)
+- **Championship Standings**: Standings calculation and HTML generation are inspired by [r3e-open-championship](https://github.com/pixeljetstream/r3e-open-championship)
+
+This toolbox implements and extends those concepts with a modern graphical interface and additional features.
+
 ### ✅ Recent Developments (February 2026)
 
 **Enhanced User Interface**:
@@ -28,7 +37,7 @@
 
 Implemented a caching system for leaderboard assets (car and track icons) so they don't need to be fetched on every load.
 
-**Solution implemented**: Zustand Store + localStorage + intelligent caching
+**Solution implemented**: Zustand Store + persistent storage (electron-store/localStorage) + intelligent caching
 
 ---
 
@@ -87,7 +96,7 @@ Integration of store in main component:
 - Import of `useLeaderboardAssetsStore` and `fetchLeaderboardAssetsWithCache`
 - `useEffect` to load cached assets on component mount
 - Button update: "Reset" → "Clear cache" with `clearAssets()`
-- Indicator badge: "💾 Cached in localStorage" when data comes from cache
+- Indicator badge: "💾 Cached" when data comes from cache (electron-store or localStorage)
 - Smart logic:
   - If HTML override exists: direct fetch (bypasses cache)
   - Otherwise: uses `fetchLeaderboardAssetsWithCache()` (with cache)
@@ -138,7 +147,7 @@ Detailed guide with ASCII diagrams:
 2. Data from localStorage → instant
 3. Button calls fetchLeaderboardAssetsWithCache()
 4. Cache HIT → returns immediately
-5. UI shows "💾 Cached in localStorage" badge
+5. UI shows "💾 Cached" badge (storage backend: electron-store or localStorage)
 ```
 
 ### Clear Cache
