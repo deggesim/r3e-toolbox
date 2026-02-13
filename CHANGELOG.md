@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/deggesim/r3e-toolbox/compare/v1.0.0...v1.0.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* enhance documentation and user guides with credits and game data management details; update caching references to persistent storage ([3ac8944](https://github.com/deggesim/r3e-toolbox/commit/3ac894444f1afd7a76628730eaf50268c568f107))
+
 # [1.0.0](https://github.com/deggesim/r3e-toolbox/compare/v0.4.5...v1.0.0) (2026-02-13)
 
 
