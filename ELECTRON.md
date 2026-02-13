@@ -1,6 +1,6 @@
 # Electron Integration for R3E Toolbox
 
-R3E Toolbox runs as both a desktop application (Electron) and web app, providing native file system access on Windows while maintaining cross-platform compatibility.
+R3E Toolbox runs as both a desktop application (Electron) and web app at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app), providing native file system access on Windows while maintaining cross-platform compatibility.
 
 **Current Version**: 0.4.3 (Windows x64 focus)
 

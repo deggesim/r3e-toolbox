@@ -6,7 +6,10 @@ A comprehensive React + TypeScript toolbox for **RaceRoom Racing Experience** (R
 
 **[⬇️ Download Latest Release (Windows Installer)](https://github.com/deggesim/r3e-toolbox/releases/latest)**
 
-Alternatively, download directly from the [Releases page](https://github.com/deggesim/r3e-toolbox/releases) for other versions or formats.
+Alternatively:
+
+- Download from the [Releases page](https://github.com/deggesim/r3e-toolbox/releases) for other versions or formats
+- Use the **web version** at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app) (works on Windows, macOS, Linux)
 
 ## What Does It Do?
 
@@ -474,7 +477,7 @@ package.json                  # Dependencies & scripts
 
 - **Electron 40** - Desktop runtime with native file dialogs and filesystem access
 - **electron-builder 26** - Packaging for Windows installers
-- **macOS/Linux** - Use the web version published on Railway.app
+- **Web version** - Available at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app) for macOS/Linux users
 
 ### Responsive Design
 
@@ -727,7 +730,7 @@ This toolbox extends those foundational concepts by providing:
 - A modern graphical user interface with React + TypeScript
 - Additional validation and error handling
 - Integrated championship management and race result tools
-- Cross-platform support (Windows, macOS, Linux via web browser)
+- Cross-platform support (Windows desktop app, macOS/Linux via [web version](https://r3e-toolbox.up.railway.app))
 - Persistent storage via electron-store (Electron) or localStorage (web)
 
 Special thanks to the RaceRoom Racing Experience community for testing and feedback.

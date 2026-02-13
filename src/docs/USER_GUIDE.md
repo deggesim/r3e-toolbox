@@ -280,7 +280,7 @@ Configure how the app behaves and tune statistical fitting parameters.
 - Modern web browser (Chrome, Edge, Firefox)
   - Works on Windows, macOS, or Linux
   - Manual file selection required
-  - Available at [r3e-toolbox web version](https://github.com/deggesim/r3e-toolbox)
+  - Available at **[https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app)**
 
 ## File Locations (Windows)
 

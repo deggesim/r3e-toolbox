@@ -66,7 +66,7 @@ npm run build:electron
 Installers will be generated in `dist/`:
 
 - **Windows**: `R3E Toolbox Setup X.X.X.exe` (NSIS installer) + portable version
-- **macOS/Linux**: Use the web version published on Railway.app
+- **macOS/Linux**: Use the web version at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app)
 
 ## Automatically Generated Formats
 
