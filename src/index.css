@@ -18,6 +18,8 @@
   --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   --border-radius: 8px;
   background-color: #212529;
+  --bs-red: #AB1818;
+  --bs-danger: #AB1818;
 }
 
 body {
@@ -33,7 +35,7 @@ a {
 }
 
 .page-header-gradient {
-  background: linear-gradient(135deg, #dc143c 0%, #b91028 100%) !important;
+  background: linear-gradient(90deg, #AB1818 0%, #7A0F0F 100%) !important;
   color: white !important;
 }
 
