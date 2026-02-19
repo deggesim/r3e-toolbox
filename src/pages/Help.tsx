@@ -6,6 +6,8 @@ import "../pages/Help.css";
 
 // Import the USER_GUIDE markdown as raw text
 import helpContent from "../docs/USER_GUIDE.md?raw";
+// Import build info (version and last updated date from package.json modification)
+import { VERSION, LAST_UPDATED } from "virtual:build-info";
 
 const Help = () => {
   const { isElectron, openExternal } = useElectronAPI();
@@ -35,6 +37,12 @@ const Help = () => {
       }
     }
   };
+
+  // Replace placeholders with build info from package.json
+  // Version and last updated are injected at build time
+  const processedContent = helpContent
+    .replace(/\{\{VERSION\}\}/g, VERSION)
+    .replace(/\{\{LAST_UPDATED\}\}/g, LAST_UPDATED);
 
   const components = useMemo(
     () => ({
@@ -86,7 +94,9 @@ const Help = () => {
   return (
     <Container className="help-container py-4">
       <div className="help-content">
-        <ReactMarkdown components={components}>{helpContent}</ReactMarkdown>
+        <ReactMarkdown components={components}>
+          {processedContent}
+        </ReactMarkdown>
       </div>
     </Container>
   );
