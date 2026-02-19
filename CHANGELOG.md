@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/deggesim/r3e-toolbox/compare/v1.1.0...v1.2.0) (2026-02-19)
+
+
+### Features
+
+* implement Floating Processing Log component and replace existing ProcessingLog usage ([b16a2cc](https://github.com/deggesim/r3e-toolbox/commit/b16a2ccbcb1744068794fb1898c184bed92d346e))
+
 # [1.1.0](https://github.com/deggesim/r3e-toolbox/compare/v1.0.2...v1.1.0) (2026-02-19)
 
 
