@@ -168,3 +168,15 @@
   min-height: 100%;
   width: 100%;
 }
+
+/* Ko-fi widget container */
+.sidebar-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 767px) {
+  .sidebar-footer {
+    order: 999;
+    margin-top: 1rem;
+  }
+}
