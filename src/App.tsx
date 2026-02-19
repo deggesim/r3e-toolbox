@@ -1,16 +1,23 @@
 import type { ReactElement } from "react";
 import { useEffect } from "react";
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  HashRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 import "./App.css";
 import Layout from "./components/Layout";
+import { useElectronAPI } from "./hooks/useElectronAPI";
 import AIManagement from "./pages/AIManagement";
 import BuildResultsDatabase from "./pages/BuildResultsDatabase";
 import FixQualyTimes from "./pages/FixQualyTimes";
 import GameDataOnboarding from "./pages/GameDataOnboarding";
+import Help from "./pages/Help";
 import ResultsDatabaseDetail from "./pages/ResultsDatabaseDetail";
 import ResultsDatabaseViewer from "./pages/ResultsDatabaseViewer";
 import Settings from "./pages/Settings";
-import Help from "./pages/Help";
 import { useConfigStore } from "./store/configStore";
 import { useGameDataStore } from "./store/gameDataStore";
 
@@ -25,18 +32,32 @@ const ProtectedRoute = ({ element }: { element: ReactElement }) => {
   return element;
 };
 
-const App = () => {
+// Navigation listener component (must be inside Router context)
+const NavigationListener = () => {
+  const navigate = useNavigate();
+  const { isElectron } = useElectronAPI();
+
+  useEffect(() => {
+    if (isElectron && window.electron?.onNavigate) {
+      const unsubscribe = window.electron.onNavigate((path: string) => {
+        navigate(path);
+      });
+      return unsubscribe;
+    }
+
+    return undefined;
+  }, [isElectron, navigate]);
+
+  return null;
+};
+
+const AppContent = () => {
   const isLoaded = useGameDataStore((state) => state.isLoaded);
   const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
-  const initializeConfig = useConfigStore((state) => state.initializeConfig);
-
-  // Initialize config settings on app startup
-  useEffect(() => {
-    initializeConfig();
-  }, [initializeConfig]);
 
   return (
-    <HashRouter>
+    <>
+      <NavigationListener />
       {isLoaded && !forceOnboarding ? (
         <Layout>
           <Routes>
@@ -74,6 +95,21 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}
+    </>
+  );
+};
+
+const App = () => {
+  const initializeConfig = useConfigStore((state) => state.initializeConfig);
+
+  // Initialize config settings on app startup
+  useEffect(() => {
+    initializeConfig();
+  }, [initializeConfig]);
+
+  return (
+    <HashRouter>
+      <AppContent />
     </HashRouter>
   );
 };
