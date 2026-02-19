@@ -34,5 +34,6 @@ declare global {
     openExternal: (
       url: string,
     ) => Promise<{ success: boolean; error?: string }>;
+    onNavigate: (callback: (path: string) => void) => () => void;
   };
 }

@@ -1,6 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
-import Store from "electron-store";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  session,
+  shell,
+} from "electron";
 import isDev from "electron-is-dev";
+import Store from "electron-store";
 import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -12,7 +20,7 @@ const store = new Store();
 
 let mainWindow;
 
-function createWindow() {
+const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -27,15 +35,17 @@ function createWindow() {
 
   // Configure session to bypass CORS for external resources
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    details.requestHeaders['Origin'] = 'https://game.raceroom.com';
+    details.requestHeaders["Origin"] = "https://game.raceroom.com";
     callback({ requestHeaders: details.requestHeaders });
   });
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const headers = details.responseHeaders || {};
-    headers['Access-Control-Allow-Origin'] = ['*'];
-    headers['Access-Control-Allow-Methods'] = ['GET, POST, PUT, DELETE, OPTIONS'];
-    headers['Access-Control-Allow-Headers'] = ['*'];
+    headers["Access-Control-Allow-Origin"] = ["*"];
+    headers["Access-Control-Allow-Methods"] = [
+      "GET, POST, PUT, DELETE, OPTIONS",
+    ];
+    headers["Access-Control-Allow-Headers"] = ["*"];
     callback({ responseHeaders: headers });
   });
 
@@ -52,9 +62,91 @@ function createWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
-}
+};
 
-app.on("ready", createWindow);
+const createMenu = () => {
+  const template = [
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "Quit",
+          accelerator: process.platform === "darwin" ? "Cmd+Q" : "Ctrl+Q",
+          click: () => {
+            app.quit();
+          },
+        },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "View",
+      submenu: [
+        { role: "reload" },
+        { role: "forceReload" },
+        { type: "separator" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
+    },
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "User Guide",
+          accelerator: "F1",
+          click: () => {
+            mainWindow.webContents.send("navigate-to", "/help");
+          },
+        },
+        { type: "separator" },
+        {
+          label: "GitHub Repository",
+          click: async () => {
+            await shell.openExternal("https://github.com/deggesim/r3e-toolbox");
+          },
+        },
+        { type: "separator" },
+        {
+          label: "About R3E Toolbox",
+          click: () => {
+            dialog.showMessageBox(mainWindow, {
+              type: "info",
+              title: "About R3E Toolbox",
+              message: "R3E Toolbox",
+              detail: `Version: ${app.getVersion()}\n\nA comprehensive toolkit for RaceRoom Racing Experience.\n\nFeatures:\n• AI difficulty optimization with statistical analysis\n• Qualification time recovery for race results\n• Championship standings generator with HTML export\n• Results database viewer\n\nAuthor: Simone De Gennaro\nLicense: Open Source\n\nBuilt with React, TypeScript, and Electron.\nBased on algorithms from r3e-adaptive-ai-primer by pixeljetstream.\n\nDeveloped with ❤️ for the RaceRoom community.`,
+              buttons: ["OK"],
+            });
+          },
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+};
+
+app.on("ready", () => {
+  createWindow();
+  createMenu();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -185,7 +277,10 @@ ipcMain.handle("app:findR3eDataFile", async () => {
         return { success: true, data: content, path: filePath };
       }
     } catch (error) {
-      console.warn(`[findR3eDataFile] Error reading ${filePath}:`, error.message);
+      console.warn(
+        `[findR3eDataFile] Error reading ${filePath}:`,
+        error.message,
+      );
     }
   }
 
@@ -217,7 +312,10 @@ ipcMain.handle("app:findAiadaptationFile", async () => {
         return { success: true, data: content, path: filePath };
       }
     } catch (error) {
-      console.warn(`[findAiadaptationFile] Error reading ${filePath}:`, error.message);
+      console.warn(
+        `[findAiadaptationFile] Error reading ${filePath}:`,
+        error.message,
+      );
     }
   }
 
