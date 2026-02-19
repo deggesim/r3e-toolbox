@@ -16,7 +16,7 @@ import AIModificationsModal from "../components/AIModificationsModal";
 import Classes from "../components/Classes";
 import FileUploadSection from "../components/FileUploadSection";
 import PlayerTimesTable from "../components/PlayerTimesTable";
-import ProcessingLog from "../components/ProcessingLog";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import Tracks from "../components/Tracks";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
@@ -114,8 +114,16 @@ const AIManagement = () => {
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const gameDataLoggedRef = useRef(false);
   const xmlAutoLoadedRef = useRef(false);
-  const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
+  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
+  const { logs, addLog, logsEndRef, getLogVariant, setLogs, clearLogs } =
     useProcessingLog();
+
+  // Auto-open log panel when logs are added
+  useEffect(() => {
+    if (logs.length > 0) {
+      setIsOpenFloatingLog(true);
+    }
+  }, [logs.length]);
 
   // Calculate AI range
   const aiNumLevels = config.aiNumLevels;
@@ -251,7 +259,6 @@ const AIManagement = () => {
 
   const handleConfirmApply = () => {
     setShowApplyModal(false);
-    setLogs([]);
 
     let updatedDb = database;
     let updatedPt = playerTimes;
@@ -304,8 +311,6 @@ const AIManagement = () => {
       aito: number,
       aiSpacing: number,
     ): Database => {
-      setLogs([]);
-
       const classLabel = assets?.classes?.[classid]?.name || classid;
       const trackLabel = assets?.tracks?.[trackid]?.name || trackid;
 
@@ -429,7 +434,6 @@ const AIManagement = () => {
   // ============ REMOVE GENERATED ============
 
   const handleRemoveGenerated = useCallback(() => {
-    setLogs([]);
     addLog("info", "Starting removal of generated AI levels...");
 
     const newDatabase = structuredClone(database);
@@ -489,7 +493,6 @@ const AIManagement = () => {
   const confirmResetAll = useCallback(() => {
     setShowResetModal(false);
 
-    setLogs([]);
     addLog("info", "Starting reset of all AI times...");
 
     const emptyDb: Database = { classes: {} };
@@ -733,14 +736,18 @@ const AIManagement = () => {
               </Card>
             </>
           )}
-
-          <ProcessingLog
-            logs={logs}
-            getLogVariant={getLogVariant}
-            logsEndRef={logsEndRef}
-          />
         </Card.Body>
       </Card>
+
+      {/* Floating Processing Log */}
+      <FloatingProcessingLog
+        logs={logs}
+        isOpen={isOpenFloatingLog}
+        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
+        onClear={clearLogs}
+        getLogVariant={getLogVariant}
+        logsEndRef={logsEndRef}
+      />
 
       {/* Apply Modifications Modal */}
       <AIModificationsModal

@@ -1,0 +1,295 @@
+/* Floating Processing Log (Toast-like notification panel) */
+
+.floating-log-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: #1e1e2e;
+  border: 1px solid #444;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 4px -4px 16px rgba(0, 0, 0, 0.8);
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  margin: 0 1rem 1rem 1rem;
+  z-index: 2000;
+  transition: max-height 0.3s ease, visibility 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.floating-log-panel.collapsed {
+  max-height: 48px;
+}
+
+.floating-log-panel.open {
+  max-height: 400px;
+}
+
+/* Header */
+.floating-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(90deg, #2d2d3d 0%, #3a3f5c 100%);
+  border-bottom: 1px solid #444;
+  flex-shrink: 0;
+}
+
+.floating-log-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.floating-log-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.floating-log-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.floating-log-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.floating-log-btn:active {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Content area */
+.floating-log-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem;
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  background-color: #1a1a25;
+}
+
+/* Custom scrollbar */
+.floating-log-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.floating-log-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.floating-log-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.floating-log-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Log entries */
+.floating-log-entry {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border-left: 3px solid;
+  align-items: flex-start;
+  word-break: break-word;
+}
+
+.floating-log-type {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.floating-log-message {
+  flex: 1;
+  color: #e8e8e8;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Entry type variants */
+.floating-log-entry-success {
+  background-color: rgba(25, 135, 84, 0.1);
+  border-left-color: #198754;
+}
+
+.floating-log-entry-success .floating-log-type {
+  background-color: #198754;
+  color: #ffffff;
+}
+
+.floating-log-entry-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left-color: #ffc107;
+}
+
+.floating-log-entry-warning .floating-log-type {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.floating-log-entry-error,
+.floating-log-entry-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left-color: #dc3545;
+}
+
+.floating-log-entry-error .floating-log-type,
+.floating-log-entry-danger .floating-log-type {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.floating-log-entry-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  border-left-color: #17a2b8;
+}
+
+.floating-log-entry-info .floating-log-type {
+  background-color: #17a2b8;
+  color: #ffffff;
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .floating-log-panel {
+    display: none !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .floating-log-panel {
+    max-width: 100%;
+    width: calc(100% - 1rem);
+    margin: 0 0.5rem;
+    border-radius: 6px;
+    /* Position above mobile menu button (which is at bottom: 1rem) */
+    bottom: 80px;
+    left: 0.5rem;
+  }
+
+  .floating-log-content {
+    max-height: 250px;
+  }
+
+  .floating-log-panel.open {
+    max-height: 300px;
+  }
+
+  .floating-log-entry {
+    font-size: 0.8rem;
+  }
+
+  .floating-log-message {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile log button (next to hamburger menu) */
+.mobile-log-button {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobile-log-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 1rem;
+    right: 4.5rem; /* Position to the left of hamburger menu */
+    width: 50px;
+    height: 50px;
+    background-color: #3a3f5c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 1.25rem;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    z-index: 1001;
+  }
+
+  .mobile-log-button:hover {
+    background-color: #4a4f6c;
+    transform: scale(1.1);
+  }
+
+  .mobile-log-button:active {
+    background-color: #2a2f4c;
+    transform: scale(0.95);
+  }
+}
+
+.mobile-log-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 0.65rem;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0 6px;
+}
+
+/* Mobile Offcanvas */
+.mobile-log-offcanvas .offcanvas-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.mobile-log-content {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.mobile-log-offcanvas .offcanvas-header {
+  padding: 1rem;
+}
+
+.mobile-log-offcanvas .offcanvas-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* For very small screens */
+@media (max-width: 400px) {
+  .floating-log-title {
+    font-size: 0.8rem;
+  }
+
+  .floating-log-entry {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

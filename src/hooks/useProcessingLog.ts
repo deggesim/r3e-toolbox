@@ -41,9 +41,6 @@ export const useProcessingLog = () => {
       ...prev,
       { type, message, icon: defaultIcon, timestamp: Date.now() },
     ]);
-    setTimeout(() => {
-      logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
   };
 
   const getLogVariant = (type: LogEntry["type"]) => {

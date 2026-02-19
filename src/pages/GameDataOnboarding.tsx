@@ -4,7 +4,7 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
-import ProcessingLog from "../components/ProcessingLog";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useGameDataStore } from "../store/gameDataStore";
@@ -14,11 +14,20 @@ import { validateR3eData } from "../utils/r3eDataValidator";
 const GameDataOnboarding = () => {
   const electron = useElectronAPI();
   const { setGameData, setForceOnboarding } = useGameDataStore();
-  const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
+  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
+    useProcessingLog();
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadSuccess, setLoadSuccess] = useState(false);
+  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
   const autoLoadAttemptedRef = useRef(false);
+
+  // Auto-open log panel when logs are added
+  useEffect(() => {
+    if (logs.length > 0) {
+      setIsOpenFloatingLog(true);
+    }
+  }, [logs.length]);
 
   // Try to load game data automatically on mount
   useEffect(() => {
@@ -215,17 +224,6 @@ const GameDataOnboarding = () => {
             </Form.Group>
           )}
 
-          {logs.length > 0 && (
-            <div className="mb-4">
-              <h5 className="text-white mb-3">Loading Status</h5>
-              <ProcessingLog
-                logs={logs}
-                logsEndRef={logsEndRef}
-                getLogVariant={getLogVariant}
-              />
-            </div>
-          )}
-
           {isLoading && (
             <div className="text-center my-3">
               <Spinner animation="border" variant="primary" />
@@ -241,6 +239,16 @@ const GameDataOnboarding = () => {
           )}
         </Card.Body>
       </Card>
+
+      {/* Floating Processing Log */}
+      <FloatingProcessingLog
+        logs={logs}
+        isOpen={isOpenFloatingLog}
+        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
+        onClear={clearLogs}
+        getLogVariant={getLogVariant}
+        logsEndRef={logsEndRef}
+      />
     </Container>
   );
 };

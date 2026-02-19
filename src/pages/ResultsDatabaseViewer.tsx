@@ -4,7 +4,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExcla
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -17,7 +17,7 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
-import ProcessingLog from "../components/ProcessingLog";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import SectionTitle from "../components/SectionTitle";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
@@ -39,10 +39,19 @@ const ResultsDatabaseViewer = () => {
   const clearAll = useChampionshipStore((state) => state.clear);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
   const gameData = useGameDataStore((state) => state.gameData);
-  const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
+  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
+    useProcessingLog();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
+
+  // Auto-open log panel when logs are added
+  useEffect(() => {
+    if (logs.length > 0) {
+      setIsOpenFloatingLog(true);
+    }
+  }, [logs.length]);
 
   const handleCardClick = (alias: string) => {
     navigate(`/results-database/${encodeURIComponent(alias)}`);
@@ -86,8 +95,19 @@ const ResultsDatabaseViewer = () => {
     });
 
   const handleClearAll = () => {
+    const count = championships.length;
     clearAll();
     setShowClearAllModal(false);
+    addLog(
+      "success",
+      `All championships cleared (${count} removed)`,
+      faTrashCan,
+    );
+  };
+
+  const handleRemoveChampionship = (alias: string) => {
+    removeChampionship(alias);
+    addLog("success", `Championship "${alias}" removed`, faTrashCan);
   };
 
   const totalRaces = championships.reduce((sum, champ) => sum + champ.races, 0);
@@ -270,7 +290,7 @@ const ResultsDatabaseViewer = () => {
                   <Col key={championship.alias} md={6} lg={4}>
                     <ChampionshipCard
                       championship={championship}
-                      onDelete={removeChampionship}
+                      onDelete={handleRemoveChampionship}
                       onRename={renameChampionship}
                       onClick={handleCardClick}
                       onDownload={handleDownloadChampionship}
@@ -324,14 +344,18 @@ const ResultsDatabaseViewer = () => {
               </Button>
             </Modal.Footer>
           </Modal>
-
-          <ProcessingLog
-            logs={logs}
-            getLogVariant={getLogVariant}
-            logsEndRef={logsEndRef}
-          />
         </Card.Body>
       </Card>
+
+      {/* Floating Processing Log */}
+      <FloatingProcessingLog
+        logs={logs}
+        isOpen={isOpenFloatingLog}
+        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
+        onClear={clearLogs}
+        getLogVariant={getLogVariant}
+        logsEndRef={logsEndRef}
+      />
     </Container>
   );
 };

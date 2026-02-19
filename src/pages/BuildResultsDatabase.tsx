@@ -1,3 +1,8 @@
+import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
+import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   useCallback,
   useEffect,
@@ -20,12 +25,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
-import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
-import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
-import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
-import ProcessingLog from "../components/ProcessingLog";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import SectionTitle from "../components/SectionTitle";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
@@ -167,8 +167,17 @@ const BuildResultsDatabase = () => {
     ChampionshipEntry[] | null
   >(null);
   const databaseInputRef = useRef<HTMLInputElement>(null);
-  const { logs, addLog, logsEndRef, getLogVariant, setLogs } =
+  const resultsInputRef = useRef<HTMLInputElement>(null);
+  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
+  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
     useProcessingLog();
+
+  // Auto-open log panel when logs are added
+  useEffect(() => {
+    if (logs.length > 0) {
+      setIsOpenFloatingLog(true);
+    }
+  }, [logs.length]);
 
   // Use store to read cached assets
   const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
@@ -397,8 +406,6 @@ const BuildResultsDatabase = () => {
   const handleCreateOrUpdate = useCallback(() => {
     const aliasTrimmed = championshipAlias.trim();
 
-    // Reset logs and start processing
-    setLogs([]);
     setIsProcessing(true);
 
     try {
@@ -476,6 +483,14 @@ const BuildResultsDatabase = () => {
         `Championship ${existing ? "updated" : "created"} successfully with ${mergedRaces.length} total race(s)`,
         faCheck,
       );
+
+      // Clear input fields after successful creation/update
+      setResultFiles([]);
+      setChampionshipAlias("");
+      setParsedRaces([]);
+      if (resultsInputRef.current) {
+        resultsInputRef.current.value = "";
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       addLog("error", errorMessage, faXmark);
@@ -624,6 +639,7 @@ const BuildResultsDatabase = () => {
                   type="file"
                   multiple
                   accept=".txt,.json"
+                  ref={resultsInputRef}
                   onChange={handleFolderChange}
                 />
                 <Form.Text className="text-white-50">
@@ -725,14 +741,18 @@ const BuildResultsDatabase = () => {
               Enter a championship alias in Step 2 to enable saving.
             </Alert>
           )}
-
-          <ProcessingLog
-            logs={logs}
-            getLogVariant={getLogVariant}
-            logsEndRef={logsEndRef}
-          />
         </Card.Body>
       </Card>
+
+      {/* Floating Processing Log */}
+      <FloatingProcessingLog
+        logs={logs}
+        isOpen={isOpenFloatingLog}
+        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
+        onClear={clearLogs}
+        getLogVariant={getLogVariant}
+        logsEndRef={logsEndRef}
+      />
 
       {/* Restore Database Confirmation Modal */}
       <Modal

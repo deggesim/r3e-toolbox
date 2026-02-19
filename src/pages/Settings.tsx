@@ -3,7 +3,7 @@ import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import type { Config } from "../config";
 import { CFG } from "../config";
@@ -12,7 +12,7 @@ import { useGameDataStore } from "../store/gameDataStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
 import { validateR3eData } from "../utils/r3eDataValidator";
-import ProcessingLog from "../components/ProcessingLog";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import type { RaceRoomData } from "../types";
 
 type NumericConfigKey = {
@@ -86,10 +86,19 @@ const Settings = () => {
   );
   const clearGameData = useGameDataStore((state) => state.clearGameData);
   const setGameData = useGameDataStore((state) => state.setGameData);
-  const { logs, addLog, logsEndRef, getLogVariant } = useProcessingLog();
+  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
+    useProcessingLog();
 
   const [localConfig, setLocalConfig] = useState<Config>(config);
   const [isReloading, setIsReloading] = useState(false);
+  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
+
+  // Auto-open log panel when logs are added
+  useEffect(() => {
+    if (logs.length > 0) {
+      setIsOpenFloatingLog(true);
+    }
+  }, [logs.length]);
 
   const handleNumberChange = (key: NumericConfigKey, value: number) => {
     if (Number.isFinite(value)) {
@@ -314,10 +323,14 @@ const Settings = () => {
         </Card.Body>
       </Card>
 
-      <ProcessingLog
+      {/* Floating Processing Log */}
+      <FloatingProcessingLog
         logs={logs}
-        logsEndRef={logsEndRef}
+        isOpen={isOpenFloatingLog}
+        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
+        onClear={clearLogs}
         getLogVariant={getLogVariant}
+        logsEndRef={logsEndRef}
       />
     </Container>
   );
