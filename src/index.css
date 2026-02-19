@@ -18,6 +18,12 @@
   --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   --border-radius: 8px;
   background-color: #212529;
+  --bs-red: #AB1818;
+  --bs-danger: #AB1818;
+  --bs-danger-rgb: 171, 24, 24;
+  --bs-danger-text-emphasis: #7A0F0F;
+  --bs-danger-bg-subtle: #FBEAEA;
+  --bs-danger-border-subtle: #F3C0C0;
 }
 
 body {
@@ -33,8 +39,128 @@ a {
 }
 
 .page-header-gradient {
-  background: linear-gradient(135deg, #dc143c 0%, #b91028 100%) !important;
+  background: linear-gradient(90deg, #AB1818 0%, #7A0F0F 100%) !important;
   color: white !important;
+}
+
+.btn-danger {
+  --bs-btn-bg: #AB1818;
+  --bs-btn-border-color: #AB1818;
+  --bs-btn-hover-bg: #8F1414;
+  --bs-btn-hover-border-color: #8F1414;
+  --bs-btn-active-bg: #7A0F0F;
+  --bs-btn-active-border-color: #7A0F0F;
+  --bs-btn-disabled-bg: #AB1818;
+  --bs-btn-disabled-border-color: #AB1818;
+}
+
+.text-danger {
+  color: #AB1818 !important;
+}
+
+.link-danger {
+  color: #AB1818;
+}
+
+.link-danger:hover,
+.link-danger:focus {
+  color: #8F1414;
+}
+
+.badge.bg-danger {
+  background-color: #AB1818 !important;
+}
+
+.badge.text-bg-danger {
+  background-color: #AB1818 !important;
+  color: #ffffff !important;
+}
+
+.alert-danger {
+  --bs-alert-color: #7A0F0F;
+  --bs-alert-bg: #FBEAEA;
+  --bs-alert-border-color: #F3C0C0;
+  color: #7A0F0F;
+  background-color: #FBEAEA;
+  border-color: #F3C0C0;
+}
+
+.border-danger {
+  border-color: #AB1818 !important;
+}
+
+.bg-danger-subtle {
+  background-color: #FBEAEA !important;
+}
+
+.btn-outline-danger {
+  --bs-btn-color: #AB1818;
+  --bs-btn-border-color: #AB1818;
+  --bs-btn-hover-bg: #AB1818;
+  --bs-btn-hover-border-color: #AB1818;
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-active-bg: #7A0F0F;
+  --bs-btn-active-border-color: #7A0F0F;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-disabled-color: #AB1818;
+  --bs-btn-disabled-border-color: #AB1818;
+}
+
+.text-danger svg {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.alert-danger .btn-close {
+  filter: none;
+  opacity: 0.85;
+}
+
+.alert-danger .btn-close:hover,
+.alert-danger .btn-close:focus {
+  opacity: 1;
+}
+
+.badge.border-danger {
+  color: #AB1818;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  background-color: #AB1818;
+}
+
+.table-danger {
+  --bs-table-bg: #FBEAEA;
+  --bs-table-color: #7A0F0F;
+  --bs-table-border-color: #F3C0C0;
+  --bs-table-striped-bg: #F7DCDC;
+  --bs-table-striped-color: #7A0F0F;
+  --bs-table-active-bg: #F3C0C0;
+  --bs-table-active-color: #7A0F0F;
+  --bs-table-hover-bg: #F7DCDC;
+  --bs-table-hover-color: #7A0F0F;
+}
+
+.list-group-item-danger {
+  --bs-list-group-color: #7A0F0F;
+  --bs-list-group-bg: #FBEAEA;
+  --bs-list-group-border-color: #F3C0C0;
+}
+
+.progress-bar.bg-danger {
+  background-color: #AB1818 !important;
+}
+
+.form-control.is-invalid,
+.was-validated .form-control:invalid,
+.form-select.is-invalid,
+.was-validated .form-select:invalid {
+  border-color: #AB1818;
+}
+
+.invalid-feedback {
+  color: #AB1818;
 }
 
 #root {
