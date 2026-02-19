@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/deggesim/r3e-toolbox/compare/v1.0.2...v1.1.0) (2026-02-19)
+
+
+### Bug Fixes
+
+* update color variables and gradient for improved styling consistency ([6466cd6](https://github.com/deggesim/r3e-toolbox/commit/6466cd6028b5a946951f3686734209816cf70173))
+* update podium cell background colors for improved visibility ([84fe288](https://github.com/deggesim/r3e-toolbox/commit/84fe28846fdd9e9ffef5a342fc54db98fd662781))
+
+
+### Features
+
+* add application menu and navigation listener for improved user experience ([#7](https://github.com/deggesim/r3e-toolbox/issues/7)) ([f1d9a74](https://github.com/deggesim/r3e-toolbox/commit/f1d9a74cac09efcac2329f6b3ecdc62f72d312ad))
+* enhance danger color styles for improved UI consistency ([5f5c28a](https://github.com/deggesim/r3e-toolbox/commit/5f5c28afebee6f8062305724ec1f50451d1b3d54))
+
 ## [1.0.2](https://github.com/deggesim/r3e-toolbox/compare/v1.0.1...v1.0.2) (2026-02-13)
 
 
