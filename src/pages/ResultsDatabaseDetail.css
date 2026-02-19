@@ -85,19 +85,19 @@
 }
 
 .results-table .pos1 {
-  background-color: #ffd700 !important;
+  background-color: #d4af37 !important;
   color: #000 !important;
   font-weight: bold;
 }
 
 .results-table .pos2 {
-  background-color: #c0c0c0 !important;
+  background-color: #a8a8a8 !important;
   color: #000 !important;
   font-weight: bold;
 }
 
 .results-table .pos3 {
-  background-color: #cd7f32 !important;
+  background-color: #9e6f47 !important;
   color: #000 !important;
   font-weight: bold;
 }

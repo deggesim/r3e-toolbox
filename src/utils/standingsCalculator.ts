@@ -61,7 +61,7 @@ export const calculateRacePoints = (
   return pointsMap;
 };
 
-function parseTimeToSeconds(timeStr: string | undefined): number | null {
+const parseTimeToSeconds = (timeStr: string | undefined): number | null => {
   if (!timeStr) return null;
 
   const parts = timeStr.split(":");
@@ -79,7 +79,7 @@ function parseTimeToSeconds(timeStr: string | undefined): number | null {
   }
 
   return Number.isNaN(seconds) ? null : seconds;
-}
+};
 
 export const buildStandings = (
   races: ParsedRace[],
