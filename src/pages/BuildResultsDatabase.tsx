@@ -526,7 +526,7 @@ const BuildResultsDatabase = () => {
                 >
                   https://game.raceroom.com/leaderboard
                 </Link>
-                , parses it to collect the latest class and track icon URLs, and
+                , parses it to collect the latest car and track icon URLs, and
                 stores them for reuse. If the request is blocked by CORS, paste
                 the page HTML below and run the analysis again.
               </p>

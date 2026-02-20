@@ -11,6 +11,12 @@ Alternatively:
 - Download from the [Releases page](https://github.com/deggesim/r3e-toolbox/releases) for other versions or formats
 - Use the **web version** at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app) (works on Windows, macOS, Linux)
 
+## ☕ Support the Project
+
+If this tool saves you time and enhances your RaceRoom experience, consider supporting its development:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/deggesim)
+
 ## What Does It Do?
 
 The toolbox combines multiple standalone tools into a single, user-friendly interface:
