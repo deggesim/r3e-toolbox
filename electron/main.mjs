@@ -20,6 +20,18 @@ const store = new Store();
 
 let mainWindow;
 
+const isInternalUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    if (isDev) {
+      return parsed.origin === "http://localhost:5173";
+    }
+    return parsed.protocol === "file:";
+  } catch (error) {
+    return false;
+  }
+};
+
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -54,6 +66,21 @@ const createWindow = () => {
     : `file://${path.join(__dirname, "../dist/index.html")}`;
 
   mainWindow.loadURL(startUrl);
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (!isInternalUrl(url)) {
+      shell.openExternal(url);
+      return { action: "deny" };
+    }
+    return { action: "allow" };
+  });
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    if (!isInternalUrl(url)) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
 
   if (isDev) {
     mainWindow.webContents.openDevTools();

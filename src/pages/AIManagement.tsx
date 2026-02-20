@@ -104,6 +104,8 @@ const AIManagement = () => {
   const [selectedAILevel, setSelectedAILevel] = useState<number | null>(null);
   const [spacing, setSpacing] = useState<number>(config.aiSpacing);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showRemoveGeneratedModal, setShowRemoveGeneratedModal] =
+    useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [xmlAutoLoaded, setXmlAutoLoaded] = useState(false);
   const [originalPlayerTimes, setOriginalPlayerTimes] = useState<PlayerTimes>({
@@ -479,6 +481,16 @@ const AIManagement = () => {
     }
   }, [database, assets, playerTimes, downloadXml, addLog, setLogs]);
 
+  const handleConfirmRemoveGenerated = useCallback(() => {
+    setShowRemoveGeneratedModal(false);
+    handleRemoveGenerated();
+  }, [handleRemoveGenerated]);
+
+  const handleCancelRemoveGenerated = useCallback(() => {
+    setShowRemoveGeneratedModal(false);
+    addLog("info", "Removal of generated AI levels cancelled by user.");
+  }, [addLog]);
+
   // ============ RESET ALL ============
 
   const handleResetAll = useCallback(() => {
@@ -652,7 +664,10 @@ const AIManagement = () => {
               <Card bg="dark" text="white" className="border-secondary mb-3">
                 <Card.Body>
                   <div className="d-flex flex-wrap gap-2">
-                    <Button variant="warning" onClick={handleRemoveGenerated}>
+                    <Button
+                      variant="warning"
+                      onClick={() => setShowRemoveGeneratedModal(true)}
+                    >
                       Remove likely generated
                     </Button>
                     <Button variant="danger" onClick={handleResetAll}>
@@ -763,6 +778,38 @@ const AIManagement = () => {
         onHide={() => setShowApplyModal(false)}
         onConfirm={handleConfirmApply}
       />
+
+      {/* Remove Generated Confirmation Modal */}
+      <Modal
+        show={showRemoveGeneratedModal}
+        onHide={handleCancelRemoveGenerated}
+        data-bs-theme="dark"
+      >
+        <Modal.Header closeButton className="bg-dark border-secondary">
+          <Modal.Title>Remove Generated AI Levels</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="bg-dark text-white">
+          <p className="text-warning">
+            ⚠️ <strong>Warning:</strong> This will remove AI levels that appear
+            to be generated (sample count = 0).
+          </p>
+          <p>This action will:</p>
+          <ul>
+            <li>Remove generated AI levels across all classes/tracks</li>
+            <li>Recalculate min/max AI ranges</li>
+            <li>Download a modified aiadaptation.xml file</li>
+          </ul>
+          <p>Do you want to continue?</p>
+        </Modal.Body>
+        <Modal.Footer className="bg-dark border-secondary">
+          <Button variant="secondary" onClick={handleCancelRemoveGenerated}>
+            Cancel
+          </Button>
+          <Button variant="warning" onClick={handleConfirmRemoveGenerated}>
+            Remove Generated
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Reset All Confirmation Modal */}
       <Modal show={showResetModal} onHide={cancelResetAll} data-bs-theme="dark">

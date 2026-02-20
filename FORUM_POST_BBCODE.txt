@@ -1,0 +1,127 @@
+[b][size=5]R3E Toolbox - Comprehensive Race Management Suite for RaceRoom[/size][/b]
+
+Hello RaceRoom community! 👋
+
+I'm excited to share a project I've been working on: [i]R3E Toolbox[/i] - a complete suite of tools designed to enhance your RaceRoom Racing Experience.
+
+[b][size=4]What is R3E Toolbox?[/size][/b]
+
+R3E Toolbox is a free, open-source desktop application (also available as a web app) that brings together multiple utilities to help you manage AI difficulty, fix race results, and create professional championship standings.
+
+[b][url=https://github.com/deggesim/r3e-toolbox/releases/latest]⬇️ Download the latest version here[/url][/b] (Windows installer + portable version)
+
+Or try the [b][url=https://r3e-toolbox.up.railway.app]web version[/url][/b] (works on any platform: Windows, macOS, Linux)
+
+[b][size=4]Key Features[/size][/b]
+
+[b]1. AI Management 🤖[/b]
+
+Based on the excellent work from [url=https://github.com/pixeljetstream/r3e-adaptive-ai-primer]pixeljetstream's r3e-adaptive-ai-primer[/url], this tool helps you:
+
+• Analyze your aiadaptation.xml file
+• Use linear regression to predict lap times for unmeasured AI difficulty levels
+• Validate fit quality and detect outliers
+• Generate optimized AI settings for all your track/class combinations
+• Remove synthetic data and re-fit with real race data
+• Remove your own player lap times
+
+Perfect for league organizers or anyone who wants consistent AI competition across different tracks and classes.
+
+[b]2. Fix Qualy Times ⏱️[/b]
+
+RaceRoom sometimes saves race results with missing qualification times. This tool:
+
+• Reads your qualification session file
+• Matches drivers between quali and race sessions
+• Patches the race results with correct qualification lap times
+• Generates a corrected file ready for your records
+
+[b]3. Build Results Database 🏆[/b]
+
+Inspired by [url=https://github.com/pixeljetstream/r3e-open-championship]pixeljetstream's r3e-open-championship[/url], this feature:
+
+• Analyzes multiple race result files from a folder
+• Calculates championship standings with points, wins, podiums
+• Generates beautiful HTML reports with official RaceRoom car and track icons
+• Caches assets for offline use
+• Creates standalone HTML files you can share with your league
+
+[b]4. Results Database Viewer 📊[/b]
+
+• Browse all your saved championships
+• Search and filter by car, track, or championship name
+• View detailed driver, team, and vehicle standings
+• Export HTML reports or JSON data
+
+[b]5. Settings & Configuration ⚙️[/b]
+
+• Customize fitting parameters
+• Configure validation thresholds
+• Manage game data files
+• Clear cached assets when needed
+
+[b][size=4]Technical Highlights[/size][/b]
+
+• [b]Cross-platform[/b]: Desktop app (Electron) or web browser
+• [b]Modern tech stack[/b]: React + TypeScript with a clean, responsive UI
+• [b]Local storage[/b]: All data stays on your machine (electron-store for desktop, localStorage for web)
+• [b]No backend required[/b]: Completely self-contained application
+• [b]Open source[/b]: MIT License - contributions welcome!
+
+[b][size=4]Credits[/size][/b]
+
+This project builds upon the fantastic work of [b]pixeljetstream[/b]:
+
+• AI fitting algorithms from [url=https://github.com/pixeljetstream/r3e-adaptive-ai-primer]r3e-adaptive-ai-primer[/url]
+• Championship standings logic from [url=https://github.com/pixeljetstream/r3e-open-championship]r3e-open-championship[/url]
+
+The toolbox consolidates these tools into a single, user-friendly interface with additional features and enhancements.
+
+[b][size=4]Getting Started[/size][/b]
+
+1. [b]Download[/b] the [url=https://github.com/deggesim/r3e-toolbox/releases/latest]Windows installer[/url] or use the [url=https://r3e-toolbox.up.railway.app]web version[/url]
+2. [b]Load your r3e-data.json[/b] file (the app can auto-detect it from your RaceRoom installation)
+3. [b]Choose your tool[/b] from the sidebar and start processing your race data!
+
+Full documentation and user guide available in the [url=https://github.com/deggesim/r3e-toolbox]GitHub repository[/url].
+
+[b][size=4]What's Next?[/size][/b]
+
+I keep improving this tool in my spare time and would love to hear your feedback. Whether you're:
+
+• A league organizer managing championships
+• A solo racer fine-tuning AI competition
+• A data enthusiast tracking your stats
+
+I'd be grateful for any suggestions, bug reports, or feature requests.
+
+[b][size=4]☕ Support the Project[/size][/b]
+
+If this tool saves you time and enhances your RaceRoom experience, consider supporting it as a thank-you:
+
+[b][url=https://ko-fi.com/C1C11UJY38]Buy me a coffee on Ko-fi[/url][/b] ☕
+
+[b][size=4]Links[/size][/b]
+
+• [b]GitHub Repository[/b]: [url=https://github.com/deggesim/r3e-toolbox]https://github.com/deggesim/r3e-toolbox[/url]
+• [b]Support on Ko-fi[/b]: [url=https://ko-fi.com/C1C11UJY38]https://ko-fi.com/C1C11UJY38[/url]
+• [b]Download Latest Release[/b]: [url=https://github.com/deggesim/r3e-toolbox/releases/latest]https://github.com/deggesim/r3e-toolbox/releases/latest[/url]
+• [b]Web Version[/b]: [url=https://r3e-toolbox.up.railway.app]https://r3e-toolbox.up.railway.app[/url]
+• [b]User Guide[/b]: [url=https://github.com/deggesim/r3e-toolbox/blob/main/src/docs/USER_GUIDE.md]Included in the app and repository[/url]
+
+[b][size=4]Version History[/size][/b]
+
+Currently at [b]v1.3.0[/b] with:
+
+• Floating processing logs for better UX
+• Application menu integration
+• Enhanced UI consistency
+• Stable production-ready release
+
+---
+
+Feel free to try it out and let me know what you think! Questions, suggestions, and contributions are always welcome.
+
+Happy racing! 🏁
+
+[i]Simone De Gennaro[/i]

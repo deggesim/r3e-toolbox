@@ -88,6 +88,20 @@ const Layout = ({ children }: PropsWithChildren<{}>) => {
                 </NavLink>
               ))}
             </Nav>
+            <div className="sidebar-footer border-top border-secondary p-3 mt-auto">
+              <a
+                href="https://ko-fi.com/C1C11UJY38"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  height="36"
+                  style={{ border: "0px", height: "36px" }}
+                  src="https://storage.ko-fi.com/cdn/kofi1.png?v=6"
+                  alt="Buy Me a Coffee at ko-fi.com"
+                />
+              </a>
+            </div>
           </div>
         </Col>
         <Col xs={12} md={9} className="main-content-col">

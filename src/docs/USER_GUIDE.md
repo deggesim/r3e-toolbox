@@ -349,5 +349,5 @@ For issues, feature requests, or bug reports, visit the [GitHub repository](http
 
 ---
 
-**Version**: 0.4.5  
-**Last Updated**: February 2026
+**Version**: {{VERSION}}  
+**Last Updated**: {{LAST_UPDATED}}
