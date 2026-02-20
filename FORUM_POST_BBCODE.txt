@@ -23,6 +23,7 @@ Based on the excellent work from [url=https://github.com/pixeljetstream/r3e-adap
 • Validate fit quality and detect outliers
 • Generate optimized AI settings for all your track/class combinations
 • Remove synthetic data and re-fit with real race data
+• Remove your own player lap times
 
 Perfect for league organizers or anyone who wants consistent AI competition across different tracks and classes.
 
@@ -86,7 +87,7 @@ Full documentation and user guide available in the [url=https://github.com/degge
 
 [b][size=4]What's Next?[/size][/b]
 
-I'm actively developing this tool and would love to hear your feedback! Whether you're:
+I keep improving this tool in my spare time and would love to hear your feedback. Whether you're:
 
 • A league organizer managing championships
 • A solo racer fine-tuning AI competition
@@ -96,11 +97,9 @@ I'd be grateful for any suggestions, bug reports, or feature requests.
 
 [b][size=4]☕ Support the Project[/size][/b]
 
-If this tool saves you time and enhances your RaceRoom experience, consider supporting its development:
+If this tool saves you time and enhances your RaceRoom experience, consider supporting it as a thank-you:
 
 [b][url=https://ko-fi.com/C1C11UJY38]Buy me a coffee on Ko-fi[/url][/b] ☕
-
-Your support helps maintain and improve the toolbox with new features and updates!
 
 [b][size=4]Links[/size][/b]
 
@@ -112,7 +111,7 @@ Your support helps maintain and improve the toolbox with new features and update
 
 [b][size=4]Version History[/size][/b]
 
-Currently at [b]v1.2.0[/b] with:
+Currently at [b]v1.3.0[/b] with:
 
 • Floating processing logs for better UX
 • Application menu integration
