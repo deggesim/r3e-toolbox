@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/deggesim/r3e-toolbox/compare/v1.2.0...v1.3.0) (2026-02-20)
+
+
+### Bug Fixes
+
+* improve commit message validation in CI workflow [skip ci] ([433f6ae](https://github.com/deggesim/r3e-toolbox/commit/433f6aeb393facb5427f5b286379fe460cbfcf43))
+
+
+### Features
+
+* add Ko-fi support section and donation button to enhance project support ([#9](https://github.com/deggesim/r3e-toolbox/issues/9)) ([07b5a46](https://github.com/deggesim/r3e-toolbox/commit/07b5a46466e5b647cdda3c88220dc14b87dcb479))
+
 # [1.2.0](https://github.com/deggesim/r3e-toolbox/compare/v1.1.0...v1.2.0) (2026-02-19)
 
 
