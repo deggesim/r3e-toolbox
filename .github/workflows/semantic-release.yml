@@ -33,10 +33,17 @@ jobs:
       - name: Validate Conventional Commit
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Commit message: $COMMIT_MSG"
+          FIRST_LINE=$(echo "$COMMIT_MSG" | head -n1)
+          echo "Commit message: $FIRST_LINE"
+
+          # Skip validation for PR squash/merge commits (contain PR references like #123)
+          if echo "$FIRST_LINE" | grep -qE '\(#[0-9]+\)'; then
+            echo "⏭️ Skipping validation for PR squash/merge commit"
+            exit 0
+          fi
 
           # Check if commit message follows conventional commits
-          if ! echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+'; then
+          if ! echo "$FIRST_LINE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+'; then
             echo "❌ Commit message does not follow Conventional Commits"
             echo "Required format: <type>(<scope>): <description>"
             echo "Valid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
@@ -91,10 +98,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.package-version.outputs.version }}
-          files: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.deb
+          files: dist/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
