@@ -47,10 +47,13 @@ Each class must have:
 
 ### Checks Performed
 
-1. ✅ Presence of `Id` and `Name`
-2. ✅ Correct types (number for Id, string for Name)
-3. ⚠️ ID consistency (key must match `Id`)
-4. ⚠️ Cars array validity (if present)
+1. ✅ Numeric class ID (key must be numeric string)
+2. ✅ Valid class structure (must be object)
+3. ✅ Presence of `Id` (must be number)
+4. ✅ Presence of `Name` (must be string)
+5. ⚠️ ID consistency check (key vs Id value)
+6. ⚠️ Optional `Cars` array validation (if present, must be array with numeric Ids)
+7. ✅ At least one valid class required
 
 ## Track Validation
 
@@ -69,12 +72,17 @@ Each layout must have:
 
 ### Checks Performed
 
-1. ✅ Presence of `Id`, `Name`, `layouts`
-2. ✅ Correct types for all fields
-3. ✅ Non-empty layouts array
-4. ✅ Each layout has valid `Id` and `Name`
-5. ⚠️ Track/layout ID consistency
-6. ⚠️ Optional fields validity
+1. ✅ Numeric track ID (key must be numeric string)
+2. ✅ Valid track structure (must be object)
+3. ✅ Presence of `Id` (must be number)
+4. ✅ Presence of `Name` (must be string)
+5. ✅ Presence of `layouts` array (must be array, not empty)
+6. ⚠️ ID consistency check (key vs Id value)
+7. ✅ Each layout has valid structure (must be object)
+8. ✅ Each layout has `Id` and `Name`
+9. ⚠️ Optional fields: `MaxNumberOfVehicles` (must be number if present)
+10. ⚠️ Optional fields: `Track` (must be number if present)
+11. ✅ At least one valid track required
 
 ## API Functions
 
@@ -226,23 +234,41 @@ if (isValidR3eDataStructure(parsedJson)) {
 
 ### Critical Errors (Blocking)
 
-| Error                                         | Description                            | Action                  |
-| --------------------------------------------- | -------------------------------------- | ----------------------- |
-| `Invalid data: must be a valid JSON object`   | Data is not a valid JSON object        | Verify file format      |
-| `Missing or invalid 'classes' property`       | classes property missing or not object | Verify JSON structure   |
-| `Missing or invalid 'tracks' property`        | tracks property missing or not object  | Verify JSON structure   |
-| `Class X: missing or invalid 'Id' field`      | Class without numeric ID               | Add ID to class         |
-| `Track X: missing or invalid 'layouts' array` | Track without layouts                  | Add at least one layout |
-| `No valid classes found in data`              | No valid class present                 | Verify classes content  |
-| `No valid tracks found in data`               | No valid track present                 | Verify tracks content   |
+| Error                                          | Description                             | Action                  |
+| ---------------------------------------------- | --------------------------------------- | ----------------------- |
+| `Invalid data: must be a valid JSON object`    | Data is not a valid JSON object         | Verify file format      |
+| `Missing or invalid 'classes' property`        | classes property missing or not object  | Verify JSON structure   |
+| `Missing or invalid 'tracks' property`         | tracks property missing or not object   | Verify JSON structure   |
+| `Class ID 'X' is not numeric`                  | Class key is not a number               | Fix key format          |
+| `Class X: invalid data structure`              | Class entry is malformed                | Verify class object     |
+| `Class X: missing or invalid 'Id' field`       | Class without numeric ID                | Add ID to class         |
+| `Class X: missing or invalid 'Name' field`     | Class without string name               | Add Name to class       |
+| `Track ID 'X' is not numeric`                  | Track key is not a number               | Fix key format          |
+| `Track X: invalid data structure`              | Track entry is malformed                | Verify track object     |
+| `Track X: missing or invalid 'Id' field`       | Track without numeric ID                | Add ID to track         |
+| `Track X: missing or invalid 'Name' field`     | Track without string name               | Add Name to track       |
+| `Track X: missing or invalid 'layouts' array`  | Track without layouts array             | Add at least one layout |
+| `Track X, layout Y: invalid layout structure`  | Layout entry is malformed               | Verify layout object    |
+| `Track X, layout Y: missing or invalid 'Id'`   | Layout without numeric ID               | Add ID to layout        |
+| `Track X, layout Y: missing or invalid 'Name'` | Layout without string name              | Add Name to layout      |
+| `No valid classes found in data`               | No valid class present after validation | Verify classes content  |
+| `No valid tracks found in data`                | No valid track present after validation | Verify tracks content   |
 
 ### Warnings (Non-blocking)
 
-| Warning                                  | Description           | Impact                         |
-| ---------------------------------------- | --------------------- | ------------------------------ |
-| `Class X: ID mismatch`                   | Key different from Id | May cause confusion, but works |
-| `Track X: no layouts defined`            | Track without layouts | Track not usable               |
-| `Class X: N cars with invalid structure` | Malformed cars        | Cars may not appear            |
+| Warning                                                    | Description                          | Impact                         |
+| ---------------------------------------------------------- | ------------------------------------ | ------------------------------ |
+| `No classes found in data`                                 | classes object is empty              | No classes available           |
+| `No tracks found in data`                                  | tracks object is empty               | No tracks available            |
+| `Class X: ID mismatch (key: Y, Id: Z)`                     | Key differs from Id value            | May cause confusion, but works |
+| `Class X: 'Cars' is not an array`                          | Cars property malformed              | Cars may not appear            |
+| `Class X: N cars with invalid structure`                   | Cars entries are malformed           | Cars may not appear            |
+| `Track X: ID mismatch (key: Y, Id: Z)`                     | Key differs from Id value            | May cause confusion, but works |
+| `Track X (name): no layouts defined`                       | Track layouts array is empty         | Track not usable               |
+| `Track X, layout Y: 'MaxNumberOfVehicles' is not a number` | Invalid type for MaxNumberOfVehicles | Display may be affected        |
+| `Track X, layout Y: 'Track' reference is not a number`     | Invalid type for Track reference     | Reference may be invalid       |
+| `'cars' property exists but is not an object`              | cars key is malformed                | Additional car data not used   |
+| `'teams' property exists but is not an object`             | teams key is malformed               | Additional team data not used  |
 
 ## Testing
 
@@ -386,3 +412,7 @@ If the structure of `RaceRoomData` changes:
 - [TypeScript Types Documentation](../types.ts)
 - [GameDataOnboarding Component](../../components/GameDataOnboarding.tsx)
 - [Game Data Store](../../store/gameDataStore.ts)
+
+---
+
+**Last Updated:** February 22, 2026 | **Version:** 1.3.1

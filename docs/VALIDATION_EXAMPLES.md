@@ -257,7 +257,7 @@ const result = validateR3eData(data);
 **Expected output:**
 
 ```
-⚠️ Track 262: empty layouts array
+⚠️ Track 262 (RaceRoom Raceway): no layouts defined
 ```
 
 **Note:** This is a warning, not a blocking error. The track exists but has no usable layouts.
@@ -483,4 +483,4 @@ if (!gameDataStore.getState().gameData) {
 
 ---
 
-**Last Updated:** February 11, 2026 | **Version:** 0.4.3
+**Last Updated:** February 22, 2026 | **Version:** 1.3.1
