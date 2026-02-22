@@ -1,8 +1,9 @@
 /**
  * Parse a time string in HH:MM:SS.ffff or MM:SS.ffff format into total seconds.
  * Handles both with and without hours component.
+ * Returns undefined if string is missing or invalid format.
  */
-export const parseTime = (str: string): number | undefined => {
+export const parseTime = (str?: string): number | undefined => {
   if (!str) return undefined;
   // Try format with hours first: HH:MM:SS.ffff
   const hMatch = str.match(/(\d+):(\d+):([0-9.]+)/);
@@ -69,4 +70,23 @@ export const computeTime = (times: number[]): [number, number, number] => {
 
 export const outputTime = (time: number): string => {
   return time.toFixed(2);
+};
+
+/**
+ * Parse a RaceRoom timestring in YYYY_MM_DD_HH_MM_SS format into timestamp (milliseconds).
+ * Handles both underscore-separated format and standard Date.parse format.
+ * Returns NaN if parsing fails.
+ */
+export const parseTimestring = (timestring?: string): number => {
+  if (!timestring) return Number.NaN;
+  if (timestring.includes("_")) {
+    const parts = timestring.split("_").map(Number);
+    if (parts.length >= 6 && parts.every((p) => !Number.isNaN(p))) {
+      const [year, month, day, hour, minute, second] = parts;
+      return new Date(year, month - 1, day, hour, minute, second).getTime();
+    }
+  }
+
+  const parsed = Date.parse(timestring);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
 };

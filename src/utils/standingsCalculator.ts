@@ -10,6 +10,7 @@ import {
   type ParsedRace,
   type RaceDatabase,
 } from "../types/raceResults";
+import { getSortedRaceSlots } from "./humanPlayerUtils";
 
 interface DriverPoints {
   points: number;
@@ -21,6 +22,15 @@ interface StandingsEntry {
   driver: string;
   vehicle: string;
   team: string;
+  points: number;
+  positions: number[];
+}
+
+/**
+ * Simplified standings entry for championship winner calculation.
+ */
+export interface ChampionshipStanding {
+  driver: string;
   points: number;
   positions: number[];
 }
@@ -152,18 +162,21 @@ export const buildStandings = (
     });
   }
 
-  // Sort by points (descending), then by best positions
+  // Sort by points (descending), then by countback (best finishing positions)
   drivers.sort((a, b) => {
+    // Primary: sort by total points
     if (b.points !== a.points) return b.points - a.points;
 
-    // Count wins, podiums, etc.
-    const aWins = a.positions.filter((p) => p === 1).length;
-    const bWins = b.positions.filter((p) => p === 1).length;
-    if (bWins !== aWins) return bWins - aWins;
-
-    const aPodiums = a.positions.filter((p) => p <= 3).length;
-    const bPodiums = b.positions.filter((p) => p <= 3).length;
-    if (bPodiums !== aPodiums) return bPodiums - aPodiums;
+    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+    for (
+      let position = 1;
+      position <= DEFAULT_POINTS_SYSTEM.default.length;
+      position++
+    ) {
+      const aCount = a.positions.filter((p) => p === position).length;
+      const bCount = b.positions.filter((p) => p === position).length;
+      if (bCount !== aCount) return bCount - aCount;
+    }
 
     return 0;
   });
@@ -237,6 +250,69 @@ export const getBestQualifyingTimes = (
   bestQuals.sort((a, b) => a.seconds - b.seconds);
 
   return bestQuals.slice(0, 20).map(({ seconds, ...rest }) => rest);
+};
+
+/**
+ * Calculate championship standings from race results.
+ * Returns sorted standings with points and positions for each driver.
+ *
+ * This function uses getSortedRaceSlots for consistent position calculation
+ * across all race results, applying the same tiebreaker logic (countback).
+ *
+ * @param races - Array of ParsedRace objects
+ * @param pointsSystem - Points awarded per position (defaults to F1 system)
+ * @returns Array of standings sorted by championship position
+ *
+ * @example
+ * const standings = calculateChampionshipStandings(races);
+ * const winner = standings[0]; // Championship winner
+ */
+export const calculateChampionshipStandings = (
+  races: ParsedRace[],
+  pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
+): ChampionshipStanding[] => {
+  const driverPoints = new Map<
+    string,
+    { points: number; positions: number[] }
+  >();
+
+  for (const race of races) {
+    const sortedSlots = getSortedRaceSlots(race.slots || []);
+
+    // Accumulate points for all drivers based on finishing positions
+    sortedSlots.forEach((slot, idx) => {
+      const position = idx + 1;
+      const points =
+        position <= pointsSystem.length ? pointsSystem[position - 1] : 0;
+
+      if (!driverPoints.has(slot.Driver)) {
+        driverPoints.set(slot.Driver, { points: 0, positions: [] });
+      }
+
+      const driverData = driverPoints.get(slot.Driver)!;
+      driverData.points += points;
+      driverData.positions.push(position);
+    });
+  }
+
+  // Build and sort standings with tiebreaker
+  const standings = Array.from(driverPoints.entries())
+    .map(([driver, data]) => ({ driver, ...data }))
+    .sort((a, b) => {
+      // Primary: sort by total points
+      if (b.points !== a.points) return b.points - a.points;
+
+      // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+      for (let position = 1; position <= pointsSystem.length; position++) {
+        const aCount = a.positions.filter((p) => p === position).length;
+        const bCount = b.positions.filter((p) => p === position).length;
+        if (bCount !== aCount) return bCount - aCount;
+      }
+
+      return 0;
+    });
+
+  return standings;
 };
 
 export const buildRaceDatabase = (

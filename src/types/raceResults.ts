@@ -14,6 +14,7 @@ export interface RaceSlot {
   QualTime?: string;
   Position?: number;
   FinishStatus?: string;
+  TotalLaps?: number;
 }
 
 export interface RaceSession {

@@ -25,6 +25,12 @@ import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import type { ChampionshipEntry } from "../types";
 import { convertAssetsForHTML } from "../utils/assetConverter";
+import { parseTime, parseTimestring } from "../utils/timeUtils";
+import {
+  getHumanDriverName,
+  getSortedRaceSlots,
+} from "../utils/humanPlayerUtils";
+import { calculateChampionshipStandings } from "../utils/standingsCalculator";
 import {
   downloadHTML,
   generateChampionshipIndexHTML,
@@ -57,6 +63,76 @@ const ResultsDatabaseViewer = () => {
     navigate(`/results-database/${encodeURIComponent(alias)}`);
   };
 
+  const getHumanStats = () => {
+    let wins = 0;
+    let podiums = 0;
+    let poles = 0;
+    let championshipsWon = 0;
+
+    for (const championship of championships) {
+      const races = championship.raceData || [];
+      if (races.length === 0) continue;
+
+      let humanDriverName: string | null = null;
+
+      for (const race of races) {
+        const humanDriver = getHumanDriverName(race);
+        if (humanDriver && !humanDriverName) {
+          humanDriverName = humanDriver;
+        }
+
+        const sortedSlots = getSortedRaceSlots(race.slots || []);
+
+        // Count race wins, podiums for human
+        if (humanDriver) {
+          const humanIndex = sortedSlots.findIndex(
+            (slot) => slot.Driver === humanDriver,
+          );
+          if (humanIndex >= 0) {
+            const position = humanIndex + 1;
+            if (position === 1) wins += 1;
+            if (position <= 3) podiums += 1;
+          }
+        }
+
+        // Count poles for human
+        if (humanDriver) {
+          const qualifyingTimes = race.slots
+            .map((slot) => ({
+              driver: slot.Driver,
+              time: parseTime(slot.QualTime),
+            }))
+            .filter((entry) => entry.time !== undefined) as Array<{
+            driver: string;
+            time: number;
+          }>;
+
+          if (qualifyingTimes.length > 0) {
+            const bestTime = Math.min(...qualifyingTimes.map((q) => q.time));
+            const humanQualTime = qualifyingTimes.find(
+              (q) => q.driver === humanDriver,
+            )?.time;
+            if (humanQualTime !== undefined && humanQualTime === bestTime) {
+              poles += 1;
+            }
+          }
+        }
+      }
+
+      // Determine championship winner using utility function
+      if (humanDriverName && races.length > 0) {
+        const standings = calculateChampionshipStandings(races);
+        if (standings.length > 0 && standings[0].driver === humanDriverName) {
+          championshipsWon += 1;
+        }
+      }
+    }
+
+    return { wins, podiums, poles, championshipsWon };
+  };
+
+  const { wins, podiums, poles, championshipsWon } = getHumanStats();
+
   const filteredChampionships = championships
     .filter((championship) => {
       const query = searchQuery.toLowerCase();
@@ -67,31 +143,25 @@ const ResultsDatabaseViewer = () => {
       );
     })
     .sort((a, b) => {
-      // Ordina per la data della prima gara, se disponibile
       const getFirstRaceDate = (champ: ChampionshipEntry): number => {
         if (!champ.raceData || champ.raceData.length === 0) {
-          // Fallback: usa generatedAt se non ci sono dati gare
           return new Date(champ.generatedAt).getTime();
         }
-        // Usa la data della prima gara (timestring)
-        const firstRace = champ.raceData[0];
-        if (!firstRace.timestring) {
-          return new Date(champ.generatedAt).getTime();
+
+        const timestring = champ.raceData[0]?.timestring;
+        const parsed = parseTimestring(timestring);
+        if (!Number.isNaN(parsed)) {
+          return parsed;
         }
-        // Parse timestring formato: "2024_12_29_06_44_00"
-        const parts = firstRace.timestring.split("_");
-        if (parts.length >= 6) {
-          const [year, month, day, hour, minute, second] = parts.map(Number);
-          return new Date(year, month - 1, day, hour, minute, second).getTime();
-        }
+
         return new Date(champ.generatedAt).getTime();
       };
 
       const dateA = getFirstRaceDate(a);
       const dateB = getFirstRaceDate(b);
 
-      // Ordine decrescente (più recenti prima)
-      return dateB - dateA;
+      // Ordine cronologico (piu vecchi prima)
+      return dateA - dateB;
     });
 
   const handleClearAll = () => {
@@ -206,14 +276,34 @@ const ResultsDatabaseViewer = () => {
               <Col md={4}>
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
-                    <div className="h2 text-info mb-1">
-                      {championships.length > 0
-                        ? Math.round(totalRaces / championships.length)
-                        : 0}
+                    <div className="h2 text-info mb-1">{wins}</div>
+                    <div className="text-white-50 small">Wins</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4}>
+                <Card className="bg-dark border-secondary">
+                  <Card.Body className="text-center">
+                    <div className="h2 text-warning mb-1">{podiums}</div>
+                    <div className="text-white-50 small">Podiums</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4}>
+                <Card className="bg-dark border-secondary">
+                  <Card.Body className="text-center">
+                    <div className="h2 text-secondary mb-1">{poles}</div>
+                    <div className="text-white-50 small">Poles</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4}>
+                <Card className="bg-dark border-secondary">
+                  <Card.Body className="text-center">
+                    <div className="h2 text-danger mb-1">
+                      {championshipsWon}
                     </div>
-                    <div className="text-white-50 small">
-                      Avg. Races/Championship
-                    </div>
+                    <div className="text-white-50 small">Championships Won</div>
                   </Card.Body>
                 </Card>
               </Col>

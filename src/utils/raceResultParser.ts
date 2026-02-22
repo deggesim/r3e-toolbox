@@ -122,6 +122,7 @@ const processSessionPlayers = (
       TotalTime: totalTime,
       BestLap: bestLap,
       FinishStatus: player.FinishStatus,
+      TotalLaps: player.TotalLaps ?? player.totalLaps ?? undefined,
     });
   }
 
@@ -281,6 +282,7 @@ const buildSinglePlayerRaceSlot = (
     BestLap: bestLap,
     QualTime: qualTime,
     FinishStatus: driver.finishStatus,
+    TotalLaps: driver.totalLaps ?? driver.TotalLaps ?? undefined,
   };
 };
 

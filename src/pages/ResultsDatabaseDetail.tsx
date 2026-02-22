@@ -6,7 +6,11 @@ import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
-import { makeTime } from "../utils/timeUtils";
+import { makeTime, parseTimestring } from "../utils/timeUtils";
+import {
+  getHumanDriverName,
+  getSortedRaceSlots,
+} from "../utils/humanPlayerUtils";
 import { generateStandingsHTML, downloadHTML } from "../utils/htmlGenerator";
 import "./ResultsDatabaseDetail.css";
 
@@ -72,26 +76,41 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
 };
 
 const getRacePosition = (slots: any[], driver: string): number | null => {
-  const sortedSlots = [...slots].sort((a, b) => {
-    const aFinished = a.FinishStatus === "Finished" || !!a.TotalTime;
-    const bFinished = b.FinishStatus === "Finished" || !!b.TotalTime;
-    if (aFinished !== bFinished) return bFinished ? 1 : -1;
-
-    const aTime = parseTime(a.TotalTime);
-    const bTime = parseTime(b.TotalTime);
-    return aTime - bTime;
-  });
-
+  const sortedSlots = getSortedRaceSlots(slots);
   const index = sortedSlots.findIndex((s) => s.Driver === driver);
   return index >= 0 && sortedSlots[index].TotalTime ? index + 1 : null;
 };
 
+const calculateGapFromWinner = (winner: any, driver: any): string => {
+  if (!winner?.TotalTime || !driver?.TotalTime) return "-";
+
+  const winnerLaps = winner.TotalLaps ?? 0;
+  const driverLaps = driver.TotalLaps ?? 0;
+  const lapDiff = winnerLaps - driverLaps;
+
+  const winnerTime = parseTime(winner.TotalTime);
+  const driverTime = parseTime(driver.TotalTime);
+  const timeDiff = driverTime - winnerTime;
+
+  if (lapDiff > 0) {
+    // Driver is lapped
+    const sign = timeDiff >= 0 ? "+" : "-";
+    const absTimeDiff = Math.abs(timeDiff).toFixed(3);
+    return `+${lapDiff} lap${lapDiff > 1 ? "s" : ""} ${sign}${absTimeDiff}`;
+  } else {
+    // Same laps, show time difference
+    const sign = timeDiff >= 0 ? "+" : "-";
+    return `${sign}${Math.abs(timeDiff).toFixed(3)}`;
+  }
+};
+
 const calculateDriverStandings = (races: any[]): DriverStanding[] => {
-  // Identify human players: the first driver in each race's slots array
+  // Identify human players in each race
   const humanDriverNames = new Set<string>();
   for (const race of races) {
-    if (race.slots && race.slots.length > 0) {
-      humanDriverNames.add(race.slots[0].Driver);
+    const humanDriver = getHumanDriverName(race);
+    if (humanDriver) {
+      humanDriverNames.add(humanDriver);
     }
   }
 
@@ -156,7 +175,25 @@ const calculateDriverStandings = (races: any[]): DriverStanding[] => {
     });
   });
 
-  standings.sort((a, b) => b.points - a.points);
+  // Sort by points (descending), then by countback (best finishing positions)
+  standings.sort((a, b) => {
+    // Primary: sort by total points
+    if (b.points !== a.points) return b.points - a.points;
+
+    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+    for (
+      let position = 1;
+      position <= DEFAULT_POINTS_SYSTEM.length;
+      position++
+    ) {
+      const aCount = a.raceResults.filter((pos) => pos === position).length;
+      const bCount = b.raceResults.filter((pos) => pos === position).length;
+      if (bCount !== aCount) return bCount - aCount;
+    }
+
+    return 0;
+  });
+
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
@@ -363,7 +400,19 @@ const ResultsDatabaseDetail = () => {
       };
     }
 
-    const races = championship.raceData;
+    // Sort races chronologically by timestring (oldest first)
+    const races = [...championship.raceData].sort((a, b) => {
+      const timeA = parseTimestring(a.timestring);
+      const timeB = parseTimestring(b.timestring);
+
+      if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
+        return timeA - timeB;
+      }
+
+      // Fallback: keep original order if parsing fails
+      return 0;
+    });
+
     return {
       driverStandings: calculateDriverStandings(races),
       teamStandings: calculateTeamStandings(races),
@@ -907,17 +956,7 @@ const ResultsDatabaseDetail = () => {
                 <tr key={`race-result-pos-${posIdx}`}>
                   <td>{posIdx + 1}</td>
                   {championship.raceData?.map((race, raceIdx) => {
-                    const sortedSlots = [...race.slots].sort((a, b) => {
-                      const aFinished =
-                        a.FinishStatus === "Finished" || !!a.TotalTime;
-                      const bFinished =
-                        b.FinishStatus === "Finished" || !!b.TotalTime;
-                      if (aFinished !== bFinished) return bFinished ? 1 : -1;
-                      const aTime = parseTime(a.TotalTime);
-                      const bTime = parseTime(b.TotalTime);
-                      return aTime - bTime;
-                    });
-
+                    const sortedSlots = getSortedRaceSlots(race.slots);
                     const slot = sortedSlots[posIdx];
                     if (!slot?.TotalTime) {
                       return (
@@ -925,10 +964,14 @@ const ResultsDatabaseDetail = () => {
                       );
                     }
 
+                    const winner = sortedSlots[0];
                     const totalTimeSeconds = parseTime(slot.TotalTime);
-                    const formattedTime = Number.isFinite(totalTimeSeconds)
-                      ? makeTime(totalTimeSeconds)
-                      : slot.TotalTime;
+                    const formattedTime =
+                      posIdx === 0
+                        ? Number.isFinite(totalTimeSeconds)
+                          ? makeTime(totalTimeSeconds)
+                          : slot.TotalTime
+                        : calculateGapFromWinner(winner, slot);
                     const vehicleIcon = getVehicleIcon(slot.VehicleId);
                     const vehicleName = getVehicleName(
                       slot.VehicleId,

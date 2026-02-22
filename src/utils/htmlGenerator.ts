@@ -153,7 +153,25 @@ const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
     });
   });
 
-  standings.sort((a, b) => b.points - a.points);
+  // Sort by points (descending), then by countback (best finishing positions)
+  standings.sort((a, b) => {
+    // Primary: sort by total points
+    if (b.points !== a.points) return b.points - a.points;
+
+    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+    for (
+      let position = 1;
+      position <= DEFAULT_POINTS_SYSTEM.length;
+      position++
+    ) {
+      const aCount = a.raceResults.filter((pos) => pos === position).length;
+      const bCount = b.raceResults.filter((pos) => pos === position).length;
+      if (bCount !== aCount) return bCount - aCount;
+    }
+
+    return 0;
+  });
+
   standings.forEach((s, i) => (s.position = i + 1));
 
   return standings;
