@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/deggesim/r3e-toolbox/compare/v1.3.0...v1.3.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* fix race results processing with human player detection and improved standings calculation ([d320ee0](https://github.com/deggesim/r3e-toolbox/commit/d320ee0149deb6d037a2ff3b20ee5f5343649c6e))
+
 # [1.3.0](https://github.com/deggesim/r3e-toolbox/compare/v1.2.0...v1.3.0) (2026-02-20)
 
 
