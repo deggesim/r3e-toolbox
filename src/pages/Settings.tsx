@@ -1,19 +1,19 @@
-import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
-import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import type { Config } from "../config";
 import { CFG } from "../config";
-import { useConfigStore } from "../store/configStore";
-import { useGameDataStore } from "../store/gameDataStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useProcessingLog } from "../hooks/useProcessingLog";
-import { validateR3eData } from "../utils/r3eDataValidator";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
+import { useConfigStore } from "../store/configStore";
+import { useGameDataStore } from "../store/gameDataStore";
 import type { RaceRoomData } from "../types";
+import { validateR3eData } from "../utils/r3eDataValidator";
 
 type NumericConfigKey = {
   [K in keyof Config]: Config[K] extends number ? K : never;
@@ -288,40 +288,42 @@ const Settings = () => {
         </Card.Body>
       </Card>
 
-      <Card bg="dark" text="white" className="border-secondary">
-        <Card.Header className="bg-dark border-secondary">
-          <h5 className="m-0">
-            <FontAwesomeIcon icon={faSync} className="me-2" />
-            Game Data Management
-          </h5>
-        </Card.Header>
-        <Card.Body>
-          <p className="text-white-50">
-            Reload r3e-data.json from your RaceRoom installation directory. Use
-            this when the game has been updated with new content.
-          </p>
+      {electron.isElectron && (
+        <Card bg="dark" text="white" className="border-secondary">
+          <Card.Header className="bg-dark border-secondary">
+            <h5 className="m-0">
+              <FontAwesomeIcon icon={faSync} className="me-2" />
+              Game Data Management
+            </h5>
+          </Card.Header>
+          <Card.Body>
+            <p className="text-white-50">
+              Reload r3e-data.json from your RaceRoom installation directory.
+              Use this when the game has been updated with new content.
+            </p>
 
-          <div className="d-flex justify-content-end">
-            <Button
-              variant="primary"
-              onClick={handleReloadGameData}
-              disabled={isReloading}
-            >
-              {isReloading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" />
-                  Reloading...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSync} className="me-2" />
-                  Reload Game Data
-                </>
-              )}
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="primary"
+                onClick={handleReloadGameData}
+                disabled={isReloading}
+              >
+                {isReloading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />{" "}
+                    Reloading...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faSync} className="me-2" />
+                    Reload Game Data
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
 
       {/* Floating Processing Log */}
       <FloatingProcessingLog

@@ -1,7 +1,9 @@
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import FloatingProcessingLog from "../components/FloatingProcessingLog";
@@ -83,6 +85,9 @@ const GameDataOnboarding = () => {
               });
             }
 
+            if (!electron.isElectron) {
+              setForceOnboarding(true);
+            }
             setGameData(parsed as RaceRoomData);
             setLoadSuccess(true);
             addLog("success", "Game data loaded successfully!", faCheck);
@@ -144,6 +149,9 @@ const GameDataOnboarding = () => {
           });
         }
 
+        if (!electron.isElectron) {
+          setForceOnboarding(true);
+        }
         setGameData(parsed as RaceRoomData);
         setLoadSuccess(true);
         addLog("success", "Game data loaded successfully!", faCheck);
@@ -184,45 +192,37 @@ const GameDataOnboarding = () => {
       >
         <Card.Header className="bg-dark border-secondary py-3">
           <Card.Title className="m-0 text-center">
-            🎮 RaceRoom Data Setup
+            <FontAwesomeIcon icon={faFlagCheckered} className="me-2" />
+            RaceRoom Data Setup
           </Card.Title>
         </Card.Header>
         <Card.Body className="p-4">
           <div className="text-center mb-4">
-            {!isLoading && !loadSuccess && (
-              <>
-                <p className="text-white-50 mb-3">
-                  The application needs to load <strong>r3e-data.json</strong>{" "}
-                  to function properly. This file contains information about
-                  tracks and cars in RaceRoom.
-                </p>
-                <p className="text-white-50 mb-4">
-                  The file is typically located in the game installation folder:
-                  <code className="d-block text-white mt-2">
-                    RaceRoom Racing
-                    Experience/Game/GameData/General/r3e-data.json
-                  </code>
-                </p>
-              </>
-            )}
+            <p className="text-white-50 mb-3">
+              The application needs to load <strong>r3e-data.json</strong> to
+              function properly. This file contains information about tracks and
+              cars in RaceRoom.
+            </p>
+            <p className="text-white-50 mb-4">
+              The file is typically located in the game installation folder:{" "}
+              <code className="d-block text-white mt-2">
+                RaceRoom Racing Experience/Game/GameData/General/r3e-data.json
+              </code>
+            </p>
           </div>
 
-          {!isLoading && !loadSuccess && (
-            <Form.Group controlId="gameDataFile" className="mb-4">
-              <Form.Label className="text-white">
-                Upload r3e-data.json
-              </Form.Label>
-              <Form.Control
-                type="file"
-                accept=".json"
-                onChange={handleFileUpload}
-                disabled={isLoading}
-              />
-              <Form.Text className="text-white-50">
-                Select the r3e-data.json file from your RaceRoom installation
-              </Form.Text>
-            </Form.Group>
-          )}
+          <Form.Group controlId="gameDataFile" className="mb-4">
+            <Form.Label className="text-white">Upload r3e-data.json</Form.Label>
+            <Form.Control
+              type="file"
+              accept=".json"
+              onChange={handleFileUpload}
+              disabled={isLoading}
+            />
+            <Form.Text className="text-white-50">
+              Select the r3e-data.json file from your RaceRoom installation
+            </Form.Text>
+          </Form.Group>
 
           {isLoading && (
             <div className="text-center my-3">

@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
-import { Offcanvas, Badge } from "react-bootstrap";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faClipboardList } from "@fortawesome/free-solid-svg-icons/faClipboardList";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChevronDown,
-  faChevronUp,
-  faXmark,
-  faClipboardList,
-} from "@fortawesome/free-solid-svg-icons";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { Badge, Offcanvas } from "react-bootstrap";
 import type { LogEntry } from "../hooks/useProcessingLog";
 import "./FloatingProcessingLog.css";
 
