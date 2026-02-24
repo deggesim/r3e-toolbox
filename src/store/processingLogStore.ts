@@ -4,6 +4,7 @@ import { faCircleInfo } from "@fortawesome/free-solid-svg-icons/faCircleInfo";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { create } from "zustand";
+import { useConfigStore } from "./configStore";
 
 export interface LogEntry {
   type: "info" | "success" | "warning" | "error";
@@ -48,14 +49,17 @@ export const useProcessingLogStore = create<ProcessingLogState>((set) => ({
         }
       })();
 
-    set((state) => ({
-      logs: [
-        ...state.logs,
-        { type, message, icon: defaultIcon, timestamp: Date.now() },
-      ],
-      // Auto-open panel when new logs are added
-      isOpen: true,
-    }));
+    set((state) => {
+      const config = useConfigStore.getState();
+      return {
+        logs: [
+          ...state.logs,
+          { type, message, icon: defaultIcon, timestamp: Date.now() },
+        ],
+        // Auto-open panel when new logs are added (if enabled in config)
+        isOpen: config.config.autoOpenLogs ? true : state.isOpen,
+      };
+    });
   },
 
   clearLogs: () => set({ logs: [], isOpen: false }),

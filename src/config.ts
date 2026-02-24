@@ -13,6 +13,10 @@ export const CFG = {
   // UI application parameters
   aiNumLevels: 5, // Number of AI levels to apply around the selected level
   aiSpacing: 1, // Step between AI levels when applying changes
+
+  // Logging preferences
+  autoOpenLogs: true, // Auto-open logs panel when new messages are added
+  showLogs: true, // Show logs panel at all
 };
 
 export type Config = typeof CFG;

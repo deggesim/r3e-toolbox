@@ -5,10 +5,12 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import { Badge, Offcanvas } from "react-bootstrap";
+import { useConfigStore } from "../store/configStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import "./FloatingProcessingLog.css";
 
 const FloatingProcessingLog = () => {
+  const config = useConfigStore((state) => state.config);
   const logs = useProcessingLogStore((state) => state.logs);
   const isOpen = useProcessingLogStore((state) => state.isOpen);
   const toggleOpen = useProcessingLogStore((state) => state.toggleOpen);
@@ -26,7 +28,8 @@ const FloatingProcessingLog = () => {
     }
   }, [logs, isOpen]);
 
-  if (logs.length === 0) {
+  // Don't show logs panel if disabled in config
+  if (logs.length === 0 || !config.showLogs) {
     return null;
   }
 

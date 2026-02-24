@@ -3,7 +3,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExcla
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import type { Config } from "../config";
@@ -95,7 +95,12 @@ const Settings = () => {
   };
 
   const handleBooleanChange = (key: BooleanConfigKey, value: boolean) => {
-    setLocalConfig({ ...localConfig, [key]: value });
+    const newConfig = { ...localConfig, [key]: value };
+    // If showLogs is disabled, also disable autoOpenLogs
+    if (key === "showLogs" && !value && newConfig.autoOpenLogs) {
+      newConfig.autoOpenLogs = false;
+    }
+    setLocalConfig(newConfig);
   };
 
   const handleSaveConfig = () => {
@@ -180,20 +185,29 @@ const Settings = () => {
         helper:
           "If enabled, use every lap time instead of the average per AI level when fitting.",
       },
+      {
+        key: "showLogs" as BooleanConfigKey,
+        label: "Show logs panel",
+        helper:
+          "Display the processing logs panel. Disable to hide it completely.",
+      },
+      {
+        key: "autoOpenLogs" as BooleanConfigKey,
+        label: "Auto-open logs panel",
+        helper:
+          "Automatically expand the logs panel when new messages are added.",
+      },
     ],
     [],
   );
 
-  const forceOnboardingSwitchHandler = (e: ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    if (checked) {
-      addLog(
-        "warning",
-        "Force onboarding enabled - game data will be cleared!",
-        faExclamationTriangle,
-      );
-      clearGameData();
-    }
+  const handleClearGameDataWeb = () => {
+    addLog(
+      "warning",
+      "Game data cleared. Redirecting to manual file selection...",
+      faExclamationTriangle,
+    );
+    clearGameData();
   };
 
   return (
@@ -241,46 +255,41 @@ const Settings = () => {
               </Col>
             ))}
 
-            {booleanFields.map((field) => (
-              <Col md={6} key={field.key}>
-                <Form.Group className="d-flex align-items-center justify-content-between p-3 border border-secondary rounded">
-                  <div>
-                    <div>{field.label}</div>
-                    {field.helper && (
-                      <Form.Text className="text-white-50">
-                        {field.helper}
-                      </Form.Text>
-                    )}
-                  </div>
-                  <Form.Check
-                    type="switch"
-                    id={field.key}
-                    checked={Boolean(localConfig[field.key])}
-                    onChange={(e) =>
-                      handleBooleanChange(field.key, e.target.checked)
-                    }
-                  />
-                </Form.Group>
-              </Col>
-            ))}
-            {import.meta.env.DEV && (
-              <Col md={6}>
-                <Form.Group className="d-flex align-items-center justify-content-between p-3 border border-secondary rounded">
-                  <div>
-                    <div>Developer: force onboarding</div>
-                    <Form.Text className="text-white-50">
-                      Always show the GameData onboarding screen on startup.
-                    </Form.Text>
-                  </div>
-                  <Form.Check
-                    type="switch"
-                    id="forceOnboarding"
-                    checked={clearGameData === null} // Use gameData presence to determine switch state
-                    onChange={(e) => forceOnboardingSwitchHandler(e)}
-                  />
-                </Form.Group>
-              </Col>
-            )}
+            {booleanFields.map((field) => {
+              const isAutoOpenLogs = field.key === "autoOpenLogs";
+              const isDisabled = isAutoOpenLogs && !localConfig.showLogs;
+
+              return (
+                <Col md={6} key={field.key}>
+                  <Form.Group
+                    className={`d-flex align-items-center justify-content-between p-3 border border-secondary rounded ${
+                      isDisabled ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div>
+                      <div>{field.label}</div>
+                      {field.helper && (
+                        <Form.Text className="text-white-50">
+                          {field.helper}
+                        </Form.Text>
+                      )}
+                    </div>
+                    <Form.Check
+                      type="switch"
+                      id={field.key}
+                      checked={Boolean(localConfig[field.key])}
+                      disabled={isDisabled}
+                      onChange={(e) => {
+                        if (isAutoOpenLogs && !localConfig.showLogs) {
+                          return; // Prevent changes when disabled
+                        }
+                        handleBooleanChange(field.key, e.target.checked);
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+              );
+            })}
           </Row>
 
           <div className="d-flex justify-content-end mt-4 gap-2">
@@ -294,7 +303,7 @@ const Settings = () => {
         </Card.Body>
       </Card>
 
-      {electron.isElectron && (
+      {
         <Card bg="dark" text="white" className="border-secondary">
           <Card.Header className="bg-dark border-secondary">
             <h5 className="m-0">
@@ -303,33 +312,52 @@ const Settings = () => {
             </h5>
           </Card.Header>
           <Card.Body>
-            <p className="text-white-50">
-              Reload r3e-data.json from your RaceRoom installation directory.
-              Use this when the game has been updated with new content.
-            </p>
+            {electron.isElectron ? (
+              <>
+                <p className="text-white-50">
+                  Reload r3e-data.json from your RaceRoom installation
+                  directory. Use this when the game has been updated with new
+                  content.
+                </p>
 
-            <div className="d-flex justify-content-end">
-              <Button
-                variant="primary"
-                onClick={handleReloadGameData}
-                disabled={isReloading}
-              >
-                {isReloading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" />{" "}
-                    Reloading...
-                  </>
-                ) : (
-                  <>
+                <div className="d-flex justify-content-end">
+                  <Button
+                    variant="primary"
+                    onClick={handleReloadGameData}
+                    disabled={isReloading}
+                  >
+                    {isReloading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />{" "}
+                        Reloading...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faSync} className="me-2" />
+                        Reload Game Data
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-white-50">
+                  You can manually upload or select your r3e-data.json file.
+                  Click the button below to open the file selection page.
+                </p>
+
+                <div className="d-flex justify-content-end">
+                  <Button variant="primary" onClick={handleClearGameDataWeb}>
                     <FontAwesomeIcon icon={faSync} className="me-2" />
-                    Reload Game Data
-                  </>
-                )}
-              </Button>
-            </div>
+                    Select Game Data File
+                  </Button>
+                </div>
+              </>
+            )}
           </Card.Body>
         </Card>
-      )}
+      }
     </Container>
   );
 };
