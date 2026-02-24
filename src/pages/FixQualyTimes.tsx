@@ -6,8 +6,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import { Button, Card, Container, Form, Modal } from "react-bootstrap";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
-import { useProcessingLog } from "../hooks/useProcessingLog";
+import { useProcessingLogStore } from "../store/processingLogStore";
 
 const FixQualyTimes = () => {
   const [qualFile, setQualFile] = useState<File | null>(null);
@@ -15,22 +14,13 @@ const FixQualyTimes = () => {
   const qualInputRef = useRef<HTMLInputElement>(null);
   const raceInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadData, setDownloadData] = useState<{
     fileName: string;
     content: string;
     updatedCount: number;
   } | null>(null);
-  const { logs, addLog, getLogVariant, logsEndRef, clearLogs } =
-    useProcessingLog();
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   const eventsAreEqual = (event1: any, event2: any) =>
     JSON.stringify(event1) === JSON.stringify(event2);
@@ -238,16 +228,6 @@ const FixQualyTimes = () => {
           </Form>
         </Card.Body>
       </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
 
       {/* Download Confirmation Modal */}
       <Modal

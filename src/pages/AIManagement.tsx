@@ -16,11 +16,10 @@ import AIModificationsModal from "../components/AIModificationsModal";
 import Classes from "../components/Classes";
 import FileUploadSection from "../components/FileUploadSection";
 import PlayerTimesTable from "../components/PlayerTimesTable";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import Tracks from "../components/Tracks";
 import { useElectronAPI } from "../hooks/useElectronAPI";
-import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useConfigStore } from "../store/configStore";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import type {
   Assets,
@@ -116,16 +115,7 @@ const AIManagement = () => {
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const gameDataLoggedRef = useRef(false);
   const xmlAutoLoadedRef = useRef(false);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
-  const { logs, addLog, logsEndRef, getLogVariant, setLogs, clearLogs } =
-    useProcessingLog();
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   // Calculate AI range
   const aiNumLevels = config.aiNumLevels;
@@ -381,7 +371,7 @@ const AIManagement = () => {
       setDatabase(newDatabase);
       return newDatabase;
     },
-    [database, processed, assets, addLog, setLogs],
+    [database, processed, assets, addLog],
   );
 
   // ============ REMOVE GENERATED ============
@@ -479,7 +469,7 @@ const AIManagement = () => {
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [database, assets, playerTimes, downloadXml, addLog, setLogs]);
+  }, [database, assets, playerTimes, downloadXml, addLog]);
 
   const handleConfirmRemoveGenerated = useCallback(() => {
     setShowRemoveGeneratedModal(false);
@@ -519,7 +509,7 @@ const AIManagement = () => {
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [downloadXml, playerTimes, addLog, setLogs]);
+  }, [downloadXml, playerTimes, addLog]);
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
@@ -753,16 +743,6 @@ const AIManagement = () => {
           )}
         </Card.Body>
       </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
 
       {/* Apply Modifications Modal */}
       <AIModificationsModal

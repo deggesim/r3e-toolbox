@@ -11,6 +11,7 @@ import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faBars } from "@fortawesome/free-solid-svg-icons/faBars";
 import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
 import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons/faCircleQuestion";
+import FloatingProcessingLog from "./FloatingProcessingLog";
 import "./Layout.css";
 import logoUrl from "/logo.png";
 
@@ -108,6 +109,9 @@ const Layout = ({ children }: PropsWithChildren<{}>) => {
           <div className="main-content">{children}</div>
         </Col>
       </Row>
+
+      {/* Global Processing Log */}
+      <FloatingProcessingLog />
     </Container>
   );
 };
