@@ -23,9 +23,9 @@ import { useGameDataStore } from "./store/gameDataStore";
 
 // Protected route component
 const ProtectedRoute = ({ element }: { element: ReactElement }) => {
-  const isLoaded = useGameDataStore((state) => state.isLoaded);
+  const gameData = useGameDataStore((state) => state.gameData);
 
-  if (!isLoaded) {
+  if (!gameData) {
     return <Navigate to="/" replace />;
   }
 
@@ -52,13 +52,12 @@ const NavigationListener = () => {
 };
 
 const AppContent = () => {
-  const isLoaded = useGameDataStore((state) => state.isLoaded);
-  const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
+  const gameData = useGameDataStore((state) => state.gameData);
 
   return (
     <>
       <NavigationListener />
-      {isLoaded && !forceOnboarding ? (
+      {gameData ? (
         <Layout>
           <Routes>
             <Route

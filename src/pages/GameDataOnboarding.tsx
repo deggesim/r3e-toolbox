@@ -1,7 +1,10 @@
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons/faArrowRight";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
+import { faFolder } from "@fortawesome/free-solid-svg-icons/faFolder";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { faUpload } from "@fortawesome/free-solid-svg-icons/faUpload";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
@@ -15,11 +18,13 @@ import { validateR3eData } from "../utils/r3eDataValidator";
 
 const GameDataOnboarding = () => {
   const electron = useElectronAPI();
-  const { setGameData, setForceOnboarding } = useGameDataStore();
+  const { setGameData } = useGameDataStore();
   const addLog = useProcessingLogStore((state) => state.addLog);
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadSuccess, setLoadSuccess] = useState(false);
+  const [parsedData, setParsedData] = useState<RaceRoomData | null>(null);
+
   const autoLoadAttemptedRef = useRef(false);
 
   // Try to load game data automatically on mount
@@ -28,14 +33,6 @@ const GameDataOnboarding = () => {
       // Prevent double execution in React StrictMode (dev mode)
       if (autoLoadAttemptedRef.current) return;
       autoLoadAttemptedRef.current = true;
-
-      if (!electron.isElectron) {
-        addLog(
-          "warning",
-          "Game data can only be loaded in Electron mode from RaceRoom installation",
-        );
-        return;
-      }
 
       setIsLoading(true);
       addLog(
@@ -76,9 +73,6 @@ const GameDataOnboarding = () => {
               });
             }
 
-            if (!electron.isElectron) {
-              setForceOnboarding(true);
-            }
             setGameData(parsed as RaceRoomData);
             setLoadSuccess(true);
             addLog("success", "Game data loaded successfully!", faCheck);
@@ -107,7 +101,16 @@ const GameDataOnboarding = () => {
       }
     };
 
-    autoLoadGameData();
+    if (electron.isElectron) {
+      autoLoadGameData();
+    } else {
+      true;
+      addLog(
+        "warning",
+        "Game data can only be loaded in Electron mode from RaceRoom installation",
+      );
+      return;
+    }
   }, [electron.isElectron]);
 
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -140,10 +143,7 @@ const GameDataOnboarding = () => {
           });
         }
 
-        if (!electron.isElectron) {
-          setForceOnboarding(true);
-        }
-        setGameData(parsed as RaceRoomData);
+        setParsedData(parsed as RaceRoomData);
         setLoadSuccess(true);
         addLog("success", "Game data loaded successfully!", faCheck);
       } else {
@@ -161,7 +161,7 @@ const GameDataOnboarding = () => {
   };
 
   const handleContinue = () => {
-    setForceOnboarding(false);
+    setGameData(parsedData!);
   };
 
   return (
@@ -195,6 +195,7 @@ const GameDataOnboarding = () => {
               cars in RaceRoom.
             </p>
             <p className="text-white-50 mb-4">
+              <FontAwesomeIcon icon={faFolder} className="me-2" />
               The file is typically located in the game installation folder:{" "}
               <code className="d-block text-white mt-2">
                 RaceRoom Racing Experience/Game/GameData/General/r3e-data.json
@@ -203,7 +204,10 @@ const GameDataOnboarding = () => {
           </div>
 
           <Form.Group controlId="gameDataFile" className="mb-4">
-            <Form.Label className="text-white">Upload r3e-data.json</Form.Label>
+            <Form.Label className="text-white">
+              <FontAwesomeIcon icon={faUpload} className="me-2" />
+              Upload r3e-data.json
+            </Form.Label>
             <Form.Control
               type="file"
               accept=".json"
@@ -224,7 +228,8 @@ const GameDataOnboarding = () => {
           {loadSuccess && (
             <div className="text-center mt-4">
               <Button variant="success" onClick={handleContinue}>
-                Continue to AI Management →
+                Continue to AI Management
+                <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
               </Button>
             </div>
           )}

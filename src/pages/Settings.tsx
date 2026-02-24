@@ -3,7 +3,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExcla
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import type { Config } from "../config";
@@ -81,10 +81,6 @@ const Settings = () => {
   const navigate = useNavigate();
   const electron = useElectronAPI();
   const { config, setConfig, resetConfig } = useConfigStore();
-  const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
-  const setForceOnboarding = useGameDataStore(
-    (state) => state.setForceOnboarding,
-  );
   const clearGameData = useGameDataStore((state) => state.clearGameData);
   const setGameData = useGameDataStore((state) => state.setGameData);
   const addLog = useProcessingLogStore((state) => state.addLog);
@@ -188,6 +184,18 @@ const Settings = () => {
     [],
   );
 
+  const forceOnboardingSwitchHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    if (checked) {
+      addLog(
+        "warning",
+        "Force onboarding enabled - game data will be cleared!",
+        faExclamationTriangle,
+      );
+      clearGameData();
+    }
+  };
+
   return (
     <Container className="py-4">
       <Card bg="dark" text="white" className="border-secondary mb-4">
@@ -267,14 +275,8 @@ const Settings = () => {
                   <Form.Check
                     type="switch"
                     id="forceOnboarding"
-                    checked={forceOnboarding}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setForceOnboarding(checked);
-                      if (checked) {
-                        clearGameData();
-                      }
-                    }}
+                    checked={clearGameData === null} // Use gameData presence to determine switch state
+                    onChange={(e) => forceOnboardingSwitchHandler(e)}
                   />
                 </Form.Group>
               </Col>
