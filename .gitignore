@@ -25,3 +25,5 @@ r3e-data.json
 *.njsproj
 *.sln
 *.sw?
+
+.nvmrc

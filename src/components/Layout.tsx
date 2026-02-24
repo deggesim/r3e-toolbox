@@ -1,16 +1,16 @@
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { faBars } from "@fortawesome/free-solid-svg-icons/faBars";
+import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
+import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons/faCircleQuestion";
+import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
+import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
+import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, type PropsWithChildren } from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
-import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
-import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
-import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
-import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
-import { faBars } from "@fortawesome/free-solid-svg-icons/faBars";
-import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
-import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons/faCircleQuestion";
 import "./Layout.css";
 import logoUrl from "/logo.png";
 

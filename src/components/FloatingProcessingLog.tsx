@@ -1,62 +1,30 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
-import { Offcanvas, Badge } from "react-bootstrap";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faClipboardList } from "@fortawesome/free-solid-svg-icons/faClipboardList";
+import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChevronDown,
-  faChevronUp,
-  faXmark,
-  faClipboardList,
-} from "@fortawesome/free-solid-svg-icons";
-import type { LogEntry } from "../hooks/useProcessingLog";
+import { useEffect, useRef, useState } from "react";
+import { Badge, Offcanvas } from "react-bootstrap";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import "./FloatingProcessingLog.css";
 
-interface FloatingProcessingLogProps {
-  logs: LogEntry[];
-  isOpen: boolean;
-  onToggle: () => void;
-  onClear: () => void;
-  getLogVariant: (type: LogEntry["type"]) => string;
-  logsEndRef: RefObject<HTMLDivElement | null>;
-}
+const FloatingProcessingLog = () => {
+  const logs = useProcessingLogStore((state) => state.logs);
+  const isOpen = useProcessingLogStore((state) => state.isOpen);
+  const toggleOpen = useProcessingLogStore((state) => state.toggleOpen);
+  const clearLogs = useProcessingLogStore((state) => state.clearLogs);
+  const getLogVariant = useProcessingLogStore((state) => state.getLogVariant);
 
-const FloatingProcessingLog = ({
-  logs,
-  isOpen,
-  onToggle,
-  onClear,
-  getLogVariant,
-  logsEndRef,
-}: Readonly<FloatingProcessingLogProps>) => {
   const logsContainerRef = useRef<HTMLDivElement>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
   const [showMobileOffcanvas, setShowMobileOffcanvas] = useState(false);
-  const previousLogCountRef = useRef(logs.length);
-
-  // Auto-open panel when new logs are added and panel is closed
-  useEffect(() => {
-    const currentLogCount = logs.length;
-    const hadNewLogs = currentLogCount > previousLogCountRef.current;
-
-    if (hadNewLogs && !isOpen && currentLogCount > 0) {
-      onToggle();
-    }
-
-    previousLogCountRef.current = currentLogCount;
-  }, [logs.length, isOpen, onToggle]);
 
   // Auto-scroll when new logs are added (only if panel is open)
   useEffect(() => {
     if (isOpen && logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [logs, isOpen, logsEndRef]);
-
-  const handleClear = () => {
-    onClear();
-    // Auto-close panel when clearing logs to avoid empty state
-    if (isOpen) {
-      onToggle();
-    }
-  };
+  }, [logs, isOpen]);
 
   if (logs.length === 0) {
     return null;
@@ -76,7 +44,7 @@ const FloatingProcessingLog = ({
           <div className="floating-log-actions">
             <button
               className="floating-log-btn floating-log-clear-btn"
-              onClick={handleClear}
+              onClick={clearLogs}
               title="Clear logs"
               aria-label="Clear logs"
             >
@@ -84,7 +52,7 @@ const FloatingProcessingLog = ({
             </button>
             <button
               className="floating-log-btn floating-log-toggle-btn"
-              onClick={onToggle}
+              onClick={toggleOpen}
               title={isOpen ? "Collapse" : "Expand"}
               aria-label={isOpen ? "Collapse" : "Expand"}
             >
@@ -153,7 +121,7 @@ const FloatingProcessingLog = ({
             <button
               className="btn btn-sm btn-outline-danger"
               onClick={() => {
-                handleClear();
+                clearLogs();
                 setShowMobileOffcanvas(false);
               }}
             >

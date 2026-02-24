@@ -1,19 +1,19 @@
-import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
-import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import type { Config } from "../config";
 import { CFG } from "../config";
+import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useConfigStore } from "../store/configStore";
 import { useGameDataStore } from "../store/gameDataStore";
-import { useElectronAPI } from "../hooks/useElectronAPI";
-import { useProcessingLog } from "../hooks/useProcessingLog";
-import { validateR3eData } from "../utils/r3eDataValidator";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import type { RaceRoomData } from "../types";
+import { validateR3eData } from "../utils/r3eDataValidator";
 
 type NumericConfigKey = {
   [K in keyof Config]: Config[K] extends number ? K : never;
@@ -78,27 +78,15 @@ const numberFields: NumberField[] = [
 ];
 
 const Settings = () => {
+  const navigate = useNavigate();
   const electron = useElectronAPI();
   const { config, setConfig, resetConfig } = useConfigStore();
-  const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
-  const setForceOnboarding = useGameDataStore(
-    (state) => state.setForceOnboarding,
-  );
   const clearGameData = useGameDataStore((state) => state.clearGameData);
   const setGameData = useGameDataStore((state) => state.setGameData);
-  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
-    useProcessingLog();
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   const [localConfig, setLocalConfig] = useState<Config>(config);
   const [isReloading, setIsReloading] = useState(false);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
 
   const handleNumberChange = (key: NumericConfigKey, value: number) => {
     if (Number.isFinite(value)) {
@@ -159,14 +147,26 @@ const Settings = () => {
           validation.errors.forEach((error) => {
             addLog("error", error);
           });
+          // Navigate to onboarding when validation fails
+          addLog("error", "Redirecting to onboarding to reload game data...");
+          clearGameData();
+          setTimeout(() => navigate("/"), 2000);
         }
       } else {
         const errorMsg = result.error || "Failed to find r3e-data.json";
         addLog("error", errorMsg);
+        // Navigate to onboarding when file not found
+        addLog("error", "Redirecting to onboarding to reload game data...");
+        clearGameData();
+        setTimeout(() => navigate("/"), 2000);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       addLog("error", `Failed to reload game data: ${message}`);
+      // Navigate to onboarding when exception occurs
+      addLog("error", "Redirecting to onboarding to reload game data...");
+      clearGameData();
+      setTimeout(() => navigate("/"), 2000);
     } finally {
       setIsReloading(false);
     }
@@ -183,6 +183,18 @@ const Settings = () => {
     ],
     [],
   );
+
+  const forceOnboardingSwitchHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    if (checked) {
+      addLog(
+        "warning",
+        "Force onboarding enabled - game data will be cleared!",
+        faExclamationTriangle,
+      );
+      clearGameData();
+    }
+  };
 
   return (
     <Container className="py-4">
@@ -263,14 +275,8 @@ const Settings = () => {
                   <Form.Check
                     type="switch"
                     id="forceOnboarding"
-                    checked={forceOnboarding}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setForceOnboarding(checked);
-                      if (checked) {
-                        clearGameData();
-                      }
-                    }}
+                    checked={clearGameData === null} // Use gameData presence to determine switch state
+                    onChange={(e) => forceOnboardingSwitchHandler(e)}
                   />
                 </Form.Group>
               </Col>
@@ -288,50 +294,42 @@ const Settings = () => {
         </Card.Body>
       </Card>
 
-      <Card bg="dark" text="white" className="border-secondary">
-        <Card.Header className="bg-dark border-secondary">
-          <h5 className="m-0">
-            <FontAwesomeIcon icon={faSync} className="me-2" />
-            Game Data Management
-          </h5>
-        </Card.Header>
-        <Card.Body>
-          <p className="text-white-50">
-            Reload r3e-data.json from your RaceRoom installation directory. Use
-            this when the game has been updated with new content.
-          </p>
+      {electron.isElectron && (
+        <Card bg="dark" text="white" className="border-secondary">
+          <Card.Header className="bg-dark border-secondary">
+            <h5 className="m-0">
+              <FontAwesomeIcon icon={faSync} className="me-2" />
+              Game Data Management
+            </h5>
+          </Card.Header>
+          <Card.Body>
+            <p className="text-white-50">
+              Reload r3e-data.json from your RaceRoom installation directory.
+              Use this when the game has been updated with new content.
+            </p>
 
-          <div className="d-flex justify-content-end">
-            <Button
-              variant="primary"
-              onClick={handleReloadGameData}
-              disabled={isReloading}
-            >
-              {isReloading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" />
-                  Reloading...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSync} className="me-2" />
-                  Reload Game Data
-                </>
-              )}
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="primary"
+                onClick={handleReloadGameData}
+                disabled={isReloading}
+              >
+                {isReloading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />{" "}
+                    Reloading...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faSync} className="me-2" />
+                    Reload Game Data
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
     </Container>
   );
 };

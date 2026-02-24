@@ -42,11 +42,16 @@ export const useMyStore = create<State>()(
 
 **Storage Backend** ([src/store/electronStorage.ts](src/store/electronStorage.ts)):
 
-- **Electron mode**: Uses `electron-store` v11.0.2 for native persistent storage (no size limits)
+- **Electron mode**: Uses `electron-store` v11.0.2 for native persistent storage (no size limits). Supports async IPC operations with automatic serialization filtering via `sanitizeForIPC()`
 - **Web mode**: Falls back to browser `localStorage` (5-10MB limit)
-- Unified interface abstracts the differences
+- Unified interface abstracts the differences through `StorageInterface` adapter pattern
 
-**Stores**: `configStore` (fitting params), `championshipStore` (saved championships), `leaderboardAssetsStore` (cached icons), `gameDataStore` (r3e-data.json).
+**Stores**:
+
+- `configStore` - Fitting parameters (testMinAIdiffs, testMaxTimePct, testMaxFailsPct, aiNumLevels, aiSpacing)
+- `championshipStore` - Saved championships with metadata
+- `leaderboardAssetsStore` - Cached leaderboard icons (driver/team portraits)
+- `gameDataStore` - Loaded r3e-data.json with lazy loading support and force onboarding flag
 
 ### Electron Dual-Mode Architecture
 
@@ -80,6 +85,10 @@ if (isElectron) {
 - `fs:readdir` - List directory contents
 - `app:findR3eDataFile` - Auto-locate r3e-data.json in standard game paths
 - `app:findAiadaptationFile` - Auto-locate aiadaptation.xml in UserData
+- `store:get` - Get value from electron-store (persistent storage)
+- `store:set` - Set value in electron-store (with IPC serialization)
+- `store:delete` - Delete key from electron-store
+- `app:openExternal` - Open external URL in system browser
 
 Renderer calls via IPC bridge in [electron/preload.cjs](electron/preload.cjs) with `contextIsolation` + `sandbox` enabled for security.
 
@@ -158,19 +167,20 @@ Each utility is self-contained:
   - `AIManagement.tsx` - AI difficulty optimization with statistical fitting
   - `FixQualyTimes.tsx` - Recover missing qualification times in race results
   - `BuildResultsDatabase.tsx` - Generate championship standings HTML with leaderboard icons
-  - `ResultsDatabaseViewer.tsx` - Browse saved championships
-  - `ResultsDatabaseDetail.tsx` - Championship detail view with driver/team/vehicle standings
+  - `ResultsDatabaseViewer.tsx` - Browse saved championships (route: `/results-database`)
+  - `ResultsDatabaseDetail.tsx` - Championship detail view with driver/team/vehicle standings (route: `/results-database/:alias`)
   - `GameDataOnboarding.tsx` - r3e-data.json setup (auto-detect or manual upload)
+  - `Help.tsx` - User guide and documentation
   - `Settings.tsx` - Fitting parameters, UI defaults, cache management
 - **Shared UI**: `Layout.tsx` (sidebar navigation), `ProcessingLog.tsx`, `FileUploadSection.tsx`
-- **Routing**: [src/App.tsx](src/App.tsx) - React Router with `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-viewer`, `/settings`
+- **Routing**: [src/App.tsx](src/App.tsx) - React Router with `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-database`, `/results-database/:alias`, `/settings`, `/help`
 
 ## Development Workflows
 
 ### Prerequisites
 
-- **Node.js 24.x** or higher
-- Windows/macOS/Linux with npm or pnpm
+- **Node.js 24.x** or higher (tested on Windows, macOS, Linux)
+- **npm** or **pnpm** package manager
 
 ### Run Dev Environment
 
@@ -185,11 +195,12 @@ npm run dev:electron  # Electron only (requires Vite already running)
 ### Build & Deploy
 
 ```bash
-npm run build             # Vite production build → dist/ (web only)
-npm run build:electron    # Full Electron app: Vite build + electron-builder → dist/ (with Windows NSIS installer + portable exe)
+npm run clean             # Clean dist/ directory
+npm run build             # TypeScript compilation + Vite production build → dist/ (web only)
+npm run build:electron    # Full Electron app: Clean + TypeScript + Vite build + electron-builder → dist/ (Windows NSIS installer + portable exe)
 ```
 
-**Output**: `dist/` for both web assets and Electron app packaging (via electron-builder). All built resources in single directory.
+**Output**: `dist/` contains web assets for browser deployment and Electron app packaging (NSIS installer for Windows). All built resources consolidated in single directory.
 
 ### Data File Locations (Windows)
 
@@ -222,9 +233,12 @@ No formal test suite—manual QA with real R3E files. When adding features:
 - `electron-store` (11.0): Native persistent storage for Electron mode (via IPC bridge)
 - `react-bootstrap` (2.10): UI components (Cards, Buttons, Forms, etc.)
 - `@fortawesome/react-fontawesome` (3.2): Solid SVG icons (solid icons library v7.1) throughout UI
-- `electron` (40): Desktop runtime with native file dialogs
-- `electron-builder` (26): Packaging for Windows NSIS installer + portable exe
+- `electron` (40.1): Desktop runtime with native file dialogs
+- `electron-builder` (26.4): Packaging for Windows NSIS installer + portable exe
 - `electron-is-dev` (3.0): Detect dev vs production for conditional loading
+- `typescript` (5.9): TypeScript compiler with strict mode enabled
+- `vite` (7.2): Fast build tool and dev server
+- `react-router-dom` (7.12): Client-side routing
 
 ## When Modifying Fitting Logic
 
@@ -246,4 +260,4 @@ No formal test suite—manual QA with real R3E files. When adding features:
 
 ---
 
-**Last Updated**: February 11, 2026 | **Version**: 0.4.3
+**Last Updated**: February 22, 2026 | **Version**: 1.3.1
