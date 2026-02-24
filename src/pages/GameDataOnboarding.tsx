@@ -3,115 +3,23 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
 import { faFolder } from "@fortawesome/free-solid-svg-icons/faFolder";
-import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { faUpload } from "@fortawesome/free-solid-svg-icons/faUpload";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
-import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import type { RaceRoomData } from "../types";
 import { validateR3eData } from "../utils/r3eDataValidator";
 
 const GameDataOnboarding = () => {
-  const electron = useElectronAPI();
   const { setGameData } = useGameDataStore();
   const addLog = useProcessingLogStore((state) => state.addLog);
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadSuccess, setLoadSuccess] = useState(false);
   const [parsedData, setParsedData] = useState<RaceRoomData | null>(null);
-
-  const autoLoadAttemptedRef = useRef(false);
-
-  // Try to load game data automatically on mount
-  useEffect(() => {
-    const autoLoadGameData = async () => {
-      // Prevent double execution in React StrictMode (dev mode)
-      if (autoLoadAttemptedRef.current) return;
-      autoLoadAttemptedRef.current = true;
-
-      setIsLoading(true);
-      addLog(
-        "info",
-        "Searching for r3e-data.json in standard paths...",
-        faSearch,
-      );
-
-      try {
-        const result = await electron.findR3eDataFile();
-        if (result.success && result.data) {
-          addLog(
-            "success",
-            `Found r3e-data.json at: ${result.path || "auto-detected path"}`,
-            faCheck,
-          );
-          addLog("info", "Validating file structure...");
-
-          // Validate and parse the data
-          const parsed = JSON.parse(result.data);
-          const validation = validateR3eData(parsed);
-
-          if (validation.valid) {
-            addLog("success", "File structure is valid");
-
-            // Log stats
-            const classCount = Object.keys(parsed.classes).length;
-            const trackCount = Object.keys(parsed.tracks).length;
-            addLog(
-              "info",
-              `Loaded ${classCount} classes and ${trackCount} tracks`,
-            );
-
-            // Log warnings if any
-            if (validation.warnings.length > 0) {
-              validation.warnings.forEach((warning) => {
-                addLog("warning", warning, faExclamationTriangle);
-              });
-            }
-
-            setGameData(parsed as RaceRoomData);
-            setLoadSuccess(true);
-            addLog("success", "Game data loaded successfully!", faCheck);
-          } else {
-            validation.errors.forEach((error) => {
-              addLog("error", error, faXmark);
-            });
-            addLog(
-              "error",
-              "Failed to load game data: validation errors",
-              faXmark,
-            );
-          }
-        } else {
-          addLog(
-            "warning",
-            "r3e-data.json not found in standard paths. Please upload it manually.",
-            faExclamationTriangle,
-          );
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        addLog("error", `Failed to load game data: ${message}`, faXmark);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (electron.isElectron) {
-      autoLoadGameData();
-    } else {
-      true;
-      addLog(
-        "warning",
-        "Game data can only be loaded in Electron mode from RaceRoom installation",
-      );
-      return;
-    }
-  }, [electron.isElectron]);
 
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -214,9 +122,6 @@ const GameDataOnboarding = () => {
               onChange={handleFileUpload}
               disabled={isLoading}
             />
-            <Form.Text className="text-white-50">
-              Select the r3e-data.json file from your RaceRoom installation
-            </Form.Text>
           </Form.Group>
 
           {isLoading && (
@@ -235,9 +140,6 @@ const GameDataOnboarding = () => {
           )}
         </Card.Body>
       </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog />
     </Container>
   );
 };
