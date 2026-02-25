@@ -13,6 +13,7 @@ import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { initAutoUpdater, manualCheckForUpdates } from "./updater.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -144,6 +145,13 @@ const createMenu = () => {
         },
         { type: "separator" },
         {
+          label: "Check for Updates",
+          click: () => {
+            manualCheckForUpdates(mainWindow);
+          },
+        },
+        { type: "separator" },
+        {
           label: "GitHub Repository",
           click: async () => {
             await shell.openExternal("https://github.com/deggesim/r3e-toolbox");
@@ -173,6 +181,7 @@ const createMenu = () => {
 app.on("ready", () => {
   createWindow();
   createMenu();
+  initAutoUpdater(mainWindow);
 });
 
 app.on("window-all-closed", () => {

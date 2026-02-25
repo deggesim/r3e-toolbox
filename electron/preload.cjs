@@ -23,12 +23,12 @@ contextBridge.exposeInMainWorld("electron", {
   storeSet: (key, value) => ipcRenderer.invoke("store:set", key, value),
   storeDelete: (key) => ipcRenderer.invoke("store:delete", key),
 
-  // Navigation listener
-  onNavigate: (callback) => {
-    const listener = (event, path) => callback(path);
-    ipcRenderer.on("navigate-to", listener);
+  // Update notifications
+  onUpdateDownloadProgress: (callback) => {
+    const listener = (event, data) => callback(data);
+    ipcRenderer.on("update-download-progress", listener);
     return () => {
-      ipcRenderer.removeListener("navigate-to", listener);
+      ipcRenderer.removeListener("update-download-progress", listener);
     };
   },
-});
+

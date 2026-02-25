@@ -24,6 +24,7 @@
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
     "electron-store": "^11.0.2",
+    "electron-updater": "^6.2.0",
     "fast-xml-parser": "^5.3.3",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",
@@ -83,6 +84,11 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "deggesim",
+      "repo": "r3e-toolbox"
     }
   }
 }
