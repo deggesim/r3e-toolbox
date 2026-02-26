@@ -41,12 +41,12 @@ import { parseResultFiles } from "../utils/raceResultParser";
 
 const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(
-    (slot) => slot.ClassId !== undefined || slot.ClassName,
+    (slot) => slot.classId !== undefined || slot.className,
   );
   const classPart =
-    classInfo?.ClassId === undefined
-      ? classInfo?.ClassName || "unknown-class"
-      : String(classInfo.ClassId);
+    classInfo?.classId === undefined
+      ? classInfo?.className || "unknown-class"
+      : String(classInfo.classId);
   const trackPart = race.trackid ? String(race.trackid) : race.trackname;
   return `${trackPart}::${classPart}`;
 };
@@ -195,7 +195,7 @@ const BuildResultsDatabase = () => {
     if (championshipAlias.trim() || parsedRaces.length === 0) return;
     const firstClass = parsedRaces
       .map((race) =>
-        race.slots.find((slot) => slot.ClassName?.trim())?.ClassName?.trim(),
+        race.slots.find((slot) => slot.className?.trim())?.className?.trim(),
       )
       .find(Boolean);
 
@@ -204,7 +204,7 @@ const BuildResultsDatabase = () => {
       return;
     }
 
-    const firstVehicle = parsedRaces[0]?.slots?.[0]?.Vehicle;
+    const firstVehicle = parsedRaces[0]?.slots?.[0]?.vehicle;
     if (firstVehicle) {
       setChampionshipAlias(`${firstVehicle} Championship`);
     }
@@ -264,8 +264,8 @@ const BuildResultsDatabase = () => {
   );
 
   const resolveCarName = useCallback(
-    (slot: { VehicleId?: number; Vehicle?: string; ClassName?: string }) => {
-      const vehicleId = slot.VehicleId;
+    (slot: { vehicleId?: number; vehicle?: string; className?: string }) => {
+      const vehicleId = slot.vehicleId;
 
       // Try to get car name from gameData first
       if (vehicleId && gameData?.cars?.[vehicleId]?.Name) {
@@ -275,34 +275,34 @@ const BuildResultsDatabase = () => {
       // If not found in gameData, try assets
       if (assets?.cars) {
         const assetCar = assets.cars.find(
-          (c) => c.id === String(vehicleId) || c.name === slot.Vehicle,
+          (c) => c.id === String(vehicleId) || c.name === slot.vehicle,
         );
         if (assetCar) {
           return assetCar.name;
         }
       }
 
-      // Fallback to slot.Vehicle
-      if (slot.Vehicle) {
-        return slot.Vehicle;
+      // Fallback to slot.vehicle
+      if (slot.vehicle) {
+        return slot.vehicle;
       }
 
       // Last resort fallback
-      return slot.ClassName || (vehicleId ? String(vehicleId) : undefined);
+      return slot.className || (vehicleId ? String(vehicleId) : undefined);
     },
     [assets, gameData],
   );
 
   const resolveCarIcon = useCallback(
-    (slot: { VehicleId?: number; Vehicle?: string }) => {
+    (slot: { vehicleId?: number; vehicle?: string }) => {
       if (!assets) return undefined;
 
       const assetMap = convertAssetsForHTML(assets);
       if (!assetMap?.cars) return undefined;
 
       const keyCandidates = [
-        slot.VehicleId ? String(slot.VehicleId) : undefined,
-        slot.Vehicle,
+        slot.vehicleId ? String(slot.vehicleId) : undefined,
+        slot.vehicle,
       ].filter(Boolean) as string[];
 
       for (const key of keyCandidates) {
@@ -319,10 +319,10 @@ const BuildResultsDatabase = () => {
   const resolveCarInfo = useCallback(() => {
     const humanSlot = parsedRaces
       .flatMap((race) => race.slots)
-      .find((slot) => typeof slot.UserId === "number" && slot.UserId > 0);
+      .find((slot) => typeof slot.userId === "number" && slot.userId > 0);
 
     const fallbackSlot = parsedRaces[0]?.slots?.find(
-      (slot) => slot.ClassName || slot.Vehicle,
+      (slot) => slot.className || slot.vehicle,
     );
 
     const slot = humanSlot || fallbackSlot;

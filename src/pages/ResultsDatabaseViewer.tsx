@@ -82,7 +82,7 @@ const ResultsDatabaseViewer = () => {
         // Count race wins, podiums for human
         if (humanDriver) {
           const humanIndex = sortedSlots.findIndex(
-            (slot) => slot.Driver === humanDriver,
+            (slot) => slot.driver === humanDriver,
           );
           if (humanIndex >= 0) {
             const position = humanIndex + 1;
@@ -95,8 +95,8 @@ const ResultsDatabaseViewer = () => {
         if (humanDriver) {
           const qualifyingTimes = race.slots
             .map((slot) => ({
-              driver: slot.Driver,
-              time: parseTime(slot.QualTime),
+              driver: slot.driver,
+              time: parseTime(slot.qualTime),
             }))
             .filter((entry) => entry.time !== undefined) as Array<{
             driver: string;

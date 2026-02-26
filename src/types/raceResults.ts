@@ -1,20 +1,20 @@
 // Types for RaceRoom race results parsing and standings generation
 
 export interface RaceSlot {
-  Driver: string;
-  Team: string;
-  Vehicle: string;
-  VehicleId?: number;
-  UserId?: number;
-  ClassName?: string;
-  ClassId?: number;
-  FinishTime?: string;
-  TotalTime?: string;
-  BestLap?: string;
-  QualTime?: string;
-  Position?: number;
-  FinishStatus?: string;
-  TotalLaps?: number;
+  driver: string;
+  team: string;
+  vehicle: string;
+  vehicleId?: number;
+  userId?: number;
+  className?: string;
+  classId?: number;
+  finishTime?: string;
+  totalTime?: string;
+  bestLap?: string;
+  qualTime?: string;
+  position?: number;
+  finishStatus?: string;
+  totalLaps?: number;
 }
 
 export type Driver = {

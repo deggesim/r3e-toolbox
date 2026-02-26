@@ -133,19 +133,19 @@ const buildSinglePlayerRaceSlot = (
   }
 
   return {
-    Driver: driver.name,
-    Vehicle: vehicleName,
-    VehicleId: vehicleId,
-    UserId: Number.isFinite(userId) ? userId : undefined,
-    ClassName: driver.className || driver.ClassName || className,
-    ClassId: driver.classId ?? driver.ClassId ?? classId,
-    Team: teamName,
-    FinishTime: totalTime,
-    TotalTime: totalTime,
-    BestLap: bestLap,
-    QualTime: qualTime,
-    FinishStatus: driver.finishStatus,
-    TotalLaps: driver.totalLaps ?? driver.TotalLaps ?? undefined,
+    driver: driver.name,
+    vehicle: vehicleName,
+    vehicleId: vehicleId,
+    userId: Number.isFinite(userId) ? userId : undefined,
+    className: driver.className || driver.ClassName || className,
+    classId: driver.classId ?? driver.ClassId ?? classId,
+    team: teamName,
+    finishTime: totalTime,
+    totalTime: totalTime,
+    bestLap: bestLap,
+    qualTime: qualTime,
+    finishStatus: driver.finishStatus,
+    totalLaps: driver.totalLaps ?? driver.TotalLaps ?? undefined,
   };
 };
 

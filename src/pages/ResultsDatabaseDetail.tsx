@@ -77,12 +77,12 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
 
 const getRacePosition = (slots: any[], driver: string): number | null => {
   const sortedSlots = getSortedRaceSlots(slots);
-  const index = sortedSlots.findIndex((s) => s.Driver === driver);
-  return index >= 0 && sortedSlots[index].TotalTime ? index + 1 : null;
+  const index = sortedSlots.findIndex((s) => s.driver === driver);
+  return index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
 };
 
 const calculateGapFromWinner = (winner: any, driver: any): string => {
-  if (!winner?.TotalTime || !driver?.TotalTime) return "-";
+  if (!winner?.totalTime || !driver?.totalTime) return "-";
 
   const winnerLaps = winner.TotalLaps ?? 0;
   const driverLaps = driver.TotalLaps ?? 0;
@@ -958,29 +958,29 @@ const ResultsDatabaseDetail = () => {
                   {championship.raceData?.map((race, raceIdx) => {
                     const sortedSlots = getSortedRaceSlots(race.slots);
                     const slot = sortedSlots[posIdx];
-                    if (!slot?.TotalTime) {
+                    if (!slot?.totalTime) {
                       return (
                         <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
                       );
                     }
 
                     const winner = sortedSlots[0];
-                    const totalTimeSeconds = parseTime(slot.TotalTime);
+                    const totalTimeSeconds = parseTime(slot.totalTime);
                     const formattedTime =
                       posIdx === 0
                         ? Number.isFinite(totalTimeSeconds)
                           ? makeTime(totalTimeSeconds)
-                          : slot.TotalTime
+                          : slot.totalTime
                         : calculateGapFromWinner(winner, slot);
-                    const vehicleIcon = getVehicleIcon(slot.VehicleId);
+                    const vehicleIcon = getVehicleIcon(slot.vehicleId);
                     const vehicleName = getVehicleName(
-                      slot.VehicleId,
-                      slot.Vehicle,
+                      slot.vehicleId,
+                      slot.vehicle,
                     );
                     const isHuman =
                       race.slots &&
                       race.slots.length > 0 &&
-                      race.slots[0].Driver === slot.Driver;
+                      race.slots[0].driver === slot.driver;
 
                     return (
                       <td
@@ -990,7 +990,7 @@ const ResultsDatabaseDetail = () => {
                         <div
                           className={`race-result-entry${isHuman ? " human-driver" : ""}`}
                         >
-                          <div className="result-driver">{slot.Driver}</div>
+                          <div className="result-driver">{slot.driver}</div>
                           <div className="result-vehicle">
                             {vehicleIcon && (
                               <img
