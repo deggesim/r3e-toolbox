@@ -31,4 +31,4 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.removeListener("update-download-progress", listener);
     };
   },
-
+});

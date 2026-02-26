@@ -31,6 +31,42 @@ R3E Toolbox runs as both a desktop application (Electron) and web app at [https:
 - Detects if running in Electron or browser
 - Throws errors if Electron API not available in browser
 
+## Auto Updates (electron-updater)
+
+Automatic updates are handled in the Electron main process with `electron-updater` (see `electron/updater.mjs`).
+
+### Configuration
+
+- **Disabled in development** via `electron-is-dev` check
+- **Auto-check on startup** (after 5 seconds) and every hour
+- **User-driven download flow**: Prompt to download → Show progress → Prompt to install
+- **Manual check** wired in Help menu ("Check for Updates")
+
+### IPC Bridge
+
+- Download progress emitted on `update-download-progress` IPC channel
+- Renderer subscribes via `window.electron.onUpdateDownloadProgress()` in `electron/preload.cjs`
+- Message format: `{ percent, transferred, total }` (for UI progress display)
+
+### UI Components
+
+- `useAutoUpdater` hook - React hook to consume update progress (see `src/hooks/useAutoUpdater.ts`)
+- `UpdateProgressNotification` - Floating progress indicator during download (see `src/components/UpdateProgressNotification.tsx`)
+
+### How It Works
+
+1. **Startup Check**: `initAutoUpdater(mainWindow)` called in `app.on('ready')`
+2. **Available Update**: User sees dialog with version info, can download or skip
+3. **Download**: Progress emitted every ~500ms to renderer via IPC
+4. **Downloaded**: User prompted to install now or on next startup
+5. **Install**: `autoUpdater.quitAndInstall()` restarts app with new version
+
+### Testing Updates
+
+- Updates only work in production (packaged app)
+- Dev mode skips update logic entirely
+- To test: Build electron app with `npm run build:electron`, then create newer version and test dialogs
+
 ## Development
 
 ```bash

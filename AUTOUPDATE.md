@@ -1,22 +1,24 @@
-# Auto-Update System per R3E Toolbox
+# Auto-Update System for R3E Toolbox
 
-## Panoramica
+## Overview
 
-Il sistema di auto-aggiornamento utilizza **electron-updater** per controllare automaticamente i nuovi release su GitHub e notificare l'utente.
+The auto-update system uses **electron-updater** to automatically check for new releases on GitHub and notify the user.
 
-## Caratteristiche
+## Features
 
-✅ **Controllo automatico**: Verifica i nuovi release al startup e ogni ora  
-✅ **Notifiche personalizzate**: Dialoghi nativi Windows con opzioni di download  
-✅ **Download in background**: Non blocca l'interfaccia durante il download  
-✅ **Installazione automatica**: Al riavvio viene installata la nuova versione  
-✅ **Monitoraggio del progresso**: Notifica visuale della barra di download  
-✅ **Controllo manuale**: Menu Help → "Check for Updates"
+✅ **Automatic check**: Verifies new releases at startup and every hour  
+✅ **Custom notifications**: Native Windows dialogs with download options  
+✅ **Background download**: Does not block the interface during download  
+✅ **Automatic installation**: New version is installed on restart  
+✅ **Progress monitoring**: Visual notification with download progress bar  
+✅ **Manual check**: Help menu → "Check for Updates"
 
-## Come Funziona
+## How It Works
 
-### 1. Configurazione
-Nel `package.json` è configurato il publish su GitHub:
+### 1. Configuration
+
+In `package.json`, GitHub publish is configured:
+
 ```json
 "publish": {
   "provider": "github",
@@ -25,44 +27,45 @@ Nel `package.json` è configurato il publish su GitHub:
 }
 ```
 
-### 2. Flusso di Aggiornamento
+### 2. Update Flow
 
 ```
-[Startup] → Check for Updates (dopo 5 sec)
+[Startup] → Check for Updates (after 5 sec)
            ↓
        Update Available → Show Dialog
            ↓
        User clicks "Download Now"
            ↓
-       Download Progress (notifica in basso a destra)
+       Download Progress (notification in bottom-right)
            ↓
        Download Complete → Show Install Dialog
            ↓
-       User clicks "Install Now" → Riavvia app e installa
+       User clicks "Install Now" → Restart app and install
 ```
 
-### 3. Files Interessati
+### 3. Affected Files
 
-- **`electron/updater.mjs`** - Logica principale di aggiornamento
-  - `initAutoUpdater()` - Inizializza il controllo automatico
-  - `manualCheckForUpdates()` - Trigger manuale dal menu
-  - Event handlers per download/installazione
+- **`electron/updater.mjs`** - Main update logic
+  - `initAutoUpdater()` - Initializes automatic check
+  - `manualCheckForUpdates()` - Manual trigger from menu
+  - Event handlers for download/installation
 
-- **`electron/main.mjs`** - Integrazione updater
-  - Importa e inizializza updater all'app start
-  - Aggiunge "Check for Updates" nel menu Help
+- **`electron/main.mjs`** - Updater integration
+  - Imports and initializes updater on app start
+  - Adds "Check for Updates" to Help menu
 
-- **`src/hooks/useAutoUpdater.ts`** - Hook React
-  - Ascolta i progressi di download
-  - Fornisce dati per UI component
+- **`src/hooks/useAutoUpdater.ts`** - React hook
+  - Listens to download progress
+  - Provides data for UI component
 
 - **`src/components/UpdateProgressNotification.tsx`** - UI
-  - Mostra barra di download in basso a destra
-  - Visualizza percentuale e size
+  - Shows download progress bar in bottom-right corner
+  - Displays percentage and size
 
-## Comportamento in Modalità Sviluppo
+## Behavior in Development Mode
 
-Il sistema è **automaticamente disabilitato** in sviluppo:
+The system is **automatically disabled** in development:
+
 ```typescript
 if (isDev) {
   console.log("[Updater] Running in development mode, auto-updater disabled");
@@ -70,61 +73,65 @@ if (isDev) {
 }
 ```
 
-## Setup per Deploy
+## Deployment Setup
 
-Per fare un release su GitHub:
+To create a release on GitHub:
 
-1. **Push con tag di versione**:
+1. **Push with version tag**:
+
 ```bash
 git tag -a v1.4.0 -m "Release 1.4.0"
 git push origin v1.4.0
 ```
 
-2. **Crea GitHub Release**:
-   - Vai a https://github.com/deggesim/r3e-toolbox/releases
+2. **Create GitHub Release**:
+   - Go to https://github.com/deggesim/r3e-toolbox/releases
    - "Create a new release"
-   - Usa il tag v1.4.0
-   - Upload gli installer da `dist/`
-   - electron-updater leggerà automaticamente i release
+   - Use tag v1.4.0
+   - Upload installers from `dist/`
+   - electron-updater will automatically read the release
 
-3. **electron-builder genererà**:
-   - `latest.yml` - Metadata dell'update
+3. **electron-builder will generate**:
+   - `latest.yml` - Update metadata
    - Windows installer (`.exe`, `.nsis`)
-   - electron-updater userà questo per il download
+   - electron-updater will use this for download
 
-## Note Importanti
+## Important Notes
 
-⚠️ **GitHub Token**: Se tanti utenti scaricano, il rate limit anonimo (60 req/h) potrebbe non bastare. Solution: Usare `GH_TOKEN` durante il build per il publish.
+⚠️ **GitHub Token**: If many users download, the anonymous rate limit (60 req/h) might not be enough. Solution: Use `GH_TOKEN` during build for publish.
 
-⚠️ **Code Signing**: Per Windows SmartScreen trusted, il build dovrebbe essere firmato. Attualmente:
+⚠️ **Code Signing**: For Windows SmartScreen trusted builds, the executable should be signed. Currently:
+
 ```json
 "win": {
   "signAndEditExecutable": true  // Placeholder
 }
 ```
 
-⚠️ **Asset Size**: electron-updater farà delta updates (solo differenze). Primo download è ~200MB.
+⚠️ **Asset Size**: electron-updater will do delta updates (only differences). First download is ~200MB.
 
-## Testing in Sviluppo
+## Testing in Development
 
-Non puoi testare l'auto-updater in dev mode, ma puoi:
-1. Fare un build di produzione: `npm run build:electron`
-2. Creare una release su GitHub con il tuo `dist/`
-3. Lanciare l'app built: `./dist/R3EToolbox.exe`
+You cannot test the auto-updater in dev mode, but you can:
 
-Oppure mockare in test, ma non è consigliato per funzionalità critica.
+1. Build for production: `npm run build:electron`
+2. Create a GitHub release with your `dist/`
+3. Launch the built app: `./dist/R3EToolbox.exe`
 
-## Disabilitare Temporaneamente
+Alternatively, mock in tests, but this is not recommended for critical functionality.
 
-Se serve disabilitare il controllo (per test offline):
+## Temporarily Disable
+
+If you need to disable the check (for offline testing):
+
 ```javascript
 // In electron/main.mjs
-// initAutoUpdater(mainWindow);  // Commenta questa linea
+// initAutoUpdater(mainWindow);  // Comment this line
 ```
 
-## Futuri Miglioramenti
+## Future Improvements
 
-- [ ] Configurare firma dei binari Windows (Code Signing)
-- [ ] Aggiungere changelog visibile nel dialogo
-- [ ] Supporto per staging/beta releases
-- [ ] Notifica quando update è pronto al riavvio successivo
+- [ ] Configure Windows binary signing (Code Signing)
+- [ ] Add visible changelog in dialog
+- [ ] Support for staging/beta releases
+- [ ] Notification when update is ready for next restart

@@ -1,4 +1,4 @@
-import { autoUpdater } from "electron-updater";
+import autoUpdater from "electron-updater";
 import { dialog } from "electron";
 import isDev from "electron-is-dev";
 
@@ -110,7 +110,8 @@ const showInstallDialog = (mainWindow) => {
       type: "info",
       title: "Update Ready",
       message: "Update ready to install",
-      detail: "The update has been downloaded. Would you like to install it now? The application will restart.",
+      detail:
+        "The update has been downloaded. Would you like to install it now? The application will restart.",
       buttons: ["Install Now", "Install on Next Startup"],
       defaultId: 0,
     })
