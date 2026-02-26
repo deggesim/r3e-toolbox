@@ -2,8 +2,8 @@ import type { RaceRoomData } from "../types";
 import type {
   ParsedRace,
   RaceSlot,
-  SinglePlayerDriver,
-  SinglePlayerRaceResult,
+  Driver,
+  RaceResult,
 } from "../types/raceResults";
 
 interface TrackInfo {
@@ -88,7 +88,7 @@ const findTrack = (
 };
 
 const buildSinglePlayerRaceSlot = (
-  driver: SinglePlayerDriver,
+  driver: Driver,
   gameData: RaceRoomData,
 ): RaceSlot => {
   const totalTime = driver.raceTimeMs
@@ -150,7 +150,7 @@ const buildSinglePlayerRaceSlot = (
 };
 
 const parseSinglePlayerResult = (
-  json: SinglePlayerRaceResult,
+  json: RaceResult,
   gameData: RaceRoomData,
   ruleset: string,
 ): ParsedRace | null => {
@@ -224,7 +224,7 @@ export const parseResultFile = async (
       "drivers" in json
     ) {
       const result = parseSinglePlayerResult(
-        json as SinglePlayerRaceResult,
+        json as RaceResult,
         gameData,
         ruleset,
       );

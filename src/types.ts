@@ -29,8 +29,8 @@ export type {
 
 export type {
   RaceSlot,
-  SinglePlayerDriver,
-  SinglePlayerRaceResult,
+  Driver,
+  RaceResult,
   ParsedRace,
   RaceDatabase,
   StandingsConfig,

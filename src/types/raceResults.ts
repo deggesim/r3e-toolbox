@@ -17,7 +17,7 @@ export interface RaceSlot {
   TotalLaps?: number;
 }
 
-export type SinglePlayerDriver = {
+export type Driver = {
   userId?: string | number;
   UserId?: string | number;
   userid?: string | number;
@@ -41,7 +41,7 @@ export type SinglePlayerDriver = {
   TotalLaps?: number;
 };
 
-export interface SinglePlayerRaceResult {
+export interface RaceResult {
   header: {
     time: string;
   };
@@ -50,7 +50,7 @@ export interface SinglePlayerRaceResult {
     layout?: string;
     layoutId?: number;
   };
-  drivers: SinglePlayerDriver[];
+  drivers: Driver[];
 }
 
 export interface ParsedRace {
