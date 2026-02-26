@@ -239,7 +239,7 @@ const BuildResultsDatabase = () => {
     }
   }, [htmlOverride]);
 
-  const handleFolderChange = useCallback(
+  const onFilesSelected = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
@@ -631,7 +631,7 @@ const BuildResultsDatabase = () => {
                   multiple
                   accept=".txt,.json"
                   ref={resultsInputRef}
-                  onChange={handleFolderChange}
+                  onChange={onFilesSelected}
                 />
                 <Form.Text className="text-white-50">
                   Select one or more Race*.txt or Race*.json files (supports
