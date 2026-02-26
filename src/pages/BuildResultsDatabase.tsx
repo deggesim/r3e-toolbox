@@ -489,10 +489,11 @@ const BuildResultsDatabase = () => {
     }
   }, [
     championshipAlias,
+    addLog,
     parsedRaces,
     championships,
-    addOrUpdateChampionship,
     resolveCarInfo,
+    addOrUpdateChampionship,
   ]);
 
   return (

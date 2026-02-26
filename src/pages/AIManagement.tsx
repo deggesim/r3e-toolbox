@@ -150,8 +150,6 @@ const AIManagement = () => {
 
   useEffect(() => {
     const loadAiadaptationFile = async () => {
-      if (xmlAutoLoadedRef.current) return;
-      xmlAutoLoadedRef.current = true;
       if (!electron.isElectron) {
         addLog(
           "warning",
@@ -193,6 +191,10 @@ const AIManagement = () => {
         addLog("error", `Auto-load of aiadaptation.xml failed: ${error}`);
       }
     };
+
+    // Prevent double execution in React StrictMode (dev mode)
+    if (xmlAutoLoadedRef.current) return;
+    xmlAutoLoadedRef.current = true;
 
     loadAiadaptationFile();
   }, [addLog, database, electron, electron.isElectron, playerTimes]);
