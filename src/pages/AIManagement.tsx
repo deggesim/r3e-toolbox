@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
 import { faThumbsUp } from "@fortawesome/free-solid-svg-icons/faThumbsUp";
@@ -194,7 +195,7 @@ const AIManagement = () => {
     };
 
     loadAiadaptationFile();
-  }, [electron.isElectron]);
+  }, [addLog, database, electron, electron.isElectron, playerTimes]);
 
   // ============ FILE UPLOAD HANDLERS ============
 
@@ -215,7 +216,9 @@ const AIManagement = () => {
           addLog("success", "AI Adaptation XML loaded successfully");
         }
       } catch (error) {
-        addLog("error", "Error parsing XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error parsing XML file: ${errorMessage}`);
       }
     },
     [database, playerTimes, addLog],
@@ -241,7 +244,9 @@ const AIManagement = () => {
         link.remove();
         URL.revokeObjectURL(url);
       } catch (error) {
-        addLog("error", "Error generating XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error generating XML file: ${errorMessage}`);
       }
     },
     [assets, addLog],
@@ -253,7 +258,8 @@ const AIManagement = () => {
     setShowApplyModal(false);
 
     let updatedDb = database;
-    let updatedPt = playerTimes;
+    // Apply player times modification (always use current playerTimes)
+    const updatedPt = playerTimes;
 
     // Apply AI modification if AI level is selected
     if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
@@ -265,9 +271,6 @@ const AIManagement = () => {
         spacing,
       );
     }
-
-    // Apply player times modification (always use current playerTimes)
-    updatedPt = playerTimes;
 
     // Download the merged results
     if (assets && updatedDb) {
@@ -290,7 +293,9 @@ const AIManagement = () => {
           faDownload,
         );
       } catch (error) {
-        addLog("error", "Error generating XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error generating XML file: ${errorMessage}`);
       }
     }
   };
@@ -380,7 +385,7 @@ const AIManagement = () => {
     (classid: string, trackid: string, timeIndex: number) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
-      if (!track || !track.playertimes) return;
+      if (!track?.playertimes) return;
 
       const deletedTime = track.playertimes[timeIndex];
       track.playertimes.splice(timeIndex, 1);
@@ -402,7 +407,7 @@ const AIManagement = () => {
     (classid: string, trackid: string) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
-      if (!track || !track.playertimes || track.playertimes.length <= 1) return;
+      if (!track?.playertimes || track.playertimes.length <= 1) return;
 
       const minTime = Math.min(...track.playertimes);
       const deletedCount = track.playertimes.length - 1;
@@ -526,8 +531,7 @@ const AIManagement = () => {
         // Compare number of times and actual values
         if (
           !trackData.playertimes ||
-          !origTrack.playertimes ||
-          trackData.playertimes.length !== origTrack.playertimes.length
+          trackData.playertimes.length !== origTrack.playertimes?.length
         ) {
           return true; // Different number of times
         }

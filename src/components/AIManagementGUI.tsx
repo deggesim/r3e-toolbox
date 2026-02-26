@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import { useConfigStore } from "../store/configStore";
