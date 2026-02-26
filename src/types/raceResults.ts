@@ -19,8 +19,6 @@ export interface RaceSlot {
 
 export type Driver = {
   userId?: string | number;
-  UserId?: string | number;
-  userid?: string | number;
   name: string;
   teamId?: number;
   teamName?: string;
@@ -28,8 +26,6 @@ export type Driver = {
   carName?: string;
   classId?: number;
   className?: string;
-  ClassId?: number;
-  ClassName?: string;
   finishStatus?: string;
   totalTime?: number;
   bestLapTime?: number;
@@ -38,7 +34,6 @@ export type Driver = {
   bestLapTimeMs?: number;
   qualTimeMs?: number;
   totalLaps?: number;
-  TotalLaps?: number;
 };
 
 export interface RaceResult {

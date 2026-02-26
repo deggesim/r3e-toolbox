@@ -119,8 +119,7 @@ const buildSinglePlayerRaceSlot = (
     resolveVehicleName(vehicleId, gameData) ||
     (vehicleId ? String(vehicleId) : "");
 
-  const rawUserId =
-    driver.userId ?? driver.UserId ?? driver.userid ?? undefined;
+  const rawUserId = driver.userId ?? undefined;
   const isStringUserId = typeof rawUserId === "string";
   const isNumberUserId = typeof rawUserId === "number";
   let userId: number | undefined;
@@ -137,15 +136,15 @@ const buildSinglePlayerRaceSlot = (
     vehicle: vehicleName,
     vehicleId: vehicleId,
     userId: Number.isFinite(userId) ? userId : undefined,
-    className: driver.className || driver.ClassName || className,
-    classId: driver.classId ?? driver.ClassId ?? classId,
+    className: driver.className || className,
+    classId: driver.classId ?? classId,
     team: teamName,
     finishTime: totalTime,
     totalTime: totalTime,
     bestLap: bestLap,
     qualTime: qualTime,
     finishStatus: driver.finishStatus,
-    totalLaps: driver.totalLaps ?? driver.TotalLaps ?? undefined,
+    totalLaps: driver.totalLaps ?? undefined,
   };
 };
 
