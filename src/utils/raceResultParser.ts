@@ -1,9 +1,8 @@
 import type { RaceRoomData } from "../types";
 import type {
-  MultiplayerRaceResult,
   ParsedRace,
-  RaceSession,
   RaceSlot,
+  SinglePlayerDriver,
   SinglePlayerRaceResult,
 } from "../types/raceResults";
 
@@ -88,144 +87,8 @@ const findTrack = (
   return undefined;
 };
 
-const processSessionPlayers = (
-  session: RaceSession,
-  gameData: RaceRoomData,
-): RaceSlot[] => {
-  const slots: RaceSlot[] = [];
-
-  for (const player of session.Players) {
-    const driver = player.Username;
-    const vehicleId = player.CarId;
-    const vehicleName =
-      player.CarName ||
-      resolveVehicleName(vehicleId, gameData) ||
-      (vehicleId ? String(vehicleId) : "");
-    const team = player.Team || driver;
-
-    const totalTime = player.TotalTime
-      ? millisecondsToTime(player.TotalTime)
-      : undefined;
-    const bestLap = player.BestLapTime
-      ? millisecondsToTime(player.BestLapTime)
-      : undefined;
-
-    slots.push({
-      Driver: driver,
-      Vehicle: vehicleName,
-      VehicleId: vehicleId,
-      UserId: player.UserId ? Number(player.UserId) : undefined,
-      ClassName: player.ClassName,
-      ClassId: player.ClassId,
-      Team: team,
-      FinishTime: totalTime,
-      TotalTime: totalTime,
-      BestLap: bestLap,
-      FinishStatus: player.FinishStatus,
-      TotalLaps: player.TotalLaps ?? player.totalLaps ?? undefined,
-    });
-  }
-
-  return slots;
-};
-
-const resolveMissingClassInfo = (
-  slots: RaceSlot[],
-  gameData: RaceRoomData,
-): void => {
-  for (const slot of slots) {
-    if (!slot.ClassName && !slot.ClassId && slot.VehicleId) {
-      const { classId, className } = resolveClassInfo(slot.VehicleId, gameData);
-      if (classId) slot.ClassId = classId;
-      if (className) slot.ClassName = className;
-    }
-  }
-};
-
-const addQualifyingTimes = (
-  slots: RaceSlot[],
-  sessQualify: RaceSession | undefined,
-): void => {
-  if (!sessQualify) return;
-  for (const player of sessQualify.Players) {
-    const slot = slots.find((s) => s.Driver === player.Username);
-    if (slot && player.QualifyingTime) {
-      slot.QualTime = millisecondsToTime(player.QualifyingTime);
-    }
-  }
-};
-
-const parseMultiplayerResult = (
-  json: MultiplayerRaceResult,
-  gameData: RaceRoomData,
-  ruleset: string,
-): ParsedRace[] | null => {
-  const { byName: trackLookup, byId: trackById } = buildTrackLookup(gameData);
-
-  const trackName = json.Track;
-  const layoutName = json.TrackLayout;
-  const trackInfo = findTrack(
-    trackName,
-    layoutName,
-    undefined,
-    trackLookup,
-    trackById,
-  );
-
-  if (!trackInfo) {
-    console.warn("Track not found:", trackName, layoutName);
-    return null;
-  }
-
-  const timestamp =
-    typeof json.Time === "string"
-      ? Math.floor(Number(/(\d+)/.exec(json.Time)?.[1] || 0) / 1000)
-      : json.Time;
-  const date = new Date(timestamp * 1000);
-  const timestring = date.toLocaleString("en-US");
-
-  const sessQualify = json.Sessions.find((s) => s.Type === "Qualify");
-  const sessRace = json.Sessions.find((s) => s.Type === "Race");
-  const sessRace2 = json.Sessions.find((s) => s.Type === "Race2");
-
-  if (!sessRace) {
-    console.warn("No race session found");
-    return null;
-  }
-
-  const slots1 = processSessionPlayers(sessRace, gameData);
-  resolveMissingClassInfo(slots1, gameData);
-  addQualifyingTimes(slots1, sessQualify);
-
-  const results: ParsedRace[] = [
-    {
-      trackname: trackInfo.name,
-      trackid: trackInfo.layoutId,
-      timestring,
-      slots: slots1,
-      ruleset,
-    },
-  ];
-
-  if (sessRace2) {
-    const date2 = new Date((timestamp + 1) * 1000);
-    const slots2 = processSessionPlayers(sessRace2, gameData);
-    resolveMissingClassInfo(slots2, gameData);
-    addQualifyingTimes(slots2, sessQualify);
-    results.push({
-      trackname: trackInfo.name,
-      trackid: trackInfo.layoutId,
-      timestring: date2.toLocaleString("en-US"),
-      slots: slots2,
-      ruleset,
-    });
-  }
-
-  return results;
-};
-
 const buildSinglePlayerRaceSlot = (
-  driver: any,
+  driver: SinglePlayerDriver,
   gameData: RaceRoomData,
 ): RaceSlot => {
   const totalTime = driver.raceTimeMs
@@ -342,7 +205,7 @@ export const parseResultFile = async (
       return null;
     }
 
-    let json: any;
+    let json: unknown;
     try {
       json = JSON.parse(text);
     } catch (parseError) {
@@ -353,15 +216,13 @@ export const parseResultFile = async (
       return null;
     }
 
-    if (json.Server || json.Sessions) {
-      // Multiplayer/dedicated server format
-      return parseMultiplayerResult(
-        json as MultiplayerRaceResult,
-        gameData,
-        ruleset,
-      );
-    } else if (json.header && json.drivers) {
-      // Single player format
+    // The result format is always the single-player JSON shape.
+    if (
+      typeof json === "object" &&
+      json !== null &&
+      "header" in json &&
+      "drivers" in json
+    ) {
       const result = parseSinglePlayerResult(
         json as SinglePlayerRaceResult,
         gameData,

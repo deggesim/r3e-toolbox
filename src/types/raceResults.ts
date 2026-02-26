@@ -17,31 +17,29 @@ export interface RaceSlot {
   TotalLaps?: number;
 }
 
-export interface RaceSession {
-  Type: string; // "Race", "Race2", "Race3", "Qualify"
-  Players: Array<{
-    UserId: string;
-    Username: string;
-    Team?: string;
-    CarId?: number;
-    CarName?: string;
-    ClassId?: number;
-    ClassName?: string;
-    FinishStatus?: string;
-    TotalTime?: number;
-    BestLapTime?: number;
-    QualifyingTime?: number;
-    [key: string]: any;
-  }>;
-}
-
-export interface MultiplayerRaceResult {
-  Server?: string;
-  Time: string | number;
-  Track: string;
-  TrackLayout?: string;
-  Sessions: RaceSession[];
-}
+export type SinglePlayerDriver = {
+  userId?: string | number;
+  UserId?: string | number;
+  userid?: string | number;
+  name: string;
+  teamId?: number;
+  teamName?: string;
+  carId?: number;
+  carName?: string;
+  classId?: number;
+  className?: string;
+  ClassId?: number;
+  ClassName?: string;
+  finishStatus?: string;
+  totalTime?: number;
+  bestLapTime?: number;
+  qualifyingTime?: number;
+  raceTimeMs?: number;
+  bestLapTimeMs?: number;
+  qualTimeMs?: number;
+  totalLaps?: number;
+  TotalLaps?: number;
+};
 
 export interface SinglePlayerRaceResult {
   header: {
@@ -52,22 +50,7 @@ export interface SinglePlayerRaceResult {
     layout?: string;
     layoutId?: number;
   };
-  drivers: Array<{
-    userId?: string | number;
-    UserId?: string | number;
-    name: string;
-    teamId?: number;
-    teamName?: string;
-    carId?: number;
-    carName?: string;
-    classId?: number;
-    className?: string;
-    finishStatus?: string;
-    totalTime?: number;
-    bestLapTime?: number;
-    qualifyingTime?: number;
-    [key: string]: any;
-  }>;
+  drivers: SinglePlayerDriver[];
 }
 
 export interface ParsedRace {
@@ -90,6 +73,18 @@ export interface StandingsConfig {
   minracetime: number; // minutes
   newdescr: string;
   forcedkey: string;
+}
+
+// Championship management types
+
+export interface ChampionshipEntry {
+  alias: string;
+  fileName: string;
+  races: number;
+  generatedAt: string;
+  carName?: string;
+  carIcon?: string;
+  raceData?: ParsedRace[]; // Store parsed races for later viewing
 }
 
 export const DEFAULT_POINTS_SYSTEM: Record<string, number[]> = {

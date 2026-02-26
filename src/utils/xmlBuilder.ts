@@ -39,11 +39,11 @@ const buildEmptyMatrix = (
   >();
 
   // Sort tracks by ID numerically to match original XML format
-  const sortedTracks = [...assets.tracksSorted].sort(
+  const sortedTracks = Object.values(assets.tracks).sort(
     (a, b) => Number.parseInt(a.id) - Number.parseInt(b.id),
   );
   // Sort classes by ID numerically to match original XML format
-  const sortedClasses = [...assets.classesSorted].sort(
+  const sortedClasses = Object.values(assets.classes).sort(
     (a, b) => Number.parseInt(a.id) - Number.parseInt(b.id),
   );
 
@@ -241,10 +241,10 @@ export const buildXML = (
   mergePlayerTimes(playerTimes, trackMap);
 
   // Sort tracks and classes by ID numerically
-  const sortedTracks = [...assets.tracksSorted].sort(
+  const sortedTracks = Object.values(assets.tracks).sort(
     (a, b) => Number.parseInt(a.id) - Number.parseInt(b.id),
   );
-  const sortedClasses = [...assets.classesSorted].sort(
+  const sortedClasses = Object.values(assets.classes).sort(
     (a, b) => Number.parseInt(a.id) - Number.parseInt(b.id),
   );
 

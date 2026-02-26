@@ -30,6 +30,7 @@ import type {
   PlayerTimes,
   ProcessedDatabase,
 } from "../types";
+import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
 import { makeTime } from "../utils/timeUtils";
@@ -595,28 +596,30 @@ const AIManagement = () => {
 
   // ============ CALCULATE AVAILABLE DATA ============
 
-  const availableClasses =
-    assets?.classesSorted.filter((classAsset) => {
-      if (!processed || Object.keys(processed.classes).length === 0) {
-        return true;
-      }
-      const classData = processed?.classes[classAsset.id];
-      const playerClass = playerTimes?.classes[classAsset.id];
-      return classData || playerClass;
-    }) || [];
+  const availableClasses = assets
+    ? getClassesSorted(assets).filter((classAsset) => {
+        if (!processed || Object.keys(processed.classes).length === 0) {
+          return true;
+        }
+        const classData = processed?.classes[classAsset.id];
+        const playerClass = playerTimes?.classes[classAsset.id];
+        return classData || playerClass;
+      })
+    : [];
 
-  const availableTracks =
-    assets?.tracksSorted.filter((trackAsset) => {
-      if (!selectedClassId) return false;
-      if (!processed || Object.keys(processed.classes).length === 0) {
-        return true;
-      }
-      const classData = processed?.classes[selectedClassId];
-      const track = classData?.tracks[trackAsset.id];
-      const playerClass = playerTimes?.classes[selectedClassId];
-      const playerTrack = playerClass?.tracks[trackAsset.id];
-      return track || playerTrack;
-    }) || [];
+  const availableTracks = assets
+    ? getTracksSorted(assets).filter((trackAsset) => {
+        if (!selectedClassId) return false;
+        if (!processed || Object.keys(processed.classes).length === 0) {
+          return true;
+        }
+        const classData = processed?.classes[selectedClassId];
+        const track = classData?.tracks[trackAsset.id];
+        const playerClass = playerTimes?.classes[selectedClassId];
+        const playerTrack = playerClass?.tracks[trackAsset.id];
+        return track || playerTrack;
+      })
+    : [];
 
   const aiLevels =
     selectedTrackId &&

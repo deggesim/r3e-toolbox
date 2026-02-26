@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import { useConfigStore } from "../store/configStore";
 import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
+import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { computeTime, makeTime } from "../utils/timeUtils";
 
 interface AIManagementGUIProps {
@@ -44,32 +45,36 @@ const AIManagementGUI = ({
 
   const availableClasses = useMemo(
     () =>
-      assets?.classesSorted.filter((classAsset) => {
-        // Show all classes if no processed data, otherwise filter by available data
-        if (!processed || Object.keys(processed.classes).length === 0) {
-          return true; // Show all classes when no AI data is loaded
-        }
-        const classData = processed?.classes[classAsset.id];
-        const playerClass = playertimes?.classes[classAsset.id];
-        return classData || playerClass;
-      }) || [],
+      assets
+        ? getClassesSorted(assets).filter((classAsset) => {
+            // Show all classes if no processed data, otherwise filter by available data
+            if (!processed || Object.keys(processed.classes).length === 0) {
+              return true; // Show all classes when no AI data is loaded
+            }
+            const classData = processed?.classes[classAsset.id];
+            const playerClass = playertimes?.classes[classAsset.id];
+            return classData || playerClass;
+          })
+        : [],
     [assets, processed, playertimes],
   );
 
   const availableTracks = useMemo(
     () =>
-      assets?.tracksSorted.filter((trackAsset) => {
-        if (!selectedClassId) return false;
-        // Show all tracks if no processed data, otherwise filter by available data
-        if (!processed || Object.keys(processed.classes).length === 0) {
-          return true; // Show all tracks when no AI data is loaded
-        }
-        const classData = processed?.classes[selectedClassId];
-        const track = classData?.tracks[trackAsset.id];
-        const playerClass = playertimes?.classes[selectedClassId];
-        const playerTrack = playerClass?.tracks[trackAsset.id];
-        return track || playerTrack;
-      }) || [],
+      assets
+        ? getTracksSorted(assets).filter((trackAsset) => {
+            if (!selectedClassId) return false;
+            // Show all tracks if no processed data, otherwise filter by available data
+            if (!processed || Object.keys(processed.classes).length === 0) {
+              return true; // Show all tracks when no AI data is loaded
+            }
+            const classData = processed?.classes[selectedClassId];
+            const track = classData?.tracks[trackAsset.id];
+            const playerClass = playertimes?.classes[selectedClassId];
+            const playerTrack = playerClass?.tracks[trackAsset.id];
+            return track || playerTrack;
+          })
+        : [],
     [assets, processed, playertimes, selectedClassId],
   );
 

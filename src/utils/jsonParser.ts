@@ -6,43 +6,26 @@ import type { RaceRoomData, Assets, TrackAsset, ClassAsset } from "../types";
  * Combines track name and layout name for readability in UI.
  */
 export const parseJson = (data: RaceRoomData): Assets => {
-  // Build classes map and list
-  const numClasses = Object.keys(data.classes).length;
+  // Build classes map
   const classes: Record<string, ClassAsset> = {};
-  const classesSorted: ClassAsset[] = [];
 
   for (const [id, cls] of Object.entries(data.classes)) {
-    const tab: ClassAsset = { name: cls.Name, id };
-    classesSorted.push(tab);
-    classes[id] = tab;
+    classes[id] = { name: cls.Name, id };
   }
 
-  // Build tracks map and list (note: each track can have multiple layouts)
+  // Build tracks map (note: each track can have multiple layouts)
   const tracks: Record<string, TrackAsset> = {};
-  const tracksSorted: TrackAsset[] = [];
-  let numTracks = 0;
 
   for (const track of Object.values(data.tracks)) {
     for (const layout of track.layouts) {
       const name = `${track.Name} - ${layout.Name}`;
       const layoutId = layout.Id.toString();
-      const tab: TrackAsset = { name, id: layoutId };
-      tracksSorted.push(tab);
-      tracks[layoutId] = tab;
-      numTracks++;
+      tracks[layoutId] = { name, id: layoutId };
     }
   }
 
-  // Sort by name alphabetically for UI display
-  classesSorted.sort((a, b) => a.name.localeCompare(b.name));
-  tracksSorted.sort((a, b) => a.name.localeCompare(b.name));
-
   return {
     classes,
-    classesSorted,
     tracks,
-    tracksSorted,
-    numClasses,
-    numTracks,
   };
 };
