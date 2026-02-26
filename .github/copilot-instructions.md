@@ -92,6 +92,18 @@ if (isElectron) {
 
 Renderer calls via IPC bridge in [electron/preload.cjs](electron/preload.cjs) with `contextIsolation` + `sandbox` enabled for security.
 
+### Auto Updates (electron-updater)
+
+Automatic updates are handled in the Electron main process with `electron-updater` (see [electron/updater.mjs](electron/updater.mjs)).
+
+- Disabled in development via `electron-is-dev`
+- Checks on startup (after 5 seconds) and every hour
+- User-driven flow: prompt to download, show progress, then prompt to install
+- Manual check wired in the Help menu (see [electron/main.mjs](electron/main.mjs))
+- Download progress is emitted on the `update-download-progress` IPC channel
+- Renderer subscribes via `window.electron.onUpdateDownloadProgress` (see [electron/preload.cjs](electron/preload.cjs))
+- UI surfaced by `useAutoUpdater` and `UpdateProgressNotification` (see [src/hooks/useAutoUpdater.ts](src/hooks/useAutoUpdater.ts) and [src/components/UpdateProgressNotification.tsx](src/components/UpdateProgressNotification.tsx))
+
 ### Statistical Fitting Logic (AI Management)
 
 **Algorithm Credits**: The fitting logic and algorithms are based on [r3e-adaptive-ai-primer](https://github.com/pixeljetstream/r3e-adaptive-ai-primer) by pixeljetstream.
@@ -231,6 +243,7 @@ No formal test suite—manual QA with real R3E files. When adding features:
 - `mathjs` (15.1): Linear regression via LU decomposition ([src/utils/fitting.ts](src/utils/fitting.ts))
 - `zustand` (5.0): State management with `persist` middleware for electron-store/localStorage
 - `electron-store` (11.0): Native persistent storage for Electron mode (via IPC bridge)
+- `electron-updater` (6.2): Auto updates for packaged Electron builds
 - `react-bootstrap` (2.10): UI components (Cards, Buttons, Forms, etc.)
 - `@fortawesome/react-fontawesome` (3.2): Solid SVG icons (solid icons library v7.1) throughout UI
 - `electron` (40.1): Desktop runtime with native file dialogs
@@ -260,4 +273,4 @@ No formal test suite—manual QA with real R3E files. When adding features:
 
 ---
 
-**Last Updated**: February 22, 2026 | **Version**: 1.3.1
+**Last Updated**: February 26, 2026 | **Version**: 1.3.2

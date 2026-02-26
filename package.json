@@ -17,20 +17,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^7.1.0",
-    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.2.0",
     "@types/react-router-dom": "^5.3.3",
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
     "electron-store": "^11.0.2",
-    "fast-xml-parser": "^5.3.3",
+    "electron-updater": "^6.8.3",
+    "fast-xml-parser": "^5.4.1",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.12.0",
+    "react-router-dom": "^7.13.1",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
@@ -38,28 +39,28 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.0",
-    "@semantic-release/npm": "^12.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.1",
+    "@semantic-release/github": "^12.0.6",
+    "@semantic-release/npm": "^13.1.4",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/electron": "^1.6.10",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "concurrently": "^9.2.1",
-    "conventional-changelog-conventionalcommits": "^8.0.0",
-    "electron": "^40.1.0",
-    "electron-builder": "^26.4.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.3.0",
     "rimraf": "^6.1.2",
-    "semantic-release": "^24.2.0",
+    "semantic-release": "^25.0.3",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4",
-    "wait-on": "^8.0.1"
+    "typescript-eslint": "^8.56.1",
+    "vite": "^7.3.1",
+    "wait-on": "^9.0.4"
   },
   "build": {
     "appId": "com.r3e-toolbox.app",
@@ -83,6 +84,11 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "deggesim",
+      "repo": "r3e-toolbox"
     }
   }
 }

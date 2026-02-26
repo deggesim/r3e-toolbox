@@ -16,6 +16,7 @@ import {
 import "./App.css";
 import FloatingProcessingLog from "./components/FloatingProcessingLog";
 import Layout from "./components/Layout";
+import { UpdateProgressNotification } from "./components/UpdateProgressNotification";
 import { useElectronAPI } from "./hooks/useElectronAPI";
 import AIManagement from "./pages/AIManagement";
 import BuildResultsDatabase from "./pages/BuildResultsDatabase";
@@ -207,6 +208,8 @@ const App = () => {
       <AppContent />
       {/* Global Processing Log */}
       <FloatingProcessingLog />
+      {/* Update Progress Notification */}
+      <UpdateProgressNotification />
     </HashRouter>
   );
 };

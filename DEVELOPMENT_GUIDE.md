@@ -74,7 +74,7 @@ Requires Vite to already be running in another terminal. Useful for:
 
 ## Project Structure Post-Update
 
-### Component Organization (v0.4.3)
+### Component Organization (v1.3.2)
 
 ```
 src/
@@ -348,4 +348,4 @@ localStorage.clear();
 
 ---
 
-**Last Updated**: February 11, 2026 (v0.4.3)
+**Last Updated**: February 26, 2026 (v1.3.2)

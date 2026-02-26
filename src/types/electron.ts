@@ -35,5 +35,11 @@ declare global {
       url: string,
     ) => Promise<{ success: boolean; error?: string }>;
     onNavigate: (callback: (path: string) => void) => () => void;
-  };
+    onUpdateDownloadProgress: (
+      callback: (data: {
+        percent: number;
+        transferred: number;
+        total: number;
+      }) => void,
+    ) => () => void;  };
 }
