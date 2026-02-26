@@ -273,4 +273,4 @@ No formal test suite—manual QA with real R3E files. When adding features:
 
 ---
 
-**Last Updated**: February 22, 2026 | **Version**: 1.3.1
+**Last Updated**: February 26, 2026 | **Version**: 1.3.2
