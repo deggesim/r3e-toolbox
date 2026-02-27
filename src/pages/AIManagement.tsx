@@ -22,14 +22,14 @@ import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useConfigStore } from "../store/configStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import { useGameDataStore } from "../store/gameDataStore";
+import type { Assets } from "../types/gameData";
 import type {
-  Assets,
   Database,
   DatabaseClass,
   DatabaseTrack,
   PlayerTimes,
   ProcessedDatabase,
-} from "../types";
+} from "../types/aiAdaptation";
 import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";

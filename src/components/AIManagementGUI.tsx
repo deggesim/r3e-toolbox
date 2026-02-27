@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Col, Form, Modal, Row, Table } from "react-bootstrap";
 import { useConfigStore } from "../store/configStore";
-import type { Assets, PlayerTimes, ProcessedDatabase } from "../types";
+import type { Assets } from "../types/gameData";
+import type { PlayerTimes, ProcessedDatabase } from "../types/aiAdaptation";
 import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { computeTime, makeTime } from "../utils/timeUtils";
 

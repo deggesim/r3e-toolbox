@@ -29,7 +29,7 @@ import Settings from "./pages/Settings";
 import { useConfigStore } from "./store/configStore";
 import { useGameDataStore } from "./store/gameDataStore";
 import { useProcessingLogStore } from "./store/processingLogStore";
-import type { RaceRoomData } from "./types";
+import type { RaceRoomData } from "./types/gameData";
 import { validateR3eData } from "./utils/r3eDataValidator";
 
 // Protected route component

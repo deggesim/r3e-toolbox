@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { RaceRoomData } from "../types";
+import type { RaceRoomData } from "../types/gameData";
 import { getStorage } from "./electronStorage";
 
 interface GameDataState {

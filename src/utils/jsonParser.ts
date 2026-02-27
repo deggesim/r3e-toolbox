@@ -1,4 +1,9 @@
-import type { RaceRoomData, Assets, TrackAsset, ClassAsset } from "../types";
+import type {
+  RaceRoomData,
+  Assets,
+  TrackAsset,
+  ClassAsset,
+} from "../types/gameData";
 
 /**
  * Parses RaceRoom's JSON database and extracts class and track information.

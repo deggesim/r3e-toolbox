@@ -5,7 +5,7 @@
  * https://github.com/pixeljetstream/r3e-adaptive-ai-primer
  */
 
-import type { Database, ProcessedDatabase } from "../types";
+import type { Database, ProcessedDatabase } from "../types/aiAdaptation";
 import { fitLinear, computeTime } from "./fitting";
 import type { Config } from "../config";
 import { useConfigStore } from "../store/configStore";

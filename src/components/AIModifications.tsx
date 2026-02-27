@@ -1,5 +1,5 @@
 import { Button, Card, Col, Row } from "react-bootstrap";
-import type { Assets } from "../types";
+import type { Assets } from "../types/gameData";
 
 interface AIModificationsProps {
   assets: Assets | null;

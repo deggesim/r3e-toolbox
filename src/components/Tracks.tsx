@@ -1,5 +1,6 @@
 import { Card, Table } from "react-bootstrap";
-import type { PlayerTimes, TrackAsset } from "../types";
+import type { PlayerTimes } from "../types/aiAdaptation";
+import type { TrackAsset } from "../types/gameData";
 import { makeTime } from "../utils/timeUtils";
 
 interface TracksProps {

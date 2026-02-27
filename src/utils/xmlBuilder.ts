@@ -1,4 +1,5 @@
-import type { Assets, Database, PlayerTimes } from "../types";
+import type { Assets } from "../types/gameData";
+import type { Database, PlayerTimes } from "../types/aiAdaptation";
 
 /**
  * Formats numbers for XML export: converts to fixed 4 decimals then removes trailing zeros.

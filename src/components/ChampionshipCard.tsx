@@ -17,7 +17,7 @@ import {
   ListGroup,
   Modal,
 } from "react-bootstrap";
-import type { ChampionshipEntry } from "../types";
+import type { ChampionshipEntry } from "../types/raceResults";
 
 interface ChampionshipCardProps {
   readonly championship: ChampionshipEntry;

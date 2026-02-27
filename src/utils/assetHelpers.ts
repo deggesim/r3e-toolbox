@@ -1,4 +1,4 @@
-import type { Assets, ClassAsset, TrackAsset } from "../types";
+import type { Assets, ClassAsset, TrackAsset } from "../types/gameData";
 
 /**
  * Get sorted array of classes from Assets, ordered alphabetically by name

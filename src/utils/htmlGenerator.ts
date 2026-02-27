@@ -5,7 +5,7 @@
  * https://github.com/pixeljetstream/r3e-open-championship
  */
 
-import type { ChampionshipEntry } from "../types";
+import type { ChampionshipEntry } from "../types/raceResults";
 import type { ParsedRace, RaceSlot } from "../types/raceResults";
 
 interface DriverStanding {

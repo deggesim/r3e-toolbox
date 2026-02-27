@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import type { Database, PlayerTimes } from "../types";
+import type { Database, PlayerTimes } from "../types/aiAdaptation";
 
 /**
  * Parses RaceRoom's aiadaptation.xml file structure.

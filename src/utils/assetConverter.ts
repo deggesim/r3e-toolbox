@@ -1,4 +1,4 @@
-import type { LeaderboardAssets } from "../types";
+import type { LeaderboardAssets } from "../types/gameData";
 
 /**
  * Converts LeaderboardAssets to HTML-friendly format with icon URL maps

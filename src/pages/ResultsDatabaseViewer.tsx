@@ -28,7 +28,7 @@ import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
-import type { ChampionshipEntry } from "../types";
+import type { ChampionshipEntry } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   downloadHTML,

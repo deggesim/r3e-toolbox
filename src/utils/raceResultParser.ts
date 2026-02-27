@@ -1,4 +1,4 @@
-import type { RaceRoomData } from "../types";
+import type { RaceRoomData } from "../types/gameData";
 import type {
   ParsedRace,
   RaceSlot,

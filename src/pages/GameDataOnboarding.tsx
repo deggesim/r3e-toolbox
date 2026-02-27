@@ -10,7 +10,7 @@ import { useState, type ChangeEvent } from "react";
 import { Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
-import type { RaceRoomData } from "../types";
+import type { RaceRoomData } from "../types/gameData";
 import { validateR3eData } from "../utils/r3eDataValidator";
 
 const GameDataOnboarding = () => {

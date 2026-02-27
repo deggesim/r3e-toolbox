@@ -1,5 +1,5 @@
 import { Card, Table } from "react-bootstrap";
-import type { ClassAsset } from "../types";
+import type { ClassAsset } from "../types/gameData";
 
 interface ClassesProps {
   availableClasses: ClassAsset[];

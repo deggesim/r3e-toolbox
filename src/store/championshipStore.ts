@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ChampionshipEntry } from "../types";
+import type { ChampionshipEntry } from "../types/raceResults";
 import { getStorage } from "./electronStorage";
 
 interface ChampionshipState {
