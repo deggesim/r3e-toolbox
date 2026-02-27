@@ -62,14 +62,6 @@ export interface RaceDatabase {
   races: ParsedRace[];
 }
 
-export interface StandingsConfig {
-  ruleset: string;
-  rulepoints: Record<string, number[]>;
-  minracetime: number; // minutes
-  newdescr: string;
-  forcedkey: string;
-}
-
 // Championship management types
 
 export interface ChampionshipEntry {

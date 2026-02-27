@@ -1,3 +1,32 @@
+// Type definitions for aiadaptation.xml structure (fast-xml-parser output)
+export interface XMLTextElement {
+  "#text"?: string;
+}
+
+export interface PlayerBestLapTimesData {
+  lapTime: XMLTextElement | string | (XMLTextElement | string)[];
+}
+
+export interface AIDataEntry {
+  averagedLapTime: XMLTextElement | string | number;
+  numberOfSampledRaces?: XMLTextElement | string | number;
+}
+
+export interface AISkillVsLapTimesData {
+  aiSkill: XMLTextElement | string | (XMLTextElement | string)[];
+  aiData: AIDataEntry | AIDataEntry[];
+}
+
+export interface SampledDataEntry {
+  playerBestLapTimes?: PlayerBestLapTimesData;
+  aiSkillVsLapTimes?: AISkillVsLapTimesData;
+}
+
+export interface TrackValueData {
+  carClassId: XMLTextElement | string | (XMLTextElement | string)[];
+  sampledData: SampledDataEntry | SampledDataEntry[];
+}
+
 // Types for aiadaptation.xml parsing and AI database
 
 export interface AITimeEntry {
