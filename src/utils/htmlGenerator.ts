@@ -5,8 +5,12 @@
  * https://github.com/pixeljetstream/r3e-open-championship
  */
 
-import type { ChampionshipEntry } from "../types/raceResults";
-import type { ParsedRace, RaceSlot } from "../types/raceResults";
+import type { RaceRoomData } from "../types/gameData";
+import type {
+  ChampionshipEntry,
+  ParsedRace,
+  RaceSlot,
+} from "../types/raceResults";
 
 interface DriverStanding {
   position: number;
@@ -343,7 +347,7 @@ export const generateStandingsHTML = (
     tracks: Record<string, string>;
     carNames?: Record<string, string>;
   },
-  gameData?: Record<string, any> | null,
+  gameData?: RaceRoomData | null,
 ): string => {
   const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
     const vehicleIdStr =

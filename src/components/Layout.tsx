@@ -37,7 +37,7 @@ const menuItems: MenuItemData[] = [
   { path: "/help", label: "Help", icon: faCircleQuestion },
 ];
 
-const Layout = ({ children }: PropsWithChildren<{}>) => {
+const Layout = ({ children }: PropsWithChildren) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);

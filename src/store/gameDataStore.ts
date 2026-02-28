@@ -22,7 +22,7 @@ export const useGameDataStore = create<GameDataState>()(
     }),
     {
       name: "r3e-toolbox-game-data-store",
-      storage: getStorage(),
+      storage: getStorage<GameDataState>(),
     },
   ),
 );

@@ -40,7 +40,7 @@ export const useLeaderboardAssetsStore = create<LeaderboardAssetsState>()(
     }),
     {
       name: "r3e-toolbox-leaderboard-assets",
-      storage: getStorage(),
+      storage: getStorage<LeaderboardAssetsState>(),
       version: 1,
       partialize: (state) =>
         ({

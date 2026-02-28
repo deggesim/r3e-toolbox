@@ -21,12 +21,10 @@ export const useConfigStore = create<ConfigState>()(
         set((state) => ({ config: { ...state.config, ...partial } })),
       resetConfig: () => set({ config: { ...CFG } }),
       initializeConfig: async () => {
-        const storage = getStorage();
+        const storage = getStorage<ConfigState>();
         const existing = await storage.getItem("r3e-toolbox-config");
         if (!existing) {
-          const initialState = { config: { ...CFG }, isInitialized: true };
-          storage.setItem("r3e-toolbox-config", initialState);
-          set(initialState);
+          set({ config: { ...CFG }, isInitialized: true });
         } else {
           set({ isInitialized: true });
         }
@@ -34,7 +32,7 @@ export const useConfigStore = create<ConfigState>()(
     }),
     {
       name: "r3e-toolbox-config",
-      storage: getStorage(),
+      storage: getStorage<ConfigState>(),
       version: 1,
     },
   ),

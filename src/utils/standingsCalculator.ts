@@ -215,7 +215,12 @@ export const getBestLapTimes = (
   // Sort by time
   bestLaps.sort((a, b) => a.seconds - b.seconds);
 
-  return bestLaps.slice(0, 20).map(({ seconds, ...rest }) => rest);
+  return bestLaps.slice(0, 20).map((entry) => ({
+    driver: entry.driver,
+    time: entry.time,
+    track: entry.track,
+    vehicle: entry.vehicle,
+  }));
 };
 
 export const getBestQualifyingTimes = (
@@ -249,7 +254,12 @@ export const getBestQualifyingTimes = (
   // Sort by time
   bestQuals.sort((a, b) => a.seconds - b.seconds);
 
-  return bestQuals.slice(0, 20).map(({ seconds, ...rest }) => rest);
+  return bestQuals.slice(0, 20).map((entry) => ({
+    driver: entry.driver,
+    time: entry.time,
+    track: entry.track,
+    vehicle: entry.vehicle,
+  }));
 };
 
 /**

@@ -5,7 +5,11 @@
  * https://github.com/pixeljetstream/r3e-adaptive-ai-primer
  */
 
-import type { Database, ProcessedDatabase } from "../types/aiAdaptation";
+import type {
+  Database,
+  DatabaseTrack,
+  ProcessedDatabase,
+} from "../types/aiAdaptation";
 import { fitLinear, computeTime } from "./fitting";
 import type { Config } from "../config";
 import { useConfigStore } from "../store/configStore";
@@ -19,12 +23,18 @@ import { useConfigStore } from "../store/configStore";
 const trackGenerator = (
   _classid: string,
   _trackid: string,
-  track: any,
+  track: DatabaseTrack,
   config: Config,
 ): ((t: number) => number) | undefined => {
-  // Validate: need at least testMinAIdiffs difference between min and max AI levels
-  if (!track.maxAI || track.maxAI - track.minAI < config.testMinAIdiffs)
+  const minAI = track.minAI;
+  const maxAI = track.maxAI;
+
+  if (minAI === undefined || maxAI === undefined) {
     return undefined;
+  }
+
+  // Validate: need at least testMinAIdiffs difference between min and max AI levels
+  if (maxAI - minAI < config.testMinAIdiffs) return undefined;
 
   // Prepare data for linear regression: x = AI levels, y = lap times
   const x: number[] = [];
@@ -33,7 +43,7 @@ const trackGenerator = (
   // Collect data points: either all individual lap times or averaged times per AI level
   if (config.fitAll) {
     // Use all individual lap times for fitting
-    for (let i = track.minAI; i <= track.maxAI; i++) {
+    for (let i = minAI; i <= maxAI; i++) {
       const times = track.ailevels[i] || [];
       for (const time of times) {
         x.push(i);
@@ -42,7 +52,7 @@ const trackGenerator = (
     }
   } else {
     // Use averaged lap time per AI level
-    for (let i = track.minAI; i <= track.maxAI; i++) {
+    for (let i = minAI; i <= maxAI; i++) {
       const { num, avg: time } = computeTime(track.ailevels[i] || []);
       if (num > 0) {
         x.push(i);
@@ -59,7 +69,7 @@ const trackGenerator = (
   const generator = (t: number) => a + b * t + (c || 0) * (t * t);
 
   // Validate fit quality: check that predicted times deviate by less than testMaxTimePct from actual data
-  const { avg: minTime } = computeTime(track.ailevels[track.minAI] || []);
+  const { avg: minTime } = computeTime(track.ailevels[minAI] || []);
   const threshold = minTime * config.testMaxTimePct;
 
   let tested = 0;
@@ -67,7 +77,7 @@ const trackGenerator = (
 
   if (config.fitAll) {
     let lasttime: number | undefined;
-    for (let i = track.minAI; i <= track.maxAI; i++) {
+    for (let i = minAI; i <= maxAI; i++) {
       const base = generator(i);
       const { num, avg: time } = computeTime(track.ailevels[i] || []);
       if (num > 0) {
@@ -85,7 +95,7 @@ const trackGenerator = (
     }
   } else {
     let lasttime: number | undefined;
-    for (let i = track.minAI; i <= track.maxAI; i++) {
+    for (let i = minAI; i <= maxAI; i++) {
       const base = generator(i);
       const times = track.ailevels[i] || [];
       for (const time of times) {

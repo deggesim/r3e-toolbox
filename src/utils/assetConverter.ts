@@ -29,7 +29,11 @@ export const convertAssetsForHTML = (
     tracksMap[t.id] = t.iconUrl || "";
   });
 
-  const result: any = { cars: carsMap, tracks: tracksMap };
+  const result: {
+    cars: Record<string, string>;
+    tracks: Record<string, string>;
+    carNames?: Record<string, string>;
+  } = { cars: carsMap, tracks: tracksMap };
   if (includeCarNames) {
     result.carNames = carNamesMap;
   }

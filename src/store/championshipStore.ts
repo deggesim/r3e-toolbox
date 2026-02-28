@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, type PersistStorage } from "zustand/middleware";
 import type { ChampionshipEntry } from "../types/raceResults";
 import { getStorage } from "./electronStorage";
 
@@ -88,7 +88,7 @@ export const useChampionshipStore = create<ChampionshipState>()(
     }),
     {
       name: "r3e-toolbox-championships",
-      storage: getStorage(),
+      storage: getStorage() as PersistStorage<ChampionshipState>,
     },
   ),
 );

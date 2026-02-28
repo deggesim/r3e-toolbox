@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Container } from "react-bootstrap";
 import ReactMarkdown from "react-markdown";
 import { useElectronAPI } from "../hooks/useElectronAPI";
@@ -12,31 +12,31 @@ import { VERSION, LAST_UPDATED } from "virtual:build-info";
 const Help = () => {
   const { isElectron, openExternal } = useElectronAPI();
 
-  const handleLinkClick = async (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href?: string,
-  ) => {
-    if (!href) return;
+  const handleLinkClick = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
+      if (!href) return;
 
-    // Check if it's an external URL
-    if (href.startsWith("http://") || href.startsWith("https://")) {
-      e.preventDefault();
+      // Check if it's an external URL
+      if (href.startsWith("http://") || href.startsWith("https://")) {
+        e.preventDefault();
 
-      if (isElectron && openExternal) {
-        // In Electron, open in system browser
-        try {
-          await openExternal(href);
-        } catch (error) {
-          console.error("Failed to open external link:", error);
-          // Fallback to window.open
+        if (isElectron && openExternal) {
+          // In Electron, open in system browser
+          try {
+            await openExternal(href);
+          } catch (error) {
+            console.error("Failed to open external link:", error);
+            // Fallback to window.open
+            window.open(href, "_blank");
+          }
+        } else {
+          // In web mode, open in new tab
           window.open(href, "_blank");
         }
-      } else {
-        // In web mode, open in new tab
-        window.open(href, "_blank");
       }
-    }
-  };
+    },
+    [isElectron, openExternal],
+  );
 
   // Replace placeholders with build info from package.json
   // Version and last updated are injected at build time
@@ -88,7 +88,7 @@ const Help = () => {
         />
       ),
     }),
-    [isElectron, openExternal],
+    [handleLinkClick],
   );
 
   return (

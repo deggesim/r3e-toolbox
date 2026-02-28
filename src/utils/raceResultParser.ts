@@ -1,9 +1,9 @@
 import type { RaceRoomData } from "../types/gameData";
 import type {
   ParsedRace,
-  RaceSlot,
-  Driver,
   RaceResult,
+  RaceResultDriver,
+  RaceSlot,
 } from "../types/raceResults";
 
 interface TrackInfo {
@@ -23,6 +23,41 @@ const formatTime = (seconds: number): string => {
 
 const millisecondsToTime = (ms: number): string => {
   return formatTime(ms / 1000);
+};
+
+const resolveRaceTimeMs = (driver: RaceResultDriver): number | undefined => {
+  if (typeof driver.raceTimeMs === "number" && driver.raceTimeMs > 0) {
+    return driver.raceTimeMs;
+  }
+
+  if (!Array.isArray(driver.laps) || driver.laps.length === 0) {
+    return undefined;
+  }
+
+  const validLapTimes = driver.laps
+    .map((lap) => lap.lapTimeMs)
+    .filter((lapTimeMs) => Number.isFinite(lapTimeMs) && lapTimeMs > 0);
+
+  if (validLapTimes.length === 0) {
+    return undefined;
+  }
+
+  return validLapTimes.reduce((total, lapTimeMs) => total + lapTimeMs, 0);
+};
+
+const resolveFinishStatus = (driver: RaceResultDriver): string => {
+  const lapsInArray = Array.isArray(driver.laps) ? driver.laps.length : 0;
+  const hasCompletedLaps = (driver.totalLaps ?? 0) > 0 || lapsInArray > 0;
+
+  if (!hasCompletedLaps) {
+    return "DNS";
+  }
+
+  if (typeof driver.place === "number" && driver.place > 0) {
+    return "Finished";
+  }
+
+  return "DNF";
 };
 
 const resolveClassInfo = (
@@ -88,22 +123,24 @@ const findTrack = (
 };
 
 const buildSinglePlayerRaceSlot = (
-  driver: Driver,
+  driver: RaceResultDriver,
   gameData: RaceRoomData,
 ): RaceSlot => {
-  const totalTime = driver.raceTimeMs
-    ? millisecondsToTime(driver.raceTimeMs)
-    : undefined;
-  const bestLap = driver.bestLapTimeMs
-    ? millisecondsToTime(driver.bestLapTimeMs)
-    : undefined;
-  const qualTime = driver.qualTimeMs
-    ? millisecondsToTime(driver.qualTimeMs)
-    : undefined;
+  const raceTimeMs = resolveRaceTimeMs(driver);
+  const totalTime = raceTimeMs ? millisecondsToTime(raceTimeMs) : undefined;
+  const bestLap =
+    typeof driver.bestLapTimeMs === "number" && driver.bestLapTimeMs > 0
+      ? millisecondsToTime(driver.bestLapTimeMs)
+      : undefined;
+  const qualTime =
+    typeof driver.qualTimeMs === "number" && driver.qualTimeMs > 0
+      ? millisecondsToTime(driver.qualTimeMs)
+      : undefined;
+  const finishStatus = resolveFinishStatus(driver);
 
   // Resolve team name from teamId if available
-  let teamName = driver.teamName || "";
-  if (!teamName && driver.teamId && gameData.teams) {
+  let teamName = "";
+  if (driver.teamId && gameData.teams) {
     const team = gameData.teams[String(driver.teamId)];
     teamName = team?.Name || "";
   }
@@ -115,7 +152,6 @@ const buildSinglePlayerRaceSlot = (
   const vehicleId = driver.carId || undefined;
   const { classId, className } = resolveClassInfo(vehicleId, gameData);
   const vehicleName =
-    driver.carName ||
     resolveVehicleName(vehicleId, gameData) ||
     (vehicleId ? String(vehicleId) : "");
 
@@ -136,14 +172,15 @@ const buildSinglePlayerRaceSlot = (
     vehicle: vehicleName,
     vehicleId: vehicleId,
     userId: Number.isFinite(userId) ? userId : undefined,
-    className: driver.className || className,
-    classId: driver.classId ?? classId,
+    className: className,
+    classId: classId,
     team: teamName,
     finishTime: totalTime,
     totalTime: totalTime,
     bestLap: bestLap,
     qualTime: qualTime,
-    finishStatus: driver.finishStatus,
+    finishStatus,
+    position: driver.place,
     totalLaps: driver.totalLaps ?? undefined,
   };
 };
