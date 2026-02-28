@@ -1,0 +1,236 @@
+{
+  "agents": {
+    "data-integrity": {
+      "enabled": true,
+      "priority": "high",
+      "runOn": ["pre-import", "pr"],
+      "description": "Schema validation, unit consistency, anomaly detection",
+      "timeout": 30000,
+      "defaultParams": {
+        "filePaths": [],
+        "schemaVersion": "r3e-v1",
+        "strictMode": false
+      },
+      "blockingThreshold": "critical"
+    },
+    "parser-resilience": {
+      "enabled": true,
+      "priority": "high",
+      "runOn": ["pr", "post-commit-parsers"],
+      "description": "Regression testing, edge case validation, performance checks",
+      "timeout": 60000,
+      "defaultParams": {
+        "parserModules": ["xmlParser.ts", "jsonParser.ts"],
+        "testDataPath": "test-fixtures/",
+        "edgeCasesEnabled": true,
+        "regressionDataset": null
+      },
+      "blockingThreshold": "fail"
+    },
+    "fitting-qa": {
+      "enabled": true,
+      "priority": "medium",
+      "runOn": ["nightly", "post-release"],
+      "description": "Monotonicity, regression quality, parameter audit with historical data",
+      "timeout": 120000,
+      "defaultParams": {
+        "aiadaptationXml": "aiadaptation.xml",
+        "fittingParams": {
+          "testMinAIdiffs": 5,
+          "testMaxTimePct": 0.1,
+          "testMaxFailsPct": 0.05
+        },
+        "historicalDataset": null,
+        "strictMode": false
+      },
+      "blockingThreshold": "fail"
+    },
+    "results-consistency": {
+      "enabled": true,
+      "priority": "medium",
+      "runOn": ["pre-championship-build", "diagnostic"],
+      "description": "Session matching, qualy patch validation, data quality scoring",
+      "timeout": 60000,
+      "defaultParams": {
+        "resultsPath": "UserData/Log/Results/",
+        "sessionPattern": "*",
+        "validateQualyPatch": true,
+        "strictMatching": false
+      },
+      "blockingThreshold": "warning"
+    },
+    "electron-ipc": {
+      "enabled": true,
+      "priority": "medium",
+      "runOn": ["pre-release", "post-electron-change"],
+      "description": "IPC audit, serialization, storage quota, race condition detection",
+      "timeout": 45000,
+      "defaultParams": {
+        "electronMainPath": "electron/main.mjs",
+        "preloadPath": "electron/preload.cjs",
+        "storeModulesPath": "src/store/",
+        "checkStorageSize": true
+      },
+      "blockingThreshold": "critical"
+    },
+    "ui-regression": {
+      "enabled": true,
+      "priority": "high",
+      "runOn": ["pre-release", "post-ui-change"],
+      "description": "Layout smoke tests, critical flow validation, console health",
+      "timeout": 120000,
+      "defaultParams": {
+        "baseUrl": "http://localhost:5173",
+        "screenshotPath": "ui-screenshots/",
+        "responsiveSizes": [320, 768, 1920],
+        "criticalFlows": ["import_ai_xml", "build_championship", "export_html"]
+      },
+      "blockingThreshold": "fail"
+    },
+    "release": {
+      "enabled": true,
+      "priority": "high",
+      "runOn": ["manual-pre-release"],
+      "description": "Version check, build validation, updater configuration, changelog quality",
+      "timeout": 180000,
+      "defaultParams": {
+        "releaseVersion": null,
+        "changelogPath": "CHANGELOG.md",
+        "packageJsonPath": "package.json",
+        "electronBuilderConfig": "electron-builder.json",
+        "publishTarget": "draft"
+      },
+      "blockingThreshold": "critical"
+    },
+    "docs-drift": {
+      "enabled": true,
+      "priority": "low",
+      "runOn": ["weekly", "post-breaking-change"],
+      "description": "Documentation vs implementation alignment check",
+      "timeout": 45000,
+      "defaultParams": {
+        "docsPath": "docs/",
+        "implementationPath": "src/",
+        "checkPaths": [
+          "README.md",
+          "DEVELOPMENT_GUIDE.md",
+          "AGENTS.md",
+          "docs/USER_GUIDE.md"
+        ],
+        "criticalSections": [
+          "Prerequisites",
+          "Run Dev Environment",
+          "File Locations"
+        ]
+      },
+      "blockingThreshold": "warning"
+    }
+  },
+  "workflows": {
+    "pull-request": {
+      "agents": ["data-integrity", "parser-resilience", "ui-regression"],
+      "failFast": true,
+      "minScore": 85
+    },
+    "pr": {
+      "agents": ["data-integrity", "parser-resilience", "ui-regression"],
+      "failFast": true,
+      "minScore": 85
+    },
+    "nightly": {
+      "agents": ["fitting-qa", "results-consistency"],
+      "failFast": false,
+      "minScore": 0,
+      "schedule": "0 2 * * *"
+    },
+    "weekly": {
+      "agents": ["electron-ipc", "docs-drift"],
+      "failFast": false,
+      "minScore": 0,
+      "schedule": "0 2 * * MON"
+    },
+    "pre-release": {
+      "agents": [
+        "data-integrity",
+        "parser-resilience",
+        "fitting-qa",
+        "results-consistency",
+        "electron-ipc",
+        "ui-regression",
+        "release",
+        "docs-drift"
+      ],
+      "failFast": true,
+      "minScore": 90,
+      "manual": true
+    },
+    "full-suite": {
+      "agents": [
+        "data-integrity",
+        "parser-resilience",
+        "fitting-qa",
+        "results-consistency",
+        "electron-ipc",
+        "ui-regression",
+        "release",
+        "docs-drift"
+      ],
+      "failFast": false,
+      "minScore": 85
+    }
+  },
+  "severityMap": {
+    "data-integrity": {
+      "critical": { "action": "block_import", "notify": true },
+      "warning": { "action": "log", "notify": false },
+      "info": { "action": "silent", "notify": false }
+    },
+    "parser-resilience": {
+      "fail": { "action": "block_merge", "notify": true },
+      "degrade": { "action": "manual_review", "notify": true },
+      "pass": { "action": "proceed", "notify": false }
+    },
+    "fitting-qa": {
+      "fail": { "action": "block_release", "notify": true },
+      "warning": { "action": "monitor", "notify": true },
+      "pass": { "action": "proceed", "notify": false }
+    },
+    "results-consistency": {
+      "error": { "action": "warn_user", "notify": true },
+      "warning": { "action": "log", "notify": false },
+      "info": { "action": "silent", "notify": false }
+    },
+    "electron-ipc": {
+      "critical": { "action": "block_release", "notify": true },
+      "warning": { "action": "review_required", "notify": true },
+      "secure": { "action": "proceed", "notify": false }
+    },
+    "ui-regression": {
+      "fail": { "action": "block_merge", "notify": true },
+      "warning": { "action": "manual_check", "notify": true },
+      "pass": { "action": "proceed", "notify": false }
+    },
+    "release": {
+      "blocked": { "action": "fix_and_retry", "notify": true },
+      "review_needed": { "action": "manual_approval", "notify": true },
+      "ready": { "action": "publish", "notify": false }
+    },
+    "docs-drift": {
+      "major_drift": { "action": "create_issue", "notify": true },
+      "minor_drift": { "action": "log", "notify": false },
+      "aligned": { "action": "proceed", "notify": false }
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "channels": ["console", "github-pr-comment"],
+    "failureThreshold": "warning"
+  },
+  "reporting": {
+    "outputFormat": "json",
+    "summaryReport": true,
+    "detailedReport": false,
+    "storeInHistory": true,
+    "historyPath": ".agent-reports/"
+  }
+}

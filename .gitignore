@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated agent reports (runtime artifacts)
+.agent-reports/
+
 # RaceRoom data files
 r3e-data.json
 
