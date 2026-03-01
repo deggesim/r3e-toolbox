@@ -140,8 +140,8 @@ Attendi che tutti gli agenti passino ✓. Se qualche agente blocca:
 - **Setup & Maintenance**: [`AGENT_SETUP_MAINTENANCE.md`](AGENT_SETUP_MAINTENANCE.md)
 - **Implementation Guide**: [`AGENT_IMPLEMENTATION_GUIDE.md`](AGENT_IMPLEMENTATION_GUIDE.md)
 - **Detailed Agent Specs**: [`AGENTS.md`](AGENTS.md)
-- **npm Scripts**: [`agents/NPM_SCRIPTS.md`](agents/NPM_SCRIPTS.md)
-- **CI/CD Config**: [`.github/workflows/agent-qa-suite.yml`](.github/workflows/agent-qa-suite.yml)
+- **npm Scripts**: [`../NPM_SCRIPTS.md`](../NPM_SCRIPTS.md)
+- **CI/CD Config**: [`../../.github/workflows/agent-qa-suite.yml`](../../.github/workflows/agent-qa-suite.yml)
 
 ---
 

@@ -20,8 +20,8 @@ Azioni concrete per attivare gli agenti nel progetto.
 - ✓ `AGENT_SETUP_MAINTENANCE.md` — Maintenance checklist
 - ✓ `QA_AGENTS_QUICK_REFERENCE.md` — Quick summary
 - ✓ `QA_AGENTS_ARCHITECTURE.md` — System design
-- ✓ `agents/NPM_SCRIPTS.md` — npm shortcuts
-- ✓ `NEXT_STEPS.md` — This file
+- ✓ `../NPM_SCRIPTS.md` — npm shortcuts
+- ✓ `AGENT_NEXT_STEPS.md` — This file
 
 ---
 
@@ -109,8 +109,8 @@ npm run agent:workflow:pr
 
 ```bash
 git add agents/
+git add agents/docs/
 git add .github/workflows/agent-qa-suite.yml
-git add *.md
 
 git commit -m "feat: Add specialized QA agents (Data Integrity, Parser Resilience, Fitting QA, Results Consistency, Electron IPC, UI Regression, Release, Docs Drift)"
 

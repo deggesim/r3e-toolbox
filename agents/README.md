@@ -52,12 +52,14 @@ npm run agent:data-integrity
 
 ## 📖 Documenti Correlati
 
-**In workspace root:**
+**In agents/docs:**
 
-- `AGENTS.md` — Detailed specs per cada agente
-- `AGENT_IMPLEMENTATION_GUIDE.md` — Practical usage per devs
-- `AGENT_SETUP_MAINTENANCE.md` — Setup & maintenance checklists
-- `QA_AGENTS_QUICK_REFERENCE.md` — Quick summary
+- `docs/AGENTS.md` — Detailed specs per cada agente
+- `docs/AGENT_IMPLEMENTATION_GUIDE.md` — Practical usage per devs
+- `docs/AGENT_SETUP_MAINTENANCE.md` — Setup & maintenance checklists
+- `docs/QA_AGENTS_QUICK_REFERENCE.md` — Quick summary
+- `docs/QA_AGENTS_ARCHITECTURE.md` — System design
+- `docs/AGENT_NEXT_STEPS.md` — Next steps
 
 **In .github/workflows/:**
 

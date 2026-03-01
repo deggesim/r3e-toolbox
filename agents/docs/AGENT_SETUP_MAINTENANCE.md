@@ -254,7 +254,7 @@ Keep these docs updated:
 
 - [ ] `AGENTS.md` — Agent specs & prompts (reference)
 - [ ] `AGENT_IMPLEMENTATION_GUIDE.md` — Practical usage (for devs)
-- [ ] `agents/NPM_SCRIPTS.md` — npm run shortcuts (copy to wiki)
+- [ ] `../NPM_SCRIPTS.md` — npm run shortcuts (copy to wiki)
 - [ ] `README.md` — Link to "QA" section in setup
 
 **Update trigger**: Whenever agent config changes or new agent added
@@ -314,9 +314,9 @@ find .agent-reports/ -type f -mtime +30 -delete
 
 ## ✅ Sign-Off
 
-**Setup completed by**: ******\_\_\_\_******  
-**Date**: ******\_\_\_\_******  
-**Team reviewed**: ******\_\_\_\_******
+**Setup completed by**: **\*\***\_\_\_\_**\*\***  
+**Date**: **\*\***\_\_\_\_**\*\***  
+**Team reviewed**: **\*\***\_\_\_\_**\*\***
 
 ---
 

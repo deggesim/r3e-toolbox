@@ -195,6 +195,15 @@ Start the development server:
 npm run dev
 ```
 
+## QA Agents
+
+All agent documentation now lives under [agents/docs/](agents/docs/).
+
+- [Quick reference](agents/docs/QA_AGENTS_QUICK_REFERENCE.md)
+- [Setup & maintenance](agents/docs/AGENT_SETUP_MAINTENANCE.md)
+- [Implementation guide](agents/docs/AGENT_IMPLEMENTATION_GUIDE.md)
+- [Full specs](agents/docs/AGENTS.md)
+
 This starts Vite **and** Electron together. For web-only development, run:
 
 ```bash

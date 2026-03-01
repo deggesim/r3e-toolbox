@@ -17,6 +17,12 @@
 
 Every time you want to release a new version:
 
+Before publishing, run the QA agent suite:
+
+```bash
+npm run agent:workflow:pre-release --releaseVersion="x.y.z"
+```
+
 ### 1. Update the version in package.json
 
 ```bash

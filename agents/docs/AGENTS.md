@@ -591,7 +591,12 @@ Output JSON:
   "checkPaths": [
     "README.md",
     "DEVELOPMENT_GUIDE.md",
-    "AGENTS.md",
+    "agents/docs/AGENTS.md",
+    "agents/docs/AGENT_IMPLEMENTATION_GUIDE.md",
+    "agents/docs/AGENT_SETUP_MAINTENANCE.md",
+    "agents/docs/QA_AGENTS_QUICK_REFERENCE.md",
+    "agents/docs/QA_AGENTS_ARCHITECTURE.md",
+    "agents/docs/AGENT_NEXT_STEPS.md",
     "docs/USER_GUIDE.md"
   ],
   "criticalSections": ["Prerequisites", "Run Dev Environment", "File Locations"]
@@ -658,7 +663,7 @@ Output JSON:
   },
   "todoItems": [
     {
-      "docFile": "AGENTS.md",
+      "docFile": "agents/docs/AGENTS.md",
       "todo": "[TODO] integrate CI workflow template",
       "daysOld": 45,
       "severity": "info"

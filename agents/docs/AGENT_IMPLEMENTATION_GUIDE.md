@@ -377,9 +377,9 @@ ipcMain.handle("store:get", async (event, key) => {
 ## 📚 Further Reading
 
 - [AGENTS.md](AGENTS.md) - Detailed agent specs & prompt templates
-- [agents/config.json](agents/config.json) - Full configuration reference
-- [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Dev environment setup
-- [ELECTRON.md](ELECTRON.md) - Electron-specific QA notes
+- [../config.json](../config.json) - Full configuration reference
+- [../../DEVELOPMENT_GUIDE.md](../../DEVELOPMENT_GUIDE.md) - Dev environment setup
+- [../../ELECTRON.md](../../ELECTRON.md) - Electron-specific QA notes
 
 ---
 
