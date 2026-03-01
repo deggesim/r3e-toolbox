@@ -146,8 +146,8 @@ const createMenu = () => {
         { type: "separator" },
         {
           label: "Check for Updates",
-          click: () => {
-            manualCheckForUpdates(mainWindow);
+          click: async () => {
+            await manualCheckForUpdates(mainWindow);
           },
         },
         { type: "separator" },
@@ -181,7 +181,9 @@ const createMenu = () => {
 app.on("ready", () => {
   createWindow();
   createMenu();
-  initAutoUpdater(mainWindow);
+  initAutoUpdater(mainWindow).catch((error) => {
+    console.error("[main] Error initializing auto-updater:", error);
+  });
 });
 
 app.on("window-all-closed", () => {

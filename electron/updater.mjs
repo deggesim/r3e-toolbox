@@ -1,44 +1,55 @@
-import autoUpdater from "electron-updater";
 import { dialog } from "electron";
 import isDev from "electron-is-dev";
 
 let updateCheckInProgress = false;
+let autoUpdater = null;
 
-export const initAutoUpdater = (mainWindow) => {
+// Lazy load autoUpdater at runtime to avoid bundling issues with electron-builder
+const getAutoUpdater = async () => {
+  if (autoUpdater === null) {
+    const module = await import("electron-updater");
+    autoUpdater = module.autoUpdater;
+  }
+  return autoUpdater;
+};
+
+export const initAutoUpdater = async (mainWindow) => {
   if (isDev) {
     console.log("[Updater] Running in development mode, auto-updater disabled");
     return;
   }
 
+  const updater = await getAutoUpdater();
+
   // Configure electron-updater
-  autoUpdater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
-  autoUpdater.autoDownload = false; // Download only when user agrees
+  updater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
+  updater.autoDownload = false; // Download only when user agrees
 
   // Check for updates on startup (after 5 seconds)
   setTimeout(() => {
-    checkForUpdates(mainWindow);
+    checkForUpdates(mainWindow, updater);
   }, 5000);
 
   // Check for updates every hour
   setInterval(() => {
-    checkForUpdates(mainWindow);
+    checkForUpdates(mainWindow, updater);
   }, 3600000); // 1 hour
 
   // Handle update events
-  autoUpdater.on("update-available", (info) => {
+  updater.on("update-available", (info) => {
     console.log("[Updater] Update available:", info.version);
-    showUpdateDialog(mainWindow, info);
+    showUpdateDialog(mainWindow, info, updater);
   });
 
-  autoUpdater.on("update-not-available", () => {
+  updater.on("update-not-available", () => {
     console.log("[Updater] Already on latest version");
   });
 
-  autoUpdater.on("error", (error) => {
+  updater.on("error", (error) => {
     console.error("[Updater] Update check error:", error);
   });
 
-  autoUpdater.on("download-progress", (progressObj) => {
+  updater.on("download-progress", (progressObj) => {
     const percent = Math.round(progressObj.percent);
     console.log(`[Updater] Download progress: ${percent}%`);
     mainWindow.webContents.send("update-download-progress", {
@@ -48,13 +59,13 @@ export const initAutoUpdater = (mainWindow) => {
     });
   });
 
-  autoUpdater.on("update-downloaded", () => {
+  updater.on("update-downloaded", () => {
     console.log("[Updater] Update downloaded successfully");
-    showInstallDialog(mainWindow);
+    showInstallDialog(mainWindow, updater);
   });
 };
 
-const checkForUpdates = (mainWindow) => {
+const checkForUpdates = async (mainWindow, updater) => {
   if (updateCheckInProgress) {
     console.log("[Updater] Check already in progress, skipping");
     return;
@@ -63,7 +74,7 @@ const checkForUpdates = (mainWindow) => {
   updateCheckInProgress = true;
   console.log("[Updater] Checking for updates...");
 
-  autoUpdater
+  updater
     .checkForUpdates()
     .catch((error) => {
       console.error("[Updater] Check for updates failed:", error.message);
@@ -73,8 +84,8 @@ const checkForUpdates = (mainWindow) => {
     });
 };
 
-const showUpdateDialog = (mainWindow, updateInfo) => {
-  const currentVersion = autoUpdater.currentVersion.version;
+const showUpdateDialog = (mainWindow, updateInfo, updater) => {
+  const currentVersion = updater.currentVersion.version;
   const newVersion = updateInfo.version;
 
   dialog
@@ -91,7 +102,7 @@ const showUpdateDialog = (mainWindow, updateInfo) => {
       if (result.response === 0) {
         // Download the update
         console.log("[Updater] User agreed to download update");
-        autoUpdater.downloadUpdate();
+        updater.downloadUpdate();
       } else if (result.response === 2) {
         // Skip this version
         console.log("[Updater] User skipped this version");
@@ -104,7 +115,7 @@ const showUpdateDialog = (mainWindow, updateInfo) => {
     });
 };
 
-const showInstallDialog = (mainWindow) => {
+const showInstallDialog = (mainWindow, updater) => {
   dialog
     .showMessageBox(mainWindow, {
       type: "info",
@@ -119,7 +130,7 @@ const showInstallDialog = (mainWindow) => {
       if (result.response === 0) {
         // Install and restart immediately
         console.log("[Updater] Installing update now");
-        autoUpdater.quitAndInstall(false, true);
+        updater.quitAndInstall(false, true);
       } else {
         // Install on next startup
         console.log("[Updater] Update will be installed on next startup");
@@ -131,6 +142,7 @@ const showInstallDialog = (mainWindow) => {
 };
 
 // Manual check trigger (can be called from UI)
-export const manualCheckForUpdates = (mainWindow) => {
-  checkForUpdates(mainWindow);
+export const manualCheckForUpdates = async (mainWindow) => {
+  const updater = await getAutoUpdater();
+  checkForUpdates(mainWindow, updater);
 };
