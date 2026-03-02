@@ -415,4 +415,4 @@ If the structure of `RaceRoomData` changes:
 
 ---
 
-**Last Updated:** February 22, 2026 | **Version:** 1.3.1
+**Last Updated:** February 26, 2026 | **Version:** 1.3.2

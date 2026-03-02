@@ -5,27 +5,19 @@ import { getStorage } from "./electronStorage";
 
 interface GameDataState {
   gameData: RaceRoomData | null;
-  isLoaded: boolean;
-  forceOnboarding: boolean;
   setGameData: (data: RaceRoomData) => void;
   clearGameData: () => void;
-  setForceOnboarding: (value: boolean) => void;
 }
 
 export const useGameDataStore = create<GameDataState>()(
   persist(
     (set) => ({
       gameData: null,
-      isLoaded: false,
-      forceOnboarding: false,
       setGameData: (data: RaceRoomData) => {
-        set({ gameData: data, isLoaded: true });
+        set({ gameData: data });
       },
       clearGameData: () => {
-        set({ gameData: null, isLoaded: false });
-      },
-      setForceOnboarding: (value: boolean) => {
-        set({ forceOnboarding: value });
+        set({ gameData: null });
       },
     }),
     {

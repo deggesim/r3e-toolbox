@@ -1,19 +1,19 @@
-import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
-import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { faCheck } from "@fortawesome/free-solid-svg-icons/faCheck";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
+import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import type { Config } from "../config";
 import { CFG } from "../config";
+import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useConfigStore } from "../store/configStore";
 import { useGameDataStore } from "../store/gameDataStore";
-import { useElectronAPI } from "../hooks/useElectronAPI";
-import { useProcessingLog } from "../hooks/useProcessingLog";
-import { validateR3eData } from "../utils/r3eDataValidator";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import type { RaceRoomData } from "../types";
+import { validateR3eData } from "../utils/r3eDataValidator";
 
 type NumericConfigKey = {
   [K in keyof Config]: Config[K] extends number ? K : never;
@@ -78,27 +78,15 @@ const numberFields: NumberField[] = [
 ];
 
 const Settings = () => {
+  const navigate = useNavigate();
   const electron = useElectronAPI();
   const { config, setConfig, resetConfig } = useConfigStore();
-  const forceOnboarding = useGameDataStore((state) => state.forceOnboarding);
-  const setForceOnboarding = useGameDataStore(
-    (state) => state.setForceOnboarding,
-  );
   const clearGameData = useGameDataStore((state) => state.clearGameData);
   const setGameData = useGameDataStore((state) => state.setGameData);
-  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
-    useProcessingLog();
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   const [localConfig, setLocalConfig] = useState<Config>(config);
   const [isReloading, setIsReloading] = useState(false);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
 
   const handleNumberChange = (key: NumericConfigKey, value: number) => {
     if (Number.isFinite(value)) {
@@ -107,7 +95,12 @@ const Settings = () => {
   };
 
   const handleBooleanChange = (key: BooleanConfigKey, value: boolean) => {
-    setLocalConfig({ ...localConfig, [key]: value });
+    const newConfig = { ...localConfig, [key]: value };
+    // If showLogs is disabled, also disable autoOpenLogs
+    if (key === "showLogs" && !value && newConfig.autoOpenLogs) {
+      newConfig.autoOpenLogs = false;
+    }
+    setLocalConfig(newConfig);
   };
 
   const handleSaveConfig = () => {
@@ -159,14 +152,26 @@ const Settings = () => {
           validation.errors.forEach((error) => {
             addLog("error", error);
           });
+          // Navigate to onboarding when validation fails
+          addLog("error", "Redirecting to onboarding to reload game data...");
+          clearGameData();
+          setTimeout(() => navigate("/"), 2000);
         }
       } else {
         const errorMsg = result.error || "Failed to find r3e-data.json";
         addLog("error", errorMsg);
+        // Navigate to onboarding when file not found
+        addLog("error", "Redirecting to onboarding to reload game data...");
+        clearGameData();
+        setTimeout(() => navigate("/"), 2000);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       addLog("error", `Failed to reload game data: ${message}`);
+      // Navigate to onboarding when exception occurs
+      addLog("error", "Redirecting to onboarding to reload game data...");
+      clearGameData();
+      setTimeout(() => navigate("/"), 2000);
     } finally {
       setIsReloading(false);
     }
@@ -180,9 +185,30 @@ const Settings = () => {
         helper:
           "If enabled, use every lap time instead of the average per AI level when fitting.",
       },
+      {
+        key: "showLogs" as BooleanConfigKey,
+        label: "Show logs panel",
+        helper:
+          "Display the processing logs panel. Disable to hide it completely.",
+      },
+      {
+        key: "autoOpenLogs" as BooleanConfigKey,
+        label: "Auto-open logs panel",
+        helper:
+          "Automatically expand the logs panel when new messages are added.",
+      },
     ],
     [],
   );
+
+  const handleClearGameDataWeb = () => {
+    addLog(
+      "warning",
+      "Game data cleared. Redirecting to manual file selection...",
+      faExclamationTriangle,
+    );
+    clearGameData();
+  };
 
   return (
     <Container className="py-4">
@@ -229,52 +255,41 @@ const Settings = () => {
               </Col>
             ))}
 
-            {booleanFields.map((field) => (
-              <Col md={6} key={field.key}>
-                <Form.Group className="d-flex align-items-center justify-content-between p-3 border border-secondary rounded">
-                  <div>
-                    <div>{field.label}</div>
-                    {field.helper && (
-                      <Form.Text className="text-white-50">
-                        {field.helper}
-                      </Form.Text>
-                    )}
-                  </div>
-                  <Form.Check
-                    type="switch"
-                    id={field.key}
-                    checked={Boolean(localConfig[field.key])}
-                    onChange={(e) =>
-                      handleBooleanChange(field.key, e.target.checked)
-                    }
-                  />
-                </Form.Group>
-              </Col>
-            ))}
-            {import.meta.env.DEV && (
-              <Col md={6}>
-                <Form.Group className="d-flex align-items-center justify-content-between p-3 border border-secondary rounded">
-                  <div>
-                    <div>Developer: force onboarding</div>
-                    <Form.Text className="text-white-50">
-                      Always show the GameData onboarding screen on startup.
-                    </Form.Text>
-                  </div>
-                  <Form.Check
-                    type="switch"
-                    id="forceOnboarding"
-                    checked={forceOnboarding}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setForceOnboarding(checked);
-                      if (checked) {
-                        clearGameData();
-                      }
-                    }}
-                  />
-                </Form.Group>
-              </Col>
-            )}
+            {booleanFields.map((field) => {
+              const isAutoOpenLogs = field.key === "autoOpenLogs";
+              const isDisabled = isAutoOpenLogs && !localConfig.showLogs;
+
+              return (
+                <Col md={6} key={field.key}>
+                  <Form.Group
+                    className={`d-flex align-items-center justify-content-between p-3 border border-secondary rounded ${
+                      isDisabled ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div>
+                      <div>{field.label}</div>
+                      {field.helper && (
+                        <Form.Text className="text-white-50">
+                          {field.helper}
+                        </Form.Text>
+                      )}
+                    </div>
+                    <Form.Check
+                      type="switch"
+                      id={field.key}
+                      checked={Boolean(localConfig[field.key])}
+                      disabled={isDisabled}
+                      onChange={(e) => {
+                        if (isAutoOpenLogs && !localConfig.showLogs) {
+                          return; // Prevent changes when disabled
+                        }
+                        handleBooleanChange(field.key, e.target.checked);
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+              );
+            })}
           </Row>
 
           <div className="d-flex justify-content-end mt-4 gap-2">
@@ -288,50 +303,61 @@ const Settings = () => {
         </Card.Body>
       </Card>
 
-      <Card bg="dark" text="white" className="border-secondary">
-        <Card.Header className="bg-dark border-secondary">
-          <h5 className="m-0">
-            <FontAwesomeIcon icon={faSync} className="me-2" />
-            Game Data Management
-          </h5>
-        </Card.Header>
-        <Card.Body>
-          <p className="text-white-50">
-            Reload r3e-data.json from your RaceRoom installation directory. Use
-            this when the game has been updated with new content.
-          </p>
+      {
+        <Card bg="dark" text="white" className="border-secondary">
+          <Card.Header className="bg-dark border-secondary">
+            <h5 className="m-0">
+              <FontAwesomeIcon icon={faSync} className="me-2" />
+              Game Data Management
+            </h5>
+          </Card.Header>
+          <Card.Body>
+            {electron.isElectron ? (
+              <>
+                <p className="text-white-50">
+                  Reload r3e-data.json from your RaceRoom installation
+                  directory. Use this when the game has been updated with new
+                  content.
+                </p>
 
-          <div className="d-flex justify-content-end">
-            <Button
-              variant="primary"
-              onClick={handleReloadGameData}
-              disabled={isReloading}
-            >
-              {isReloading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" />
-                  Reloading...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSync} className="me-2" />
-                  Reload Game Data
-                </>
-              )}
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
+                <div className="d-flex justify-content-end">
+                  <Button
+                    variant="primary"
+                    onClick={handleReloadGameData}
+                    disabled={isReloading}
+                  >
+                    {isReloading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />{" "}
+                        Reloading...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faSync} className="me-2" />
+                        Reload Game Data
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-white-50">
+                  You can manually upload or select your r3e-data.json file.
+                  Click the button below to open the file selection page.
+                </p>
 
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
+                <div className="d-flex justify-content-end">
+                  <Button variant="primary" onClick={handleClearGameDataWeb}>
+                    <FontAwesomeIcon icon={faSync} className="me-2" />
+                    Select Game Data File
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card.Body>
+        </Card>
+      }
     </Container>
   );
 };

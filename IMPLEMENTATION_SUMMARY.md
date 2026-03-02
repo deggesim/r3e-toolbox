@@ -1,6 +1,6 @@
 # R3E Toolbox - Implementation Summary
 
-## 📊 Current Version: 0.4.3 (February 2026)
+## 📊 Current Version: 1.3.2 (February 2026)
 
 ### 🙏 Credits & Acknowledgments
 
@@ -246,6 +246,6 @@ const fresh = await fetchLeaderboardAssetsWithCache({ forceRefresh: true });
 
 **Implementation completed and tested! ✅**
 
-**Last Updated**: February 11, 2026 | **Version**: 0.4.3
+**Last Updated**: February 26, 2026 | **Version**: 1.3.2
 
-**Ultimo aggiornamento**: 11 Febbraio 2026 | **Versione**: 0.4.3
+**Ultimo aggiornamento**: 26 Febbraio 2026 | **Versione**: 1.3.2

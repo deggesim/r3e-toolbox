@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  release:
+  validate-and-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,6 +50,33 @@ jobs:
           fi
           echo "✅ Commit message is valid"
 
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+
+  release:
+    needs: validate-and-build
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run Semantic Release
         run: npx semantic-release
         env:
@@ -58,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
 
-  build:
+  build-electron:
     needs: release
     if: success()
     runs-on: ${{ matrix.os }}

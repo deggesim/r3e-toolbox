@@ -1,10 +1,16 @@
+import { faBolt } from "@fortawesome/free-solid-svg-icons/faBolt";
 import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
+import { faCrown } from "@fortawesome/free-solid-svg-icons/faCrown";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
+import { faMedal } from "@fortawesome/free-solid-svg-icons/faMedal";
+import { faRankingStar } from "@fortawesome/free-solid-svg-icons/faRankingStar";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
+import { faTrophy } from "@fortawesome/free-solid-svg-icons/faTrophy";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Button,
@@ -17,25 +23,24 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import SectionTitle from "../components/SectionTitle";
-import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import type { ChampionshipEntry } from "../types";
 import { convertAssetsForHTML } from "../utils/assetConverter";
-import { parseTime, parseTimestring } from "../utils/timeUtils";
-import {
-  getHumanDriverName,
-  getSortedRaceSlots,
-} from "../utils/humanPlayerUtils";
-import { calculateChampionshipStandings } from "../utils/standingsCalculator";
 import {
   downloadHTML,
   generateChampionshipIndexHTML,
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
+import {
+  getHumanDriverName,
+  getSortedRaceSlots,
+} from "../utils/humanPlayerUtils";
+import { calculateChampionshipStandings } from "../utils/standingsCalculator";
+import { parseTime, parseTimestring } from "../utils/timeUtils";
 
 const ResultsDatabaseViewer = () => {
   const navigate = useNavigate();
@@ -45,19 +50,10 @@ const ResultsDatabaseViewer = () => {
   const clearAll = useChampionshipStore((state) => state.clear);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
   const gameData = useGameDataStore((state) => state.gameData);
-  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
-    useProcessingLog();
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
 
   const handleCardClick = (alias: string) => {
     navigate(`/results-database/${encodeURIComponent(alias)}`);
@@ -259,6 +255,7 @@ const ResultsDatabaseViewer = () => {
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
                     <div className="h2 text-primary mb-1">
+                      <FontAwesomeIcon icon={faTrophy} className="me-2" />
                       {championships.length}
                     </div>
                     <div className="text-white-50 small">Championships</div>
@@ -268,7 +265,13 @@ const ResultsDatabaseViewer = () => {
               <Col md={4}>
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
-                    <div className="h2 text-success mb-1">{totalRaces}</div>
+                    <div className="h2 text-success mb-1">
+                      <FontAwesomeIcon
+                        icon={faFlagCheckered}
+                        className="me-2"
+                      />
+                      {totalRaces}
+                    </div>
                     <div className="text-white-50 small">Total Races</div>
                   </Card.Body>
                 </Card>
@@ -276,7 +279,10 @@ const ResultsDatabaseViewer = () => {
               <Col md={4}>
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
-                    <div className="h2 text-info mb-1">{wins}</div>
+                    <div className="h2 text-info mb-1">
+                      <FontAwesomeIcon icon={faRankingStar} className="me-2" />
+                      {wins}
+                    </div>
                     <div className="text-white-50 small">Wins</div>
                   </Card.Body>
                 </Card>
@@ -284,7 +290,10 @@ const ResultsDatabaseViewer = () => {
               <Col md={4}>
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
-                    <div className="h2 text-warning mb-1">{podiums}</div>
+                    <div className="h2 text-warning mb-1">
+                      <FontAwesomeIcon icon={faMedal} className="me-2" />
+                      {podiums}
+                    </div>
                     <div className="text-white-50 small">Podiums</div>
                   </Card.Body>
                 </Card>
@@ -292,7 +301,10 @@ const ResultsDatabaseViewer = () => {
               <Col md={4}>
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
-                    <div className="h2 text-secondary mb-1">{poles}</div>
+                    <div className="h2 text-secondary mb-1">
+                      <FontAwesomeIcon icon={faBolt} className="me-2" />
+                      {poles}
+                    </div>
                     <div className="text-white-50 small">Poles</div>
                   </Card.Body>
                 </Card>
@@ -301,6 +313,7 @@ const ResultsDatabaseViewer = () => {
                 <Card className="bg-dark border-secondary">
                   <Card.Body className="text-center">
                     <div className="h2 text-danger mb-1">
+                      <FontAwesomeIcon icon={faCrown} className="me-2" />
                       {championshipsWon}
                     </div>
                     <div className="text-white-50 small">Championships Won</div>
@@ -436,16 +449,6 @@ const ResultsDatabaseViewer = () => {
           </Modal>
         </Card.Body>
       </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
     </Container>
   );
 };

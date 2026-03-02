@@ -25,12 +25,11 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import FloatingProcessingLog from "../components/FloatingProcessingLog";
 import SectionTitle from "../components/SectionTitle";
-import { useProcessingLog } from "../hooks/useProcessingLog";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useProcessingLogStore } from "../store/processingLogStore";
 import type { ChampionshipEntry, LeaderboardAssets } from "../types";
 import type { ParsedRace } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
@@ -168,16 +167,7 @@ const BuildResultsDatabase = () => {
   >(null);
   const databaseInputRef = useRef<HTMLInputElement>(null);
   const resultsInputRef = useRef<HTMLInputElement>(null);
-  const [isOpenFloatingLog, setIsOpenFloatingLog] = useState(false);
-  const { logs, addLog, logsEndRef, getLogVariant, clearLogs } =
-    useProcessingLog();
-
-  // Auto-open log panel when logs are added
-  useEffect(() => {
-    if (logs.length > 0) {
-      setIsOpenFloatingLog(true);
-    }
-  }, [logs.length]);
+  const addLog = useProcessingLogStore((state) => state.addLog);
 
   // Use store to read cached assets
   const cachedAssets = useLeaderboardAssetsStore((state) => state.assets);
@@ -743,16 +733,6 @@ const BuildResultsDatabase = () => {
           )}
         </Card.Body>
       </Card>
-
-      {/* Floating Processing Log */}
-      <FloatingProcessingLog
-        logs={logs}
-        isOpen={isOpenFloatingLog}
-        onToggle={() => setIsOpenFloatingLog(!isOpenFloatingLog)}
-        onClear={clearLogs}
-        getLogVariant={getLogVariant}
-        logsEndRef={logsEndRef}
-      />
 
       {/* Restore Database Confirmation Modal */}
       <Modal
