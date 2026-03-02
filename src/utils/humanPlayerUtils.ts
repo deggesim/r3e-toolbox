@@ -30,11 +30,11 @@ export const getHumanDriverName = (race: ParsedRace): string | null => {
 
   // Strategy 1: Find driver with valid UserId (human player indicator)
   const userSlot = race.slots.find(
-    (slot) => typeof slot.UserId === "number" && slot.UserId > 0,
+    (slot) => typeof slot.userId === "number" && slot.userId > 0,
   );
 
   // Return matched user, or fallback to first slot
-  return (userSlot || race.slots[0]).Driver || null;
+  return (userSlot || race.slots[0]).driver || null;
 };
 
 /**
@@ -64,12 +64,12 @@ export const getHumanDriverName = (race: ParsedRace): string | null => {
  */
 export const getSortedRaceSlots = (slots: RaceSlot[]): RaceSlot[] => {
   return [...slots].sort((a, b) => {
-    const statusA = a.FinishStatus;
-    const statusB = b.FinishStatus;
+    const statusA = a.finishStatus;
+    const statusB = b.finishStatus;
 
     // Parse lap times: returns undefined for invalid/missing times
-    const timeA = parseTime(a.TotalTime || a.FinishTime);
-    const timeB = parseTime(b.TotalTime || b.FinishTime);
+    const timeA = parseTime(a.totalTime || a.finishTime);
+    const timeB = parseTime(b.totalTime || b.finishTime);
 
     // Determine if each driver finished the race
     const validA =
@@ -83,8 +83,8 @@ export const getSortedRaceSlots = (slots: RaceSlot[]): RaceSlot[] => {
     if (!validB) return -1; // B is DNF/DNS -> sort after A
 
     // Both finished: first compare by laps completed (more laps = better)
-    const lapsA = a.TotalLaps ?? 0;
-    const lapsB = b.TotalLaps ?? 0;
+    const lapsA = a.totalLaps ?? 0;
+    const lapsB = b.totalLaps ?? 0;
     if (lapsB !== lapsA) return lapsB - lapsA;
 
     // Same laps: sort by time (ascending = fastest first, lowest time)

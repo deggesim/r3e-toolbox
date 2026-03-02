@@ -116,6 +116,14 @@ npx semantic-release --dry-run
 npm version patch -m "chore(release): %s"
 ```
 
+## QA Agents
+
+Agent documentation lives in [agents/docs/](agents/docs/).
+
+- [Quick reference](agents/docs/QA_AGENTS_QUICK_REFERENCE.md)
+- [Implementation guide](agents/docs/AGENT_IMPLEMENTATION_GUIDE.md)
+- [Setup & maintenance](agents/docs/AGENT_SETUP_MAINTENANCE.md)
+
 ## Important Notes
 
 - ⚠️ Commit must be on `master` branch to trigger release

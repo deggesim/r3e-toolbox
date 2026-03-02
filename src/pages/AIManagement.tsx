@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
 import { faThumbsUp } from "@fortawesome/free-solid-svg-icons/faThumbsUp";
@@ -21,14 +22,15 @@ import { useElectronAPI } from "../hooks/useElectronAPI";
 import { useConfigStore } from "../store/configStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import { useGameDataStore } from "../store/gameDataStore";
+import type { Assets } from "../types/gameData";
 import type {
-  Assets,
   Database,
   DatabaseClass,
   DatabaseTrack,
   PlayerTimes,
   ProcessedDatabase,
-} from "../types";
+} from "../types/aiAdaptation";
+import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { processDatabase } from "../utils/databaseProcessor";
 import { parseJson } from "../utils/jsonParser";
 import { makeTime } from "../utils/timeUtils";
@@ -149,8 +151,6 @@ const AIManagement = () => {
 
   useEffect(() => {
     const loadAiadaptationFile = async () => {
-      if (xmlAutoLoadedRef.current) return;
-      xmlAutoLoadedRef.current = true;
       if (!electron.isElectron) {
         addLog(
           "warning",
@@ -193,8 +193,12 @@ const AIManagement = () => {
       }
     };
 
+    // Prevent double execution in React StrictMode (dev mode)
+    if (xmlAutoLoadedRef.current) return;
+    xmlAutoLoadedRef.current = true;
+
     loadAiadaptationFile();
-  }, [electron.isElectron]);
+  }, [addLog, database, electron, electron.isElectron, playerTimes]);
 
   // ============ FILE UPLOAD HANDLERS ============
 
@@ -215,7 +219,9 @@ const AIManagement = () => {
           addLog("success", "AI Adaptation XML loaded successfully");
         }
       } catch (error) {
-        addLog("error", "Error parsing XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error parsing XML file: ${errorMessage}`);
       }
     },
     [database, playerTimes, addLog],
@@ -241,7 +247,9 @@ const AIManagement = () => {
         link.remove();
         URL.revokeObjectURL(url);
       } catch (error) {
-        addLog("error", "Error generating XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error generating XML file: ${errorMessage}`);
       }
     },
     [assets, addLog],
@@ -253,7 +261,8 @@ const AIManagement = () => {
     setShowApplyModal(false);
 
     let updatedDb = database;
-    let updatedPt = playerTimes;
+    // Apply player times modification (always use current playerTimes)
+    const updatedPt = playerTimes;
 
     // Apply AI modification if AI level is selected
     if (selectedClassId && selectedTrackId && selectedAILevel !== null) {
@@ -265,9 +274,6 @@ const AIManagement = () => {
         spacing,
       );
     }
-
-    // Apply player times modification (always use current playerTimes)
-    updatedPt = playerTimes;
 
     // Download the merged results
     if (assets && updatedDb) {
@@ -290,7 +296,9 @@ const AIManagement = () => {
           faDownload,
         );
       } catch (error) {
-        addLog("error", "Error generating XML file");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        addLog("error", `Error generating XML file: ${errorMessage}`);
       }
     }
   };
@@ -380,7 +388,7 @@ const AIManagement = () => {
     (classid: string, trackid: string, timeIndex: number) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
-      if (!track || !track.playertimes) return;
+      if (!track?.playertimes) return;
 
       const deletedTime = track.playertimes[timeIndex];
       track.playertimes.splice(timeIndex, 1);
@@ -402,7 +410,7 @@ const AIManagement = () => {
     (classid: string, trackid: string) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
-      if (!track || !track.playertimes || track.playertimes.length <= 1) return;
+      if (!track?.playertimes || track.playertimes.length <= 1) return;
 
       const minTime = Math.min(...track.playertimes);
       const deletedCount = track.playertimes.length - 1;
@@ -526,8 +534,7 @@ const AIManagement = () => {
         // Compare number of times and actual values
         if (
           !trackData.playertimes ||
-          !origTrack.playertimes ||
-          trackData.playertimes.length !== origTrack.playertimes.length
+          trackData.playertimes.length !== origTrack.playertimes?.length
         ) {
           return true; // Different number of times
         }
@@ -589,28 +596,30 @@ const AIManagement = () => {
 
   // ============ CALCULATE AVAILABLE DATA ============
 
-  const availableClasses =
-    assets?.classesSorted.filter((classAsset) => {
-      if (!processed || Object.keys(processed.classes).length === 0) {
-        return true;
-      }
-      const classData = processed?.classes[classAsset.id];
-      const playerClass = playerTimes?.classes[classAsset.id];
-      return classData || playerClass;
-    }) || [];
+  const availableClasses = assets
+    ? getClassesSorted(assets).filter((classAsset) => {
+        if (!processed || Object.keys(processed.classes).length === 0) {
+          return true;
+        }
+        const classData = processed?.classes[classAsset.id];
+        const playerClass = playerTimes?.classes[classAsset.id];
+        return classData || playerClass;
+      })
+    : [];
 
-  const availableTracks =
-    assets?.tracksSorted.filter((trackAsset) => {
-      if (!selectedClassId) return false;
-      if (!processed || Object.keys(processed.classes).length === 0) {
-        return true;
-      }
-      const classData = processed?.classes[selectedClassId];
-      const track = classData?.tracks[trackAsset.id];
-      const playerClass = playerTimes?.classes[selectedClassId];
-      const playerTrack = playerClass?.tracks[trackAsset.id];
-      return track || playerTrack;
-    }) || [];
+  const availableTracks = assets
+    ? getTracksSorted(assets).filter((trackAsset) => {
+        if (!selectedClassId) return false;
+        if (!processed || Object.keys(processed.classes).length === 0) {
+          return true;
+        }
+        const classData = processed?.classes[selectedClassId];
+        const track = classData?.tracks[trackAsset.id];
+        const playerClass = playerTimes?.classes[selectedClassId];
+        const playerTrack = playerClass?.tracks[trackAsset.id];
+        return track || playerTrack;
+      })
+    : [];
 
   const aiLevels =
     selectedTrackId &&

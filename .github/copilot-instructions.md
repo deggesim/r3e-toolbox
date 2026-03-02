@@ -52,6 +52,7 @@ export const useMyStore = create<State>()(
 - `championshipStore` - Saved championships with metadata
 - `leaderboardAssetsStore` - Cached leaderboard icons (driver/team portraits)
 - `gameDataStore` - Loaded r3e-data.json with lazy loading support and force onboarding flag
+- `processingLogStore` - Floating log panel state with log entries, visibility, and actions
 
 ### Electron Dual-Mode Architecture
 
@@ -145,14 +146,22 @@ const assets = await fetchLeaderboardAssetsWithCache({ forceRefresh: true }); //
 
 ### Processing Log Pattern
 
-UI feedback for batch operations uses custom hook:
+UI feedback for batch operations uses centralized store ([src/store/processingLogStore.ts](src/store/processingLogStore.ts)):
 
 ```typescript
-const { logs, addLog, logsEndRef } = useProcessingLog();
-addLog("success", "Processed 42 files"); // auto-scrolls, timestamps
+// In components: access store directly
+const addLog = useProcessingLogStore((state) => state.addLog);
+const logs = useProcessingLogStore((state) => state.logs);
+addLog("success", "Processed 42 files"); // auto-scrolls, timestamps, type-safe icons
 ```
 
-Used in: FixQualyTimes, BuildResultsDatabase (see [src/hooks/useProcessingLog.ts](src/hooks/useProcessingLog.ts)).
+**FloatingProcessingLog** ([src/components/FloatingProcessingLog.tsx](src/components/FloatingProcessingLog.tsx)):
+
+- Global floating panel (bottom-right on desktop, off-canvas on mobile)
+- Auto-collapses/expands based on log activity
+- Integrated in Layout.tsx—automatically available on all pages
+- Logs categorized with Font Awesome icons: info (faCircleInfo), success (faCheck), warning (faExclamationTriangle), error (faXmark)
+- Legacy pattern: `useProcessingLog()` hook still available for backward compatibility
 
 ## File Structure & Naming
 
@@ -184,7 +193,7 @@ Each utility is self-contained:
   - `GameDataOnboarding.tsx` - r3e-data.json setup (auto-detect or manual upload)
   - `Help.tsx` - User guide and documentation
   - `Settings.tsx` - Fitting parameters, UI defaults, cache management
-- **Shared UI**: `Layout.tsx` (sidebar navigation), `ProcessingLog.tsx`, `FileUploadSection.tsx`
+- **Shared UI**: `Layout.tsx` (sidebar navigation), `FloatingProcessingLog.tsx` (global log panel), `FileUploadSection.tsx` (reusable file upload)
 - **Routing**: [src/App.tsx](src/App.tsx) - React Router with `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-database`, `/results-database/:alias`, `/settings`, `/help`
 
 ## Development Workflows
@@ -239,19 +248,19 @@ No formal test suite—manual QA with real R3E files. When adding features:
 
 ## Key External Dependencies
 
-- `fast-xml-parser` (5.3): R3E XML → JSON (set `ignoreAttributes: false` for proper parsing)
+- `fast-xml-parser` (5.4): R3E XML → JSON (set `ignoreAttributes: false` for proper parsing)
 - `mathjs` (15.1): Linear regression via LU decomposition ([src/utils/fitting.ts](src/utils/fitting.ts))
 - `zustand` (5.0): State management with `persist` middleware for electron-store/localStorage
 - `electron-store` (11.0): Native persistent storage for Electron mode (via IPC bridge)
-- `electron-updater` (6.2): Auto updates for packaged Electron builds
+- `electron-updater` (6.8): Auto updates for packaged Electron builds
 - `react-bootstrap` (2.10): UI components (Cards, Buttons, Forms, etc.)
-- `@fortawesome/react-fontawesome` (3.2): Solid SVG icons (solid icons library v7.1) throughout UI
-- `electron` (40.1): Desktop runtime with native file dialogs
-- `electron-builder` (26.4): Packaging for Windows NSIS installer + portable exe
+- `@fortawesome/react-fontawesome` (3.2): Solid SVG icons (solid icons library v7.2) throughout UI
+- `electron` (40.6): Desktop runtime with native file dialogs
+- `electron-builder` (26.8): Packaging for Windows NSIS installer + portable exe
 - `electron-is-dev` (3.0): Detect dev vs production for conditional loading
 - `typescript` (5.9): TypeScript compiler with strict mode enabled
-- `vite` (7.2): Fast build tool and dev server
-- `react-router-dom` (7.12): Client-side routing
+- `vite` (7.3): Fast build tool and dev server
+- `react-router-dom` (7.13): Client-side routing
 
 ## When Modifying Fitting Logic
 
@@ -273,4 +282,4 @@ No formal test suite—manual QA with real R3E files. When adding features:
 
 ---
 
-**Last Updated**: February 26, 2026 | **Version**: 1.3.2
+**Last Updated**: February 28, 2026 | **Version**: 1.3.2

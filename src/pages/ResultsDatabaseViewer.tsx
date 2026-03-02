@@ -1,11 +1,13 @@
 import { faBolt } from "@fortawesome/free-solid-svg-icons/faBolt";
 import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
+import { faCircleInfo } from "@fortawesome/free-solid-svg-icons/faCircleInfo";
 import { faCrown } from "@fortawesome/free-solid-svg-icons/faCrown";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
 import { faMedal } from "@fortawesome/free-solid-svg-icons/faMedal";
 import { faRankingStar } from "@fortawesome/free-solid-svg-icons/faRankingStar";
+import { faRotate } from "@fortawesome/free-solid-svg-icons/faRotate";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
 import { faTrophy } from "@fortawesome/free-solid-svg-icons/faTrophy";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
@@ -19,16 +21,19 @@ import {
   Container,
   Form,
   Modal,
+  OverlayTrigger,
   Row,
+  Tooltip,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
 import SectionTitle from "../components/SectionTitle";
+import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
-import type { ChampionshipEntry } from "../types";
+import type { ChampionshipEntry } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   downloadHTML,
@@ -48,12 +53,20 @@ const ResultsDatabaseViewer = () => {
   const removeChampionship = useChampionshipStore((state) => state.remove);
   const renameChampionship = useChampionshipStore((state) => state.rename);
   const clearAll = useChampionshipStore((state) => state.clear);
+  const setAllChampionships = useChampionshipStore((state) => state.setAll);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
   const gameData = useGameDataStore((state) => state.gameData);
   const addLog = useProcessingLogStore((state) => state.addLog);
+  const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
+    gameData,
+    leaderboardAssets,
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [isRefreshingDatabase, setIsRefreshingDatabase] = useState(false);
+  const [isDownloadingDatabase, setIsDownloadingDatabase] = useState(false);
+  const [isDownloadingIndex, setIsDownloadingIndex] = useState(false);
 
   const handleCardClick = (alias: string) => {
     navigate(`/results-database/${encodeURIComponent(alias)}`);
@@ -82,7 +95,7 @@ const ResultsDatabaseViewer = () => {
         // Count race wins, podiums for human
         if (humanDriver) {
           const humanIndex = sortedSlots.findIndex(
-            (slot) => slot.Driver === humanDriver,
+            (slot) => slot.driver === humanDriver,
           );
           if (humanIndex >= 0) {
             const position = humanIndex + 1;
@@ -95,8 +108,8 @@ const ResultsDatabaseViewer = () => {
         if (humanDriver) {
           const qualifyingTimes = race.slots
             .map((slot) => ({
-              driver: slot.Driver,
-              time: parseTime(slot.QualTime),
+              driver: slot.driver,
+              time: parseTime(slot.qualTime),
             }))
             .filter((entry) => entry.time !== undefined) as Array<{
             driver: string;
@@ -212,9 +225,14 @@ const ResultsDatabaseViewer = () => {
       );
       return;
     }
-    const html = generateChampionshipIndexHTML(championships);
-    downloadHTML(html, "index.html");
-    addLog("success", "Downloaded index.html");
+    setIsDownloadingIndex(true);
+    try {
+      const html = generateChampionshipIndexHTML(championships);
+      downloadHTML(html, "index.html");
+      addLog("success", "Downloaded index.html");
+    } finally {
+      setTimeout(() => setIsDownloadingIndex(false), 300);
+    }
   };
 
   const handleDownloadDatabase = () => {
@@ -223,17 +241,96 @@ const ResultsDatabaseViewer = () => {
       return;
     }
 
-    const databaseJSON = JSON.stringify(championships, null, 2);
-    const blob = new Blob([databaseJSON], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "r3e-championships.json";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    addLog("success", "Downloaded championship database");
+    setIsDownloadingDatabase(true);
+    try {
+      const databaseJSON = JSON.stringify(championships, null, 2);
+      const blob = new Blob([databaseJSON], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "r3e-championships.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      addLog("success", "Downloaded championship database");
+    } finally {
+      setTimeout(() => setIsDownloadingDatabase(false), 300);
+    }
+  };
+
+  const handleRefreshDatabase = () => {
+    setIsRefreshingDatabase(true);
+
+    try {
+      if (championships.length === 0) {
+        addLog("warning", "No championships to refresh", faExclamationTriangle);
+        return;
+      }
+
+      if (!leaderboardAssets || leaderboardAssets.cars.length === 0) {
+        addLog(
+          "warning",
+          "No leaderboard assets available. Download assets first from Build Results Database.",
+          faExclamationTriangle,
+        );
+        return;
+      }
+
+      let updatedCount = 0;
+
+      const refreshedChampionships = championships.map((championship) => {
+        if (!championship.raceData || championship.raceData.length === 0) {
+          return championship;
+        }
+
+        const humanSlot = championship.raceData
+          .flatMap((race) => race.slots)
+          .find((slot) => typeof slot.userId === "number" && slot.userId > 0);
+
+        const fallbackSlot = championship.raceData[0]?.slots?.find(
+          (slot) =>
+            slot.className || slot.vehicle || slot.vehicleId !== undefined,
+        );
+
+        const selectedSlot = humanSlot || fallbackSlot;
+        if (!selectedSlot) {
+          return championship;
+        }
+
+        const nextCarName =
+          resolveCarName(selectedSlot) || championship.carName;
+        const nextCarIcon =
+          resolveCarIcon(selectedSlot) || championship.carIcon;
+
+        if (
+          nextCarName !== championship.carName ||
+          nextCarIcon !== championship.carIcon
+        ) {
+          updatedCount += 1;
+          return {
+            ...championship,
+            carName: nextCarName,
+            carIcon: nextCarIcon,
+          };
+        }
+
+        return championship;
+      });
+
+      if (updatedCount === 0) {
+        addLog("info", "Database already up to date with current assets");
+        return;
+      }
+
+      setAllChampionships(refreshedChampionships);
+      addLog(
+        "success",
+        `Database refreshed: ${updatedCount} championship${updatedCount === 1 ? "" : "s"} updated with leaderboard assets`,
+      );
+    } finally {
+      setIsRefreshingDatabase(false);
+    }
   };
 
   return (
@@ -371,21 +468,64 @@ const ResultsDatabaseViewer = () => {
               <SectionTitle
                 label={`Championships (${filteredChampionships.length})`}
               />
-              <div className="d-flex justify-content-end gap-2 mb-3">
+              <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
+                <Button
+                  onClick={handleRefreshDatabase}
+                  disabled={championships.length === 0 || isRefreshingDatabase}
+                  variant="outline-info"
+                >
+                  <FontAwesomeIcon
+                    icon={faRotate}
+                    className="me-2"
+                    spin={isRefreshingDatabase}
+                  />
+                  {isRefreshingDatabase
+                    ? "Refreshing database..."
+                    : "Refresh database"}
+                </Button>
+                <OverlayTrigger
+                  placement="top"
+                  overlay={
+                    <Tooltip id="refresh-database-info">
+                      Updates saved championships with the latest car assets
+                      loaded from the Leaderboard page.
+                    </Tooltip>
+                  }
+                >
+                  <span
+                    className="text-info d-inline-flex align-items-center"
+                    style={{ cursor: "help" }}
+                    aria-label="Refresh database info"
+                  >
+                    <FontAwesomeIcon icon={faCircleInfo} />
+                  </span>
+                </OverlayTrigger>
                 <Button
                   onClick={handleDownloadDatabase}
-                  disabled={championships.length === 0}
+                  disabled={championships.length === 0 || isDownloadingDatabase}
                   variant="secondary"
                 >
-                  <FontAwesomeIcon icon={faDownload} className="me-2" />
-                  Download database
+                  <FontAwesomeIcon
+                    icon={faDownload}
+                    className="me-2"
+                    spin={isDownloadingDatabase}
+                  />
+                  {isDownloadingDatabase
+                    ? "Downloading..."
+                    : "Download database"}
                 </Button>
                 <Button
                   onClick={handleDownloadIndex}
-                  disabled={championships.length === 0}
+                  disabled={championships.length === 0 || isDownloadingIndex}
                 >
-                  <FontAwesomeIcon icon={faDownload} className="me-2" />
-                  Download index.html
+                  <FontAwesomeIcon
+                    icon={faDownload}
+                    className="me-2"
+                    spin={isDownloadingIndex}
+                  />
+                  {isDownloadingIndex
+                    ? "Downloading..."
+                    : "Download index.html"}
                 </Button>
               </div>
               <Row className="g-3">

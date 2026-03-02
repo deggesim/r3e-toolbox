@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { LeaderboardAssets } from "../types";
+import type { LeaderboardAssets } from "../types/gameData";
 import { getStorage } from "./electronStorage";
 
 interface LeaderboardAssetsState {
@@ -40,7 +40,7 @@ export const useLeaderboardAssetsStore = create<LeaderboardAssetsState>()(
     }),
     {
       name: "r3e-toolbox-leaderboard-assets",
-      storage: getStorage(),
+      storage: getStorage<LeaderboardAssetsState>(),
       version: 1,
       partialize: (state) =>
         ({

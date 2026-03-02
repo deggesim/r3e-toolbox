@@ -13,7 +13,9 @@ export const useElectronAPI = () => {
     () => ({
       isElectron,
 
-      async openFile(options?: any): Promise<string | null> {
+      async openFile(
+        options?: ElectronOpenFileOptions,
+      ): Promise<string | null> {
         if (!isElectron) {
           throw new Error("Electron API not available");
         }
@@ -90,14 +92,14 @@ export const useElectronAPI = () => {
         return globalThis.electron.findAiadaptationFile();
       },
 
-      async storeGet(key: string): Promise<any> {
+      async storeGet(key: string): Promise<unknown> {
         if (!isElectron) {
           throw new Error("Electron API not available");
         }
         return globalThis.electron.storeGet(key);
       },
 
-      async storeSet(key: string, value: any): Promise<void> {
+      async storeSet(key: string, value: unknown): Promise<void> {
         if (!isElectron) {
           throw new Error("Electron API not available");
         }

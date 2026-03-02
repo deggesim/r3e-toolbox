@@ -8,6 +8,18 @@ import { useRef, useState } from "react";
 import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLogStore } from "../store/processingLogStore";
 
+type RaceResultDriver = {
+  name: string;
+  bestLapTimeMs?: number;
+  raceTimeMs?: number;
+  qualTimeMs?: number;
+};
+
+type RaceResultFile = {
+  event: Record<string, unknown>;
+  drivers: RaceResultDriver[];
+};
+
 const FixQualyTimes = () => {
   const [qualFile, setQualFile] = useState<File | null>(null);
   const [raceFile, setRaceFile] = useState<File | null>(null);
@@ -22,8 +34,10 @@ const FixQualyTimes = () => {
   } | null>(null);
   const addLog = useProcessingLogStore((state) => state.addLog);
 
-  const eventsAreEqual = (event1: any, event2: any) =>
-    JSON.stringify(event1) === JSON.stringify(event2);
+  const eventsAreEqual = (
+    event1: Record<string, unknown>,
+    event2: Record<string, unknown>,
+  ) => JSON.stringify(event1) === JSON.stringify(event2);
 
   const processFiles = async () => {
     if (!qualFile || !raceFile) {
@@ -41,8 +55,8 @@ const FixQualyTimes = () => {
       const qualText = await qualFile.text();
       const raceText = await raceFile.text();
 
-      const qual = JSON.parse(qualText);
-      const race = JSON.parse(raceText);
+      const qual = JSON.parse(qualText) as RaceResultFile;
+      const race = JSON.parse(raceText) as RaceResultFile;
 
       // Validation 1: event equality
       if (!eventsAreEqual(qual.event, race.event)) {
@@ -53,7 +67,7 @@ const FixQualyTimes = () => {
       addLog("success", "event attribute is identical.", faCheck);
 
       // Validation 2: bestLapTimeMs must be valid
-      qual.drivers.forEach((d: any) => {
+      qual.drivers.forEach((d: RaceResultDriver) => {
         if (typeof d.bestLapTimeMs !== "number" || d.bestLapTimeMs <= -1) {
           throw new TypeError(
             `Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
@@ -67,7 +81,7 @@ const FixQualyTimes = () => {
       );
 
       // Validation 3: raceTimeMs must be > -1
-      race.drivers.forEach((d: any) => {
+      race.drivers.forEach((d: RaceResultDriver) => {
         if (typeof d.raceTimeMs !== "number" || d.raceTimeMs <= -1) {
           throw new TypeError(
             `Driver '${d.name}' has invalid raceTimeMs: ${d.raceTimeMs}`,
@@ -78,13 +92,13 @@ const FixQualyTimes = () => {
 
       // Build map from name → bestLapTimeMs
       const qualTimesMap = new Map(
-        qual.drivers.map((d: any) => [d.name, d.bestLapTimeMs]),
+        qual.drivers.map((d: RaceResultDriver) => [d.name, d.bestLapTimeMs]),
       );
 
       // Patch race file
       let updatedCount = 0;
 
-      race.drivers.forEach((driver: any) => {
+      race.drivers.forEach((driver: RaceResultDriver) => {
         const qualTime = qualTimesMap.get(driver.name);
         if (qualTime === undefined) {
           addLog(

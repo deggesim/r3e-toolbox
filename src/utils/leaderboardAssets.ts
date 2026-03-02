@@ -1,4 +1,4 @@
-import type { LeaderboardAsset, LeaderboardAssets } from "../types";
+import type { LeaderboardAsset, LeaderboardAssets } from "../types/gameData";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 
 const LEADERBOARD_URL = "https://game.raceroom.com/leaderboard";

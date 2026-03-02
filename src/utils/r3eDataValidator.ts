@@ -1,4 +1,8 @@
-import type { RaceRoomData, RaceRoomClass, RaceRoomTrack } from "../types";
+import type {
+  RaceRoomData,
+  RaceRoomClass,
+  RaceRoomTrack,
+} from "../types/gameData";
 
 export interface ValidationResult {
   valid: boolean;

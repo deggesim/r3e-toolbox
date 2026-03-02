@@ -1,8 +1,25 @@
 declare global {
+  type ElectronDialogFilter = {
+    name: string;
+    extensions: string[];
+  };
+
+  type ElectronOpenFileOptions = {
+    title?: string;
+    defaultPath?: string;
+    filters?: ElectronDialogFilter[];
+    properties?: Array<
+      "openFile" | "openDirectory" | "multiSelections" | "showHiddenFiles"
+    >;
+  };
+
   var electron: {
-    openFile: (options?: any) => Promise<string | null>;
+    openFile: (options?: ElectronOpenFileOptions) => Promise<string | null>;
     openDirectory: () => Promise<string | null>;
-    saveFile: (defaultPath?: string, filters?: any[]) => Promise<string | null>;
+    saveFile: (
+      defaultPath?: string,
+      filters?: ElectronDialogFilter[],
+    ) => Promise<string | null>;
     readFile: (
       filePath: string,
     ) => Promise<{ success: boolean; data?: string; error?: string }>;
@@ -25,10 +42,10 @@ declare global {
       path?: string;
       error?: string;
     }>;
-    storeGet: (key: string) => Promise<any>;
+    storeGet: (key: string) => Promise<unknown>;
     storeSet: (
       key: string,
-      value: any,
+      value: unknown,
     ) => Promise<{ success: boolean; error?: string }>;
     storeDelete: (key: string) => Promise<{ success: boolean; error?: string }>;
     openExternal: (
@@ -41,5 +58,8 @@ declare global {
         transferred: number;
         total: number;
       }) => void,
-    ) => () => void;  };
+    ) => () => void;
+  };
 }
+
+export {};

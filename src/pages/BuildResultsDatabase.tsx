@@ -26,13 +26,13 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import SectionTitle from "../components/SectionTitle";
+import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
-import type { ChampionshipEntry, LeaderboardAssets } from "../types";
-import type { ParsedRace } from "../types/raceResults";
-import { convertAssetsForHTML } from "../utils/assetConverter";
+import type { ChampionshipEntry, ParsedRace } from "../types/raceResults";
+import type { LeaderboardAssets } from "../types/gameData";
 import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
@@ -41,12 +41,12 @@ import { parseResultFiles } from "../utils/raceResultParser";
 
 const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(
-    (slot) => slot.ClassId !== undefined || slot.ClassName,
+    (slot) => slot.classId !== undefined || slot.className,
   );
   const classPart =
-    classInfo?.ClassId === undefined
-      ? classInfo?.ClassName || "unknown-class"
-      : String(classInfo.ClassId);
+    classInfo?.classId === undefined
+      ? classInfo?.className || "unknown-class"
+      : String(classInfo.classId);
   const trackPart = race.trackid ? String(race.trackid) : race.trackname;
   return `${trackPart}::${classPart}`;
 };
@@ -195,7 +195,7 @@ const BuildResultsDatabase = () => {
     if (championshipAlias.trim() || parsedRaces.length === 0) return;
     const firstClass = parsedRaces
       .map((race) =>
-        race.slots.find((slot) => slot.ClassName?.trim())?.ClassName?.trim(),
+        race.slots.find((slot) => slot.className?.trim())?.className?.trim(),
       )
       .find(Boolean);
 
@@ -204,7 +204,7 @@ const BuildResultsDatabase = () => {
       return;
     }
 
-    const firstVehicle = parsedRaces[0]?.slots?.[0]?.Vehicle;
+    const firstVehicle = parsedRaces[0]?.slots?.[0]?.vehicle;
     if (firstVehicle) {
       setChampionshipAlias(`${firstVehicle} Championship`);
     }
@@ -239,7 +239,7 @@ const BuildResultsDatabase = () => {
     }
   }, [htmlOverride]);
 
-  const handleFolderChange = useCallback(
+  const onFilesSelected = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
@@ -263,66 +263,18 @@ const BuildResultsDatabase = () => {
     [gameData],
   );
 
-  const resolveCarName = useCallback(
-    (slot: { VehicleId?: number; Vehicle?: string; ClassName?: string }) => {
-      const vehicleId = slot.VehicleId;
-
-      // Try to get car name from gameData first
-      if (vehicleId && gameData?.cars?.[vehicleId]?.Name) {
-        return gameData.cars[vehicleId].Name;
-      }
-
-      // If not found in gameData, try assets
-      if (assets?.cars) {
-        const assetCar = assets.cars.find(
-          (c) => c.id === String(vehicleId) || c.name === slot.Vehicle,
-        );
-        if (assetCar) {
-          return assetCar.name;
-        }
-      }
-
-      // Fallback to slot.Vehicle
-      if (slot.Vehicle) {
-        return slot.Vehicle;
-      }
-
-      // Last resort fallback
-      return slot.ClassName || (vehicleId ? String(vehicleId) : undefined);
-    },
-    [assets, gameData],
-  );
-
-  const resolveCarIcon = useCallback(
-    (slot: { VehicleId?: number; Vehicle?: string }) => {
-      if (!assets) return undefined;
-
-      const assetMap = convertAssetsForHTML(assets);
-      if (!assetMap?.cars) return undefined;
-
-      const keyCandidates = [
-        slot.VehicleId ? String(slot.VehicleId) : undefined,
-        slot.Vehicle,
-      ].filter(Boolean) as string[];
-
-      for (const key of keyCandidates) {
-        if (assetMap.cars[key]) {
-          return assetMap.cars[key];
-        }
-      }
-
-      return undefined;
-    },
-    [assets],
+  const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
+    gameData,
+    assets,
   );
 
   const resolveCarInfo = useCallback(() => {
     const humanSlot = parsedRaces
       .flatMap((race) => race.slots)
-      .find((slot) => typeof slot.UserId === "number" && slot.UserId > 0);
+      .find((slot) => typeof slot.userId === "number" && slot.userId > 0);
 
     const fallbackSlot = parsedRaces[0]?.slots?.find(
-      (slot) => slot.ClassName || slot.Vehicle,
+      (slot) => slot.className || slot.vehicle,
     );
 
     const slot = humanSlot || fallbackSlot;
@@ -489,10 +441,11 @@ const BuildResultsDatabase = () => {
     }
   }, [
     championshipAlias,
+    addLog,
     parsedRaces,
     championships,
-    addOrUpdateChampionship,
     resolveCarInfo,
+    addOrUpdateChampionship,
   ]);
 
   return (
@@ -630,7 +583,7 @@ const BuildResultsDatabase = () => {
                   multiple
                   accept=".txt,.json"
                   ref={resultsInputRef}
-                  onChange={handleFolderChange}
+                  onChange={onFilesSelected}
                 />
                 <Form.Text className="text-white-50">
                   Select one or more Race*.txt or Race*.json files (supports

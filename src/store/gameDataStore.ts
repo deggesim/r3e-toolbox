@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { RaceRoomData } from "../types";
+import type { RaceRoomData } from "../types/gameData";
 import { getStorage } from "./electronStorage";
 
 interface GameDataState {
@@ -22,7 +22,7 @@ export const useGameDataStore = create<GameDataState>()(
     }),
     {
       name: "r3e-toolbox-game-data-store",
-      storage: getStorage(),
+      storage: getStorage<GameDataState>(),
     },
   ),
 );

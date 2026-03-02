@@ -1,4 +1,4 @@
-import type { LeaderboardAssets } from "../types";
+import type { LeaderboardAssets } from "../types/gameData";
 
 /**
  * Converts LeaderboardAssets to HTML-friendly format with icon URL maps
@@ -29,7 +29,11 @@ export const convertAssetsForHTML = (
     tracksMap[t.id] = t.iconUrl || "";
   });
 
-  const result: any = { cars: carsMap, tracks: tracksMap };
+  const result: {
+    cars: Record<string, string>;
+    tracks: Record<string, string>;
+    carNames?: Record<string, string>;
+  } = { cars: carsMap, tracks: tracksMap };
   if (includeCarNames) {
     result.carNames = carNamesMap;
   }

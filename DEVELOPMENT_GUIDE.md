@@ -169,6 +169,14 @@ pnpm run build
 pnpm run build:electron
 ```
 
+## QA Agents
+
+Agent docs live under [agents/docs/](agents/docs/).
+
+- [Quick reference](agents/docs/QA_AGENTS_QUICK_REFERENCE.md)
+- [Implementation guide](agents/docs/AGENT_IMPLEMENTATION_GUIDE.md)
+- [Setup & maintenance](agents/docs/AGENT_SETUP_MAINTENANCE.md)
+
 ### 4. Push and PR
 
 ```bash

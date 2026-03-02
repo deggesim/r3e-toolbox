@@ -29,7 +29,7 @@ import Settings from "./pages/Settings";
 import { useConfigStore } from "./store/configStore";
 import { useGameDataStore } from "./store/gameDataStore";
 import { useProcessingLogStore } from "./store/processingLogStore";
-import type { RaceRoomData } from "./types";
+import type { RaceRoomData } from "./types/gameData";
 import { validateR3eData } from "./utils/r3eDataValidator";
 
 // Protected route component
@@ -49,8 +49,8 @@ const NavigationListener = () => {
   const { isElectron } = useElectronAPI();
 
   useEffect(() => {
-    if (isElectron && window.electron?.onNavigate) {
-      const unsubscribe = window.electron.onNavigate((path: string) => {
+    if (isElectron && globalThis.electron?.onNavigate) {
+      const unsubscribe = globalThis.electron.onNavigate((path: string) => {
         navigate(path);
       });
       return unsubscribe;
@@ -72,10 +72,6 @@ const AppContent = () => {
   // Try to load game data automatically on mount
   useEffect(() => {
     const autoLoadGameData = async () => {
-      // Prevent double execution in React StrictMode (dev mode)
-      if (autoLoadAttemptedRef.current) return;
-      autoLoadAttemptedRef.current = true;
-
       addLog(
         "info",
         "Searching for r3e-data.json in standard paths...",
@@ -139,6 +135,10 @@ const AppContent = () => {
       }
     };
 
+    // Prevent double execution in React StrictMode (dev mode)
+    if (autoLoadAttemptedRef.current) return;
+    autoLoadAttemptedRef.current = true;
+
     if (electron.isElectron) {
       autoLoadGameData();
     } else {
@@ -147,9 +147,8 @@ const AppContent = () => {
         "Game data can only be loaded in Electron mode from RaceRoom installation",
         faExclamationTriangle,
       );
-      return;
     }
-  }, [electron.isElectron]);
+  }, [addLog, electron, electron.isElectron, setGameData]);
 
   return (
     <>

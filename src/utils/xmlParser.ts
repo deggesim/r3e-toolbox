@@ -1,5 +1,13 @@
 import { XMLParser } from "fast-xml-parser";
-import type { Database, PlayerTimes } from "../types";
+import type {
+  AISkillVsLapTimesData,
+  Database,
+  PlayerBestLapTimesData,
+  PlayerTimes,
+  SampledDataEntry,
+  TrackValueData,
+  XMLTextElement,
+} from "../types/aiAdaptation";
 
 /**
  * Parses RaceRoom's aiadaptation.xml file structure.
@@ -18,10 +26,22 @@ const toArray = <T>(data: T | T[]): T[] => {
 };
 
 /**
+ * Extracts text from XML element (which can be an object with #text or a primitive string/number)
+ */
+const extractText = (
+  value: XMLTextElement | string | number | undefined,
+): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return value.toString();
+  if (!value) return "";
+  return value["#text"] ?? "";
+};
+
+/**
  * Processes player lap times for a track/class combination
  */
 const processPlayerTimes = (
-  playerentries: any,
+  playerentries: PlayerBestLapTimesData,
   playertimes: PlayerTimes,
   classid: string,
   trackid: string,
@@ -40,7 +60,7 @@ const processPlayerTimes = (
 
   for (const entry of lapTimes) {
     if (entry) {
-      const playertime = Number.parseFloat(entry["#text"] || entry);
+      const playertime = Number.parseFloat(extractText(entry));
       if (!Number.isNaN(playertime)) {
         allTimes.push(playertime);
         mintime = Math.min(playertime, mintime);
@@ -58,7 +78,7 @@ const processPlayerTimes = (
  * Processes AI skill levels and lap times for a track/class combination
  */
 const processAIEntries = (
-  aientries: any,
+  aientries: AISkillVsLapTimesData,
   database: Database,
   classid: string,
   trackid: string,
@@ -77,14 +97,10 @@ const processAIEntries = (
   let added = false;
 
   for (let k = 0; k < aiSkills.length; k++) {
-    const ailevel = Number.parseInt(aiSkills[k]["#text"] || aiSkills[k]);
-    const aitime = Number.parseFloat(
-      aiDatas[k].averagedLapTime["#text"] || aiDatas[k].averagedLapTime,
-    );
+    const ailevel = Number.parseInt(extractText(aiSkills[k]));
+    const aitime = Number.parseFloat(extractText(aiDatas[k].averagedLapTime));
     const numSamples = Number.parseInt(
-      aiDatas[k].numberOfSampledRaces?.["#text"] ??
-        aiDatas[k].numberOfSampledRaces ??
-        "1",
+      extractText(aiDatas[k].numberOfSampledRaces) ?? "1",
     );
 
     if (Number.isNaN(aitime)) continue;
@@ -119,15 +135,17 @@ const processAIEntries = (
  * Processes a single class entry for a track
  */
 const processClassEntry = (
-  classkey: any,
-  classcustom: any,
+  classkey: XMLTextElement | string,
+  classcustom: SampledDataEntry,
   trackid: string,
   database: Database,
   playertimes?: PlayerTimes,
 ): boolean => {
   if (!classkey || !classcustom) return false;
 
-  const classid = classkey["#text"]?.toString();
+  const classid = extractText(
+    typeof classkey === "string" ? classkey : classkey["#text"],
+  );
   if (!classid) return false;
 
   const playerentries = classcustom.playerBestLapTimes;
@@ -148,14 +166,16 @@ const processClassEntry = (
  * Processes a single track entry
  */
 const processTrackEntry = (
-  trackkey: any,
-  trackvalue: any,
+  trackkey: XMLTextElement | string,
+  trackvalue: TrackValueData,
   database: Database,
   playertimes?: PlayerTimes,
 ): boolean => {
   if (!trackkey || !trackvalue) return false;
 
-  const trackid = trackkey["#text"]?.toString();
+  const trackid = extractText(
+    typeof trackkey === "string" ? trackkey : trackkey["#text"],
+  );
   if (!trackid || typeof trackvalue !== "object") return false;
 
   const carClassIds = toArray(trackvalue.carClassId);

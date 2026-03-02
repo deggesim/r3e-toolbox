@@ -43,8 +43,8 @@ export const calculateRacePoints = (
 
   // Sort by finish time
   const sorted = [...race.slots].sort((a, b) => {
-    const timeA = parseTimeToSeconds(a.FinishTime);
-    const timeB = parseTimeToSeconds(b.FinishTime);
+    const timeA = parseTimeToSeconds(a.finishTime);
+    const timeB = parseTimeToSeconds(b.finishTime);
 
     // DNF/DNS should be at the end
     if (!timeA && !timeB) return 0;
@@ -57,14 +57,14 @@ export const calculateRacePoints = (
   // Assign points based on position
   sorted.forEach((slot, index) => {
     if (
-      slot.FinishTime &&
-      slot.FinishStatus !== "DNF" &&
-      slot.FinishStatus !== "DNS"
+      slot.finishTime &&
+      slot.finishStatus !== "DNF" &&
+      slot.finishStatus !== "DNS"
     ) {
       const points = pointsSystem[index] || 0;
-      pointsMap.set(slot.Driver, points);
+      pointsMap.set(slot.driver, points);
     } else {
-      pointsMap.set(slot.Driver, 0);
+      pointsMap.set(slot.driver, 0);
     }
   });
 
@@ -110,8 +110,8 @@ export const buildStandings = (
 
     // Sort to get positions
     const sorted = [...race.slots].sort((a, b) => {
-      const timeA = parseTimeToSeconds(a.FinishTime);
-      const timeB = parseTimeToSeconds(b.FinishTime);
+      const timeA = parseTimeToSeconds(a.finishTime);
+      const timeB = parseTimeToSeconds(b.finishTime);
       if (!timeA && !timeB) return 0;
       if (!timeA) return 1;
       if (!timeB) return -1;
@@ -119,14 +119,14 @@ export const buildStandings = (
     });
 
     sorted.forEach((slot, index) => {
-      const driver = slot.Driver;
+      const driver = slot.driver;
       const points = racePoints.get(driver) || 0;
       const position = index + 1;
 
       // Update driver stats
       if (!driverStats.has(driver)) {
         driverStats.set(driver, { points: 0, positions: [], races: 0 });
-        driverInfo.set(driver, { vehicle: slot.Vehicle, team: slot.Team });
+        driverInfo.set(driver, { vehicle: slot.vehicle, team: slot.team });
       }
 
       const stats = driverStats.get(driver)!;
@@ -135,15 +135,15 @@ export const buildStandings = (
       stats.races += 1;
 
       // Update team points
-      if (slot.Team) {
-        teamPoints.set(slot.Team, (teamPoints.get(slot.Team) || 0) + points);
+      if (slot.team) {
+        teamPoints.set(slot.team, (teamPoints.get(slot.team) || 0) + points);
       }
 
       // Update vehicle points
-      if (slot.Vehicle) {
+      if (slot.vehicle) {
         vehiclePoints.set(
-          slot.Vehicle,
-          (vehiclePoints.get(slot.Vehicle) || 0) + points,
+          slot.vehicle,
+          (vehiclePoints.get(slot.vehicle) || 0) + points,
         );
       }
     });
@@ -197,14 +197,14 @@ export const getBestLapTimes = (
 
   for (const race of races) {
     for (const slot of race.slots) {
-      if (slot.BestLap) {
-        const seconds = parseTimeToSeconds(slot.BestLap);
-        if (seconds) {
+      if (slot.bestLap) {
+        const seconds = parseTimeToSeconds(slot.bestLap);
+        if (seconds && seconds > 0) {
           bestLaps.push({
-            driver: slot.Driver,
-            time: slot.BestLap,
+            driver: slot.driver,
+            time: slot.bestLap,
             track: race.trackname,
-            vehicle: slot.Vehicle,
+            vehicle: slot.vehicle,
             seconds,
           });
         }
@@ -215,7 +215,12 @@ export const getBestLapTimes = (
   // Sort by time
   bestLaps.sort((a, b) => a.seconds - b.seconds);
 
-  return bestLaps.slice(0, 20).map(({ seconds, ...rest }) => rest);
+  return bestLaps.slice(0, 20).map((entry) => ({
+    driver: entry.driver,
+    time: entry.time,
+    track: entry.track,
+    vehicle: entry.vehicle,
+  }));
 };
 
 export const getBestQualifyingTimes = (
@@ -231,14 +236,14 @@ export const getBestQualifyingTimes = (
 
   for (const race of races) {
     for (const slot of race.slots) {
-      if (slot.QualTime) {
-        const seconds = parseTimeToSeconds(slot.QualTime);
+      if (slot.qualTime) {
+        const seconds = parseTimeToSeconds(slot.qualTime);
         if (seconds) {
           bestQuals.push({
-            driver: slot.Driver,
-            time: slot.QualTime,
+            driver: slot.driver,
+            time: slot.qualTime,
             track: race.trackname,
-            vehicle: slot.Vehicle,
+            vehicle: slot.vehicle,
             seconds,
           });
         }
@@ -249,7 +254,12 @@ export const getBestQualifyingTimes = (
   // Sort by time
   bestQuals.sort((a, b) => a.seconds - b.seconds);
 
-  return bestQuals.slice(0, 20).map(({ seconds, ...rest }) => rest);
+  return bestQuals.slice(0, 20).map((entry) => ({
+    driver: entry.driver,
+    time: entry.time,
+    track: entry.track,
+    vehicle: entry.vehicle,
+  }));
 };
 
 /**
@@ -285,11 +295,11 @@ export const calculateChampionshipStandings = (
       const points =
         position <= pointsSystem.length ? pointsSystem[position - 1] : 0;
 
-      if (!driverPoints.has(slot.Driver)) {
-        driverPoints.set(slot.Driver, { points: 0, positions: [] });
+      if (!driverPoints.has(slot.driver)) {
+        driverPoints.set(slot.driver, { points: 0, positions: [] });
       }
 
-      const driverData = driverPoints.get(slot.Driver)!;
+      const driverData = driverPoints.get(slot.driver)!;
       driverData.points += points;
       driverData.positions.push(position);
     });

@@ -1,5 +1,5 @@
 import { Button, Modal } from "react-bootstrap";
-import type { Assets } from "../types";
+import type { Assets } from "../types/gameData";
 
 interface PlayerTimesModification {
   classId: string;
