@@ -1,3 +1,11 @@
+# [1.4.0](https://github.com/deggesim/r3e-toolbox/compare/v1.3.2...v1.4.0) (2026-03-02)
+
+
+### Features
+
+* enhance logging configuration options and behavior ([9fdbdc9](https://github.com/deggesim/r3e-toolbox/commit/9fdbdc982878b21185e91b2a892b267ffb3642ed))
+* implement auto-update system using electron-updater ([#11](https://github.com/deggesim/r3e-toolbox/issues/11)) ([aaaae94](https://github.com/deggesim/r3e-toolbox/commit/aaaae94a414dab8c7b315c61f47c4bc061e7d144))
+
 ## [1.3.2](https://github.com/deggesim/r3e-toolbox/compare/v1.3.1...v1.3.2) (2026-02-24)
 
 ## [1.3.1](https://github.com/deggesim/r3e-toolbox/compare/v1.3.0...v1.3.1) (2026-02-22)
