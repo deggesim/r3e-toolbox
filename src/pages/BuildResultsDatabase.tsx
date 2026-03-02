@@ -26,14 +26,13 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import SectionTitle from "../components/SectionTitle";
+import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
-import type { ChampionshipEntry } from "../types/raceResults";
+import type { ChampionshipEntry, ParsedRace } from "../types/raceResults";
 import type { LeaderboardAssets } from "../types/gameData";
-import type { ParsedRace } from "../types/raceResults";
-import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   fetchLeaderboardAssets,
   fetchLeaderboardAssetsWithCache,
@@ -264,57 +263,9 @@ const BuildResultsDatabase = () => {
     [gameData],
   );
 
-  const resolveCarName = useCallback(
-    (slot: { vehicleId?: number; vehicle?: string; className?: string }) => {
-      const vehicleId = slot.vehicleId;
-
-      // Try to get car name from gameData first
-      if (vehicleId && gameData?.cars?.[vehicleId]?.Name) {
-        return gameData.cars[vehicleId].Name;
-      }
-
-      // If not found in gameData, try assets
-      if (assets?.cars) {
-        const assetCar = assets.cars.find(
-          (c) => c.id === String(vehicleId) || c.name === slot.vehicle,
-        );
-        if (assetCar) {
-          return assetCar.name;
-        }
-      }
-
-      // Fallback to slot.vehicle
-      if (slot.vehicle) {
-        return slot.vehicle;
-      }
-
-      // Last resort fallback
-      return slot.className || (vehicleId ? String(vehicleId) : undefined);
-    },
-    [assets, gameData],
-  );
-
-  const resolveCarIcon = useCallback(
-    (slot: { vehicleId?: number; vehicle?: string }) => {
-      if (!assets) return undefined;
-
-      const assetMap = convertAssetsForHTML(assets);
-      if (!assetMap?.cars) return undefined;
-
-      const keyCandidates = [
-        slot.vehicleId ? String(slot.vehicleId) : undefined,
-        slot.vehicle,
-      ].filter(Boolean) as string[];
-
-      for (const key of keyCandidates) {
-        if (assetMap.cars[key]) {
-          return assetMap.cars[key];
-        }
-      }
-
-      return undefined;
-    },
-    [assets],
+  const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
+    gameData,
+    assets,
   );
 
   const resolveCarInfo = useCallback(() => {

@@ -28,6 +28,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
 import SectionTitle from "../components/SectionTitle";
+import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
@@ -56,6 +57,10 @@ const ResultsDatabaseViewer = () => {
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
   const gameData = useGameDataStore((state) => state.gameData);
   const addLog = useProcessingLogStore((state) => state.addLog);
+  const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
+    gameData,
+    leaderboardAssets,
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
@@ -271,46 +276,6 @@ const ResultsDatabaseViewer = () => {
         );
         return;
       }
-
-      const resolveCarName = (slot: {
-        vehicleId?: number;
-        vehicle?: string;
-        className?: string;
-      }) => {
-        if (slot.vehicleId && gameData?.cars?.[slot.vehicleId]?.Name) {
-          return gameData.cars[slot.vehicleId].Name;
-        }
-
-        const assetCar = leaderboardAssets.cars.find(
-          (car) =>
-            (slot.vehicleId !== undefined &&
-              car.id === String(slot.vehicleId)) ||
-            (slot.vehicle !== undefined && car.name === slot.vehicle),
-        );
-
-        if (assetCar?.name) {
-          return assetCar.name;
-        }
-
-        return slot.vehicle || slot.className;
-      };
-
-      const resolveCarIcon = (slot: {
-        vehicleId?: number;
-        vehicle?: string;
-        className?: string;
-      }) => {
-        const resolvedName = resolveCarName(slot);
-        const assetCar = leaderboardAssets.cars.find(
-          (car) =>
-            (slot.vehicleId !== undefined &&
-              car.id === String(slot.vehicleId)) ||
-            (slot.vehicle !== undefined && car.name === slot.vehicle) ||
-            (resolvedName !== undefined && car.name === resolvedName),
-        );
-
-        return assetCar?.iconUrl;
-      };
 
       let updatedCount = 0;
 
