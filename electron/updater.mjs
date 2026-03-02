@@ -3,6 +3,7 @@ import isDev from "electron-is-dev";
 
 let updateCheckInProgress = false;
 let autoUpdater = null;
+let pendingManualNoUpdateNotification = false;
 
 // Lazy load autoUpdater at runtime to avoid bundling issues with electron-builder
 const getAutoUpdater = async () => {
@@ -14,42 +15,50 @@ const getAutoUpdater = async () => {
 };
 
 export const initAutoUpdater = async (mainWindow) => {
-  if (isDev) {
-    console.log("[Updater] Running in development mode, auto-updater disabled");
-    return;
+  const updater = isDev ? { on: () => {} } : await getAutoUpdater();
+
+  if (!isDev) {
+    // Configure electron-updater
+    updater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
+    updater.autoDownload = false; // Download only when user agrees
+
+    // Check for updates on startup (after 5 seconds)
+    setTimeout(() => {
+      checkForUpdates(updater);
+    }, 5000);
+
+    // Check for updates every hour
+    setInterval(() => {
+      checkForUpdates(updater);
+    }, 3600000); // 1 hour
+  } else {
+    console.log(
+      "[Updater] Running in development mode, auto-update checks disabled",
+    );
   }
 
-  const updater = await getAutoUpdater();
+  // Handle update events (registered for both dev and prod)
+  const handleUpdateAvailable = (info) => {
+    console.log("[Updater] Update available:", info);
+    pendingManualNoUpdateNotification = false;
+    if (!isDev) showUpdateDialog(mainWindow, info, updater);
+  };
 
-  // Configure electron-updater
-  updater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
-  updater.autoDownload = false; // Download only when user agrees
-
-  // Check for updates on startup (after 5 seconds)
-  setTimeout(() => {
-    checkForUpdates(mainWindow, updater);
-  }, 5000);
-
-  // Check for updates every hour
-  setInterval(() => {
-    checkForUpdates(mainWindow, updater);
-  }, 3600000); // 1 hour
-
-  // Handle update events
-  updater.on("update-available", (info) => {
-    console.log("[Updater] Update available:", info.version);
-    showUpdateDialog(mainWindow, info, updater);
-  });
-
-  updater.on("update-not-available", () => {
+  const handleUpdateNotAvailable = () => {
     console.log("[Updater] Already on latest version");
-  });
 
-  updater.on("error", (error) => {
+    if (pendingManualNoUpdateNotification) {
+      pendingManualNoUpdateNotification = false;
+      showNoUpdatesDialog(mainWindow);
+    }
+  };
+
+  const handleError = (error) => {
     console.error("[Updater] Update check error:", error);
-  });
+    pendingManualNoUpdateNotification = false;
+  };
 
-  updater.on("download-progress", (progressObj) => {
+  const handleDownloadProgress = (progressObj) => {
     const percent = Math.round(progressObj.percent);
     console.log(`[Updater] Download progress: ${percent}%`);
     mainWindow.webContents.send("update-download-progress", {
@@ -57,31 +66,60 @@ export const initAutoUpdater = async (mainWindow) => {
       transferred: progressObj.transferred,
       total: progressObj.total,
     });
-  });
+  };
 
-  updater.on("update-downloaded", () => {
+  const handleUpdateDownloaded = () => {
     console.log("[Updater] Update downloaded successfully");
-    showInstallDialog(mainWindow, updater);
-  });
+    if (!isDev) showInstallDialog(mainWindow, updater);
+  };
+
+  // Store handlers for dev mode simulation
+  if (isDev) {
+    global.updateHandlers = {
+      handleUpdateAvailable,
+      handleUpdateNotAvailable,
+      handleError,
+      handleDownloadProgress,
+      handleUpdateDownloaded,
+    };
+  } else {
+    updater.on("update-available", handleUpdateAvailable);
+    updater.on("update-not-available", handleUpdateNotAvailable);
+    updater.on("error", handleError);
+    updater.on("download-progress", handleDownloadProgress);
+    updater.on("update-downloaded", handleUpdateDownloaded);
+  }
 };
 
-const checkForUpdates = async (mainWindow, updater) => {
+const checkForUpdates = async (updater, { manual = false } = {}) => {
   if (updateCheckInProgress) {
     console.log("[Updater] Check already in progress, skipping");
     return;
   }
 
+  pendingManualNoUpdateNotification = manual;
   updateCheckInProgress = true;
   console.log("[Updater] Checking for updates...");
 
-  updater
-    .checkForUpdates()
-    .catch((error) => {
-      console.error("[Updater] Check for updates failed:", error.message);
-    })
-    .finally(() => {
+  if (isDev) {
+    // In dev mode, simulate a check with a delay
+    setTimeout(() => {
+      console.log("[Updater] Dev mode: check simulated, no updates available");
+      if (global.updateHandlers?.handleUpdateNotAvailable) {
+        global.updateHandlers.handleUpdateNotAvailable();
+      }
       updateCheckInProgress = false;
-    });
+    }, 1000);
+  } else {
+    updater
+      .checkForUpdates()
+      .catch((error) => {
+        console.error("[Updater] Check for updates failed:", error.message);
+      })
+      .finally(() => {
+        updateCheckInProgress = false;
+      });
+  }
 };
 
 const showUpdateDialog = (mainWindow, updateInfo, updater) => {
@@ -141,8 +179,22 @@ const showInstallDialog = (mainWindow, updater) => {
     });
 };
 
+const showNoUpdatesDialog = (mainWindow) => {
+  dialog
+    .showMessageBox(mainWindow, {
+      type: "info",
+      title: "No Updates Available",
+      message: "You are already using the latest version of R3E Toolbox.",
+      buttons: ["OK"],
+      defaultId: 0,
+    })
+    .catch((error) => {
+      console.error("[Updater] Error showing no-updates dialog:", error);
+    });
+};
+
 // Manual check trigger (can be called from UI)
 export const manualCheckForUpdates = async (mainWindow) => {
   const updater = await getAutoUpdater();
-  checkForUpdates(mainWindow, updater);
+  checkForUpdates(updater, { manual: true });
 };
