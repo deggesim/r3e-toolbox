@@ -88,6 +88,27 @@ const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
   return index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
 };
 
+const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
+  if (!winner?.totalTime || !driver?.totalTime) return "-";
+
+  const winnerLaps = winner.totalLaps ?? 0;
+  const driverLaps = driver.totalLaps ?? 0;
+  const lapDiff = winnerLaps - driverLaps;
+
+  const winnerTime = parseTime(winner.totalTime);
+  const driverTime = parseTime(driver.totalTime);
+  const timeDiff = driverTime - winnerTime;
+
+  if (lapDiff > 0) {
+    // Driver is lapped: show only lap count, no time gap
+    return `+${lapDiff} lap${lapDiff > 1 ? "s" : ""}`;
+  } else {
+    // Same laps, show time difference
+    const sign = timeDiff >= 0 ? "+" : "-";
+    return `${sign}${Math.abs(timeDiff).toFixed(3)}`;
+  }
+};
+
 const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
   const driverMap = new Map<
     string,
@@ -948,6 +969,12 @@ body {
                     return `<td>-</td>`;
                   }
 
+                  const winner = sortedSlots[0];
+                  const formattedTime =
+                    posIdx === 0
+                      ? slot.totalTime
+                      : calculateGapFromWinner(winner, slot);
+
                   const vehicleIcon =
                     slot.vehicleId &&
                     leaderboardAssets?.cars[String(slot.vehicleId)]
@@ -964,7 +991,7 @@ body {
                     <div class="race-result-entry${isHuman ? " human-driver" : ""}">
                       <div class="result-driver">${slot.driver}</div>
                       <div class="result-vehicle">${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}<span>${displayVehicleName}</span></div>
-                      <div class="result-time">${slot.totalTime}</div>
+                      <div class="result-time">${formattedTime}</div>
                     </div>
                   </td>`;
                 })

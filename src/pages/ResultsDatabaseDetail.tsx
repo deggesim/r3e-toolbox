@@ -94,10 +94,8 @@ const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
   const timeDiff = driverTime - winnerTime;
 
   if (lapDiff > 0) {
-    // Driver is lapped
-    const sign = timeDiff >= 0 ? "+" : "-";
-    const absTimeDiff = Math.abs(timeDiff).toFixed(3);
-    return `+${lapDiff} lap${lapDiff > 1 ? "s" : ""} ${sign}${absTimeDiff}`;
+    // Driver is lapped: show only lap count, no time gap
+    return `+${lapDiff} lap${lapDiff > 1 ? "s" : ""}`;
   } else {
     // Same laps, show time difference
     const sign = timeDiff >= 0 ? "+" : "-";
