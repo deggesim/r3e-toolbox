@@ -38,6 +38,7 @@
     "@types/react-router-dom": "^5.3.3",
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
+    "electron-log": "^5.2.0",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
     "fast-xml-parser": "^5.4.1",

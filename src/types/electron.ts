@@ -51,6 +51,23 @@ declare global {
     openExternal: (
       url: string,
     ) => Promise<{ success: boolean; error?: string }>;
+    logInfo: (
+      message: string,
+      metadata?: unknown,
+    ) => Promise<{ success: boolean }>;
+    logError: (
+      message: string,
+      metadata?: unknown,
+    ) => Promise<{ success: boolean }>;
+    logWarn: (
+      message: string,
+      metadata?: unknown,
+    ) => Promise<{ success: boolean }>;
+    logDebug: (
+      message: string,
+      metadata?: unknown,
+    ) => Promise<{ success: boolean }>;
+    getLogsPath: () => Promise<string>;
     onNavigate: (callback: (path: string) => void) => () => void;
     onUpdateDownloadProgress: (
       callback: (data: {
