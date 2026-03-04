@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/deggesim/r3e-toolbox/compare/v1.4.1...v1.5.0) (2026-03-04)
+
+
+### Bug Fixes
+
+* **logging:** improve error handling and log path display in LoggingSection component [skip ci] ([be20ccd](https://github.com/deggesim/r3e-toolbox/commit/be20ccd1abeb53d9d9a1af036f0a64dc09dfbced))
+
+
+### Features
+
+* **logging:** implement comprehensive logging system with electron-log integration ([#15](https://github.com/deggesim/r3e-toolbox/issues/15)) ([9eddf2a](https://github.com/deggesim/r3e-toolbox/commit/9eddf2a94c5b48a999d26d664527fac8ce9933aa))
+
 ## [1.4.1](https://github.com/deggesim/r3e-toolbox/compare/v1.4.0...v1.4.1) (2026-03-04)
 
 # [1.4.0](https://github.com/deggesim/r3e-toolbox/compare/v1.3.2...v1.4.0) (2026-03-02)
