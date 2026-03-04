@@ -8,8 +8,9 @@ import {
   shell,
 } from "electron";
 import isDev from "electron-is-dev";
+import log from "electron-log";
 import Store from "electron-store";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,27 @@ import { initAutoUpdater, manualCheckForUpdates } from "./updater.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const store = new Store();
+
+// Configure electron-log for production logging
+const logsDir = path.join(app.getPath("userData"), "logs");
+if (!existsSync(logsDir)) {
+  mkdirSync(logsDir, { recursive: true });
+}
+
+log.transports.file.resolvePathFn = () => path.join(logsDir, "main.log");
+log.transports.file.maxSize = 5242880; // 5MB
+log.transports.console.level = isDev ? "debug" : "info";
+log.transports.file.level = "info";
+
+// Only log to file in production
+if (!isDev) {
+  // Overwrite console methods to use electron-log in production
+  console.log = log.log;
+  console.error = log.error;
+  console.warn = log.warn;
+  console.info = log.info;
+  console.debug = log.debug;
+}
 
 let mainWindow;
 
@@ -402,4 +424,29 @@ ipcMain.handle("app:openExternal", async (event, url) => {
     console.error("[app:openExternal] Error:", error);
     return { success: false, error: error.message };
   }
+});
+
+// Logging handlers
+ipcMain.handle("log:info", async (event, message, metadata) => {
+  log.info(message, metadata);
+  return { success: true };
+});
+
+ipcMain.handle("log:error", async (event, message, metadata) => {
+  log.error(message, metadata);
+  return { success: true };
+});
+
+ipcMain.handle("log:warn", async (event, message, metadata) => {
+  log.warn(message, metadata);
+  return { success: true };
+});
+
+ipcMain.handle("log:debug", async (event, message, metadata) => {
+  log.debug(message, metadata);
+  return { success: true };
+});
+
+ipcMain.handle("log:getPath", async () => {
+  return logsDir;
 });

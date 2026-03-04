@@ -13,6 +13,7 @@ import { useConfigStore } from "../store/configStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import type { RaceRoomData } from "../types/gameData";
+import { LoggingSection } from "../components/LoggingSection";
 import { validateR3eData } from "../utils/r3eDataValidator";
 
 type NumericConfigKey = {
@@ -358,6 +359,7 @@ const Settings = () => {
           </Card.Body>
         </Card>
       }
+      <LoggingSection />
     </Container>
   );
 };
