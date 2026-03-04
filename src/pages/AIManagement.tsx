@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -28,7 +29,6 @@ import type {
   DatabaseClass,
   DatabaseTrack,
   PlayerTimes,
-  ProcessedDatabase,
 } from "../types/aiAdaptation";
 import { getClassesSorted, getTracksSorted } from "../utils/assetHelpers";
 import { processDatabase } from "../utils/databaseProcessor";
@@ -94,10 +94,9 @@ const AIManagement = () => {
   // Data state
   const [assets, setAssets] = useState<Assets | null>(null);
   const [database, setDatabase] = useState<Database>({ classes: {} });
-  const [processed, setProcessed] = useState<ProcessedDatabase>({
-    classes: {},
-  });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
+
+  const fittedDatabase = useMemo(() => processDatabase(database), [database]);
 
   // UI state
   const [selectedClassId, setSelectedClassId] = useState<string>("");
@@ -134,10 +133,6 @@ const AIManagement = () => {
   useEffect(() => {
     setSpacing(config.aiSpacing);
   }, [config.aiSpacing]);
-
-  useEffect(() => {
-    setProcessed(processDatabase(database));
-  }, [config, database]);
 
   // Load game data assets on mount from global store
   useEffect(() => {
@@ -318,14 +313,14 @@ const AIManagement = () => {
       addLog("info", `AI Range: ${aifrom} - ${aito} (step: ${aiSpacing})`);
 
       // Validate that the track has been processed (fitted) successfully
-      if (!processed.classes[classid]?.tracks[trackid]) {
+      if (!fittedDatabase.classes[classid]?.tracks[trackid]) {
         addLog(
           "error",
-          "No processed data available for this class/track combination",
+          "No fitted data available for this class/track combination",
         );
         return database;
       }
-      addLog("success", "Processed data found");
+      addLog("success", "Fitted data found");
 
       // Create a deep copy of the current database to avoid mutating state directly
       const newDatabase = structuredClone(database);
@@ -342,7 +337,7 @@ const AIManagement = () => {
       }
 
       const track = newDatabase.classes[classid].tracks[trackid];
-      const processedTrack = processed.classes[classid].tracks[trackid];
+      const fittedTrack = fittedDatabase.classes[classid].tracks[trackid];
 
       // Replace all existing AI levels for this class/track with generated values
       track.ailevels = {};
@@ -351,7 +346,7 @@ const AIManagement = () => {
       // Populate the track with generated AI levels from aifrom to aito with aiSpacing step
       let addedCount = 0;
       for (let ai = aifrom; ai <= aito; ai += aiSpacing) {
-        const generatedTime = processedTrack.ailevels[ai]?.[0];
+        const generatedTime = fittedTrack.ailevels[ai]?.[0];
         if (generatedTime) {
           track.ailevels[ai] = [generatedTime];
           track.samplesCount[ai] = 0; // Mark as generated
@@ -379,7 +374,7 @@ const AIManagement = () => {
       setDatabase(newDatabase);
       return newDatabase;
     },
-    [database, processed, assets, addLog],
+    [database, fittedDatabase, assets, addLog],
   );
 
   // ============ REMOVE GENERATED ============
@@ -507,7 +502,6 @@ const AIManagement = () => {
 
     const emptyDb: Database = { classes: {} };
     setDatabase(emptyDb);
-    setProcessed({ classes: {} });
     addLog("success", "All AI data cleared from database");
 
     downloadXml(emptyDb, playerTimes);
@@ -598,10 +592,10 @@ const AIManagement = () => {
 
   const availableClasses = assets
     ? getClassesSorted(assets).filter((classAsset) => {
-        if (!processed || Object.keys(processed.classes).length === 0) {
+        if (Object.keys(fittedDatabase.classes).length === 0) {
           return true;
         }
-        const classData = processed?.classes[classAsset.id];
+        const classData = fittedDatabase.classes[classAsset.id];
         const playerClass = playerTimes?.classes[classAsset.id];
         return classData || playerClass;
       })
@@ -610,10 +604,10 @@ const AIManagement = () => {
   const availableTracks = assets
     ? getTracksSorted(assets).filter((trackAsset) => {
         if (!selectedClassId) return false;
-        if (!processed || Object.keys(processed.classes).length === 0) {
+        if (Object.keys(fittedDatabase.classes).length === 0) {
           return true;
         }
-        const classData = processed?.classes[selectedClassId];
+        const classData = fittedDatabase.classes[selectedClassId];
         const track = classData?.tracks[trackAsset.id];
         const playerClass = playerTimes?.classes[selectedClassId];
         const playerTrack = playerClass?.tracks[trackAsset.id];
@@ -623,9 +617,10 @@ const AIManagement = () => {
 
   const aiLevels =
     selectedTrackId &&
-    processed?.classes[selectedClassId]?.tracks[selectedTrackId]
+    fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
       ? Object.entries(
-          processed.classes[selectedClassId].tracks[selectedTrackId].ailevels,
+          fittedDatabase.classes[selectedClassId].tracks[selectedTrackId]
+            .ailevels,
         )
           .map(([ai, times]) => ({
             ai: Number(ai),
