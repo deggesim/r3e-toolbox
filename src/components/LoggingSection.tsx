@@ -27,6 +27,7 @@ export const LoggingSection = () => {
       const path = await electron.getLogsPath();
       setLogsPath(path);
     } catch (error) {
+      console.error("Failed to get logs path:", error);
       addLog("error", "Failed to get logs path");
     } finally {
       setIsLoadingLogs(false);
@@ -41,8 +42,9 @@ export const LoggingSection = () => {
 
     try {
       const path = await electron.getLogsPath();
-      await electron.openExternal(`file:///${path.replace(/\\/g, "/")}`);
+      await electron.openExternal(`file:///${path.replaceAll("\\", "/")}`);
     } catch (error) {
+      console.error("Failed to open logs folder:", error);
       addLog("error", "Failed to open logs folder");
     }
   };
@@ -63,7 +65,7 @@ export const LoggingSection = () => {
         <p className="text-white-50 mb-3">
           In production mode, all application logs are automatically saved to disk.
           Logs are rotated when they exceed 5MB. Latest logs are in{" "}
-          <code>C:\Users\{"{username}"}\AppData\Roaming\r3e-toolbox\logs\</code>
+          <code>C:\Users\username\AppData\Roaming\r3e-toolbox\logs\</code>
         </p>
         <Row className="mb-3">
           <Col xs={12}>
