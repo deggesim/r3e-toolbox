@@ -326,7 +326,7 @@ aiadaptation.xml
        ↓
    databaseProcessor.ts (fit & validate)
        ↓
-   ProcessedDatabase {
+   Database {
      classes: {
        [classId]: {
          tracks: {
@@ -359,7 +359,7 @@ aiadaptation.xml
 - Builds normalized `Database` structure: `classes[id].tracks[id].ailevels[level]`
 - Implements linear least-squares regression fitting
 - Validates fit quality: rejects non-monotonic predictions and deviations > `testMaxTimePct`
-- Returns `ProcessedDatabase` with lap time generator functions
+- Returns `Database` with lap time generator functions
 
 #### 3. **Fitting Algorithm** (`src/utils/fitting.ts`)
 
@@ -427,7 +427,6 @@ src/
 │   └── Settings.tsx              # Global settings panel
 │
 ├── components/
-│   ├── AIManagementGUI.tsx       # AI Management: visualization & controls
 │   ├── AISelectionTable.tsx      # AI level selection table
 │   ├── ChampionshipCard.tsx      # Viewer cards for saved championships
 │   ├── FileUploadSection.tsx     # Shared file input UI
@@ -450,7 +449,7 @@ src/
 │   ├── xmlParser.ts              # Parse aiadaptation.xml → Database
 │   ├── jsonParser.ts             # Load r3e-data.json → Assets
 │   ├── r3eDataValidator.ts       # Validate r3e-data.json structure
-│   ├── databaseProcessor.ts      # Fit & validate → ProcessedDatabase
+│   ├── databaseProcessor.ts      # Fit & validate → Database
 │   ├── fitting.ts                # Linear/parabolic regression functions
 │   ├── timeUtils.ts              # Lap time computations
 │   ├── xmlBuilder.ts             # Reconstruct aiadaptation.xml

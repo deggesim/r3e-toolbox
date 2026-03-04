@@ -23,6 +23,17 @@ contextBridge.exposeInMainWorld("electron", {
   storeSet: (key, value) => ipcRenderer.invoke("store:set", key, value),
   storeDelete: (key) => ipcRenderer.invoke("store:delete", key),
 
+  // Logging operations
+  logInfo: (message, metadata) =>
+    ipcRenderer.invoke("log:info", message, metadata),
+  logError: (message, metadata) =>
+    ipcRenderer.invoke("log:error", message, metadata),
+  logWarn: (message, metadata) =>
+    ipcRenderer.invoke("log:warn", message, metadata),
+  logDebug: (message, metadata) =>
+    ipcRenderer.invoke("log:debug", message, metadata),
+  getLogsPath: () => ipcRenderer.invoke("log:getPath"),
+
   // Update notifications
   onUpdateDownloadProgress: (callback) => {
     const listener = (event, data) => callback(data);

@@ -128,6 +128,41 @@ export const useElectronAPI = () => {
           throw new Error(result.error || "Failed to open external link");
         }
       },
+
+      async logInfo(message: string, metadata?: unknown): Promise<void> {
+        if (!isElectron) {
+          return;
+        }
+        await globalThis.electron.logInfo(message, metadata);
+      },
+
+      async logError(message: string, metadata?: unknown): Promise<void> {
+        if (!isElectron) {
+          return;
+        }
+        await globalThis.electron.logError(message, metadata);
+      },
+
+      async logWarn(message: string, metadata?: unknown): Promise<void> {
+        if (!isElectron) {
+          return;
+        }
+        await globalThis.electron.logWarn(message, metadata);
+      },
+
+      async logDebug(message: string, metadata?: unknown): Promise<void> {
+        if (!isElectron) {
+          return;
+        }
+        await globalThis.electron.logDebug(message, metadata);
+      },
+
+      async getLogsPath(): Promise<string> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        return globalThis.electron.getLogsPath();
+      },
     }),
     [isElectron],
   );

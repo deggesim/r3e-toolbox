@@ -1,7 +1,7 @@
 {
   "name": "r3e-toolbox",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Comprehensive toolkit for RaceRoom Racing Experience (R3E) - AI management, race results, and championship standings",
   "author": "Simone De Gennaro",
   "type": "module",
@@ -38,6 +38,7 @@
     "@types/react-router-dom": "^5.3.3",
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
+    "electron-log": "^5.2.0",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
     "fast-xml-parser": "^5.4.1",
