@@ -1,37 +1,37 @@
-# Implementazione Sistema di Logging - R3E Toolbox
+# Logging System Implementation - R3E Toolbox
 
-## Sommario
+## Summary
 
-È stato implementato un sistema completo di logging per l'app R3E Toolbox che salva automaticamente i log su disco in modalità produzione.
+A complete logging system has been implemented for the R3E Toolbox app. It automatically saves logs to disk in production mode.
 
-## Cosa è stato Fatto
+## What Was Done
 
 ### 1. **Dependency Add**
 
-- ✅ Aggiunto `electron-log` v5.2.0 al `package.json`
+- ✅ Added `electron-log` v5.2.0 to `package.json`
 
-### 2. **Configurazione Electron (main.mjs)**
+### 2. **Electron Configuration (main.mjs)**
 
-- ✅ Importato `electron-log` e configurato per salvare in `AppData\Roaming\r3e-toolbox\logs\`
-- ✅ Impostato limite di rotazione file a 5MB
-- ✅ Console methods reindirizzati a electron-log in produzione
-- ✅ Diversi livelli per dev vs prod:
+- ✅ Imported `electron-log` and configured it to save under `AppData\Roaming\r3e-toolbox\logs\`
+- ✅ Set file rotation limit to 5MB
+- ✅ Redirected console methods to electron-log in production
+- ✅ Different levels for dev vs prod:
   - **Production**: console=info, file=info
   - **Development**: console=debug, file=info
 
 ### 3. **IPC Handlers (main.mjs)**
 
-Aggiunti 5 handler IPC per logging:
+Added 5 IPC handlers for logging:
 
-- `log:info` - Log informativi
-- `log:error` - Log errori
-- `log:warn` - Log avvertimenti
-- `log:debug` - Log debug
-- `log:getPath` - Ottieni path cartella logs
+- `log:info` - Informational logs
+- `log:error` - Error logs
+- `log:warn` - Warning logs
+- `log:debug` - Debug logs
+- `log:getPath` - Get logs directory path
 
 ### 4. **Preload Bridge (preload.cjs)**
 
-Esposti 5 metodi al renderer process:
+Exposed 5 methods to the renderer process:
 
 - `logInfo(message, metadata)`
 - `logError(message, metadata)`
@@ -41,52 +41,52 @@ Esposti 5 metodi al renderer process:
 
 ### 5. **Type Definitions (src/types/electron.ts)**
 
-- ✅ Aggiunti type per tutti i metodi di logging
+- ✅ Added types for all logging methods
 
-### 6. **Hook useLogger (src/hooks/useLogger.ts)**
+### 6. **useLogger Hook (src/hooks/useLogger.ts)**
 
-- ✅ Creato hook React per logging con fallback web (console)
-- ✅ Supporta prefix automatico per identificare il componente
-- ✅ Async e non-blocking
-- ✅ Lavora sia in Electron che web mode
+- ✅ Created a React hook for logging with web fallback (console)
+- ✅ Supports automatic prefixing to identify the component
+- ✅ Async and non-blocking
+- ✅ Works in both Electron and web mode
 
-### 7. **Hook useElectronAPI (aggiornato)**
+### 7. **useElectronAPI Hook (updated)**
 
-- ✅ Aggiunti metodi `logInfo`, `logError`, `logWarn`, `logDebug`, `getLogsPath`
+- ✅ Added methods `logInfo`, `logError`, `logWarn`, `logDebug`, `getLogsPath`
 
 ### 8. **Utility Helpers (src/utils/loggingUtils.ts)**
 
-- ✅ Utility `openLogsFolder()` per aprire cartella con Windows Explorer
-- ✅ Utility `getLogsPath()` per ottenere path
+- ✅ Utility `openLogsFolder()` to open the logs folder in Windows Explorer
+- ✅ Utility `getLogsPath()` to retrieve the path
 
 ### 9. **UI Component (src/components/LoggingSection.tsx)**
 
-- ✅ Componente riusabile che mostra:
-  - percorso della cartella logs
-  - bottone "Load Path" per caricare il path
-  - bottone "Open Logs Folder" per aprire in Windows Explorer
-- ✅ Visible solo in Electron mode
+- ✅ Reusable component that shows:
+  - logs folder path
+  - "Load Path" button to fetch the path
+  - "Open Logs Folder" button to open Windows Explorer
+- ✅ Visible only in Electron mode
 
 ### 10. **Settings Page Integration (src/pages/Settings.tsx)**
 
-- ✅ Integrato LoggingSection nella pagina Settings
-- ✅ Posizionato dopo la sezione Game Data Management
+- ✅ Integrated `LoggingSection` into the Settings page
+- ✅ Positioned after the Game Data Management section
 
-## Posizione Log File
+## Log File Location
 
 ```
 C:\Users\{username}\AppData\Roaming\r3e-toolbox\logs\main.log
 ```
 
-Esempio:
+Example:
 
 ```
 C:\Users\simon\AppData\Roaming\r3e-toolbox\logs\main.log
 ```
 
-## Come Usare il Logger
+## How to Use the Logger
 
-### Nel Codice React/TypeScript
+### In React/TypeScript Code
 
 ```typescript
 import { useLogger } from "../hooks/useLogger";
@@ -99,7 +99,7 @@ export const MyComponent = () => {
     logger.info("User action", { userId: 123, action: "click" });
 
     try {
-      // operazione
+      // operation
     } catch (error) {
       logger.error("Operation failed", { error: error.message });
     }
@@ -109,14 +109,14 @@ export const MyComponent = () => {
 };
 ```
 
-### Livelli di Log
+### Log Levels
 
-- **info**: Informazioni generali
-- **error**: Errori e problemi
-- **warn**: Avvertimenti
-- **debug**: Info debug (solo dev mode)
+- **info**: General information
+- **error**: Errors and issues
+- **warn**: Warnings
+- **debug**: Debug info (dev mode only)
 
-### Metadata Opzionale
+### Optional Metadata
 
 ```typescript
 logger.info("File loaded", {
@@ -126,35 +126,35 @@ logger.info("File loaded", {
 });
 ```
 
-## Differenze Dev vs Production
+## Dev vs Production Differences
 
-| Aspetto            | Dev Mode               | Production                          |
-| ------------------ | ---------------------- | ----------------------------------- |
-| **Console Log**    | debug                  | info                                |
-| **File Log Level** | info                   | info                                |
-| **File Rotation**  | 5MB                    | 5MB                                 |
-| **Dev Tools**      | Automaticamente aperto | Chiuso                              |
-| **Path**           | Same                   | `AppData\Roaming\r3e-toolbox\logs\` |
+| Aspect            | Dev Mode               | Production                          |
+| ----------------- | ---------------------- | ----------------------------------- |
+| **Console Log**   | debug                  | info                                |
+| **File Log Level**| info                   | info                                |
+| **File Rotation** | 5MB                    | 5MB                                 |
+| **Dev Tools**     | Automatically open     | Closed                              |
+| **Path**          | Same                   | `AppData\Roaming\r3e-toolbox\logs\` |
 
-## Settings Page - Nuova Sezione
+## Settings Page - New Section
 
-Nella pagina `/settings` è apparsa una nuova sezione **"Application Logs"** (solo in Electron):
+In the `/settings` page, a new **"Application Logs"** section appears (Electron only):
 
-1. **Logs Location** - Campo di testo mostra il percorso completo
-2. **Load Path** - Bottone per caricare il percorso
-3. **Open Logs Folder** - Bottone per aprire Windows Explorer (disabled finché non carichi il path)
+1. **Logs Location** - Text field showing the full path
+2. **Load Path** - Button to fetch the path
+3. **Open Logs Folder** - Button to open Windows Explorer (disabled until path is loaded)
 
-## Configurazione
+## Configuration
 
-La configurazione di electron-log in `main.mjs` è customizzabile:
+The electron-log configuration in `main.mjs` is customizable:
 
 ```javascript
-log.transports.file.maxSize = 5242880; // 5MB - Cambia per rotazione
+log.transports.file.maxSize = 5242880; // 5MB - adjust for rotation
 log.transports.console.level = isDev ? "debug" : "info";
 log.transports.file.level = "info";
 ```
 
-## Flow di Logging
+## Logging Flow
 
 ```
 React Component
@@ -170,92 +170,92 @@ electron-log
 File System: AppData\Roaming\r3e-toolbox\logs\main.log
 ```
 
-## Fallback Web Mode
+## Web Mode Fallback
 
-Quando l'app è in **browser mode** (non Electron):
+When the app runs in **browser mode** (not Electron):
 
-- ✅ `useLogger` funziona comunque
-- ✅ Loga nella console del browser (DevTools → Console)
-- ✅ Non persiste su disco (limitazione browser)
-- ✅ LoggingSection non è visibile
+- ✅ `useLogger` still works
+- ✅ Logs go to the browser console (DevTools → Console)
+- ✅ No disk persistence (browser limitation)
+- ✅ LoggingSection is not visible
 
 ## Testing
 
-Per testare in development:
+To test in development:
 
 ```bash
-npm run dev  # Avvia Electron con Vite
+npm run dev  # Start Electron with Vite
 ```
 
-Look per log line nel output della console Electron. Poi:
+Look for log lines in the Electron console output. Then:
 
-1. Vai in Settings → Application Logs
-2. Clicca "Load Path"
-3. Clicca "Open Logs Folder"
-4. Dovresti vedere la cartella in Windows Explorer con `main.log`
+1. Go to Settings → Application Logs
+2. Click "Load Path"
+3. Click "Open Logs Folder"
+4. You should see the folder in Windows Explorer with `main.log`
 
-Per modalità produzione, compila:
+For production mode, build with:
 
 ```bash
 npm run build:electron
 ```
 
-Poi esegui l'installer creato in `dist/`.
+Then run the installer created in `dist/`.
 
-## File Modificati/Creati
+## Files Modified/Created
 
-### Modificati:
+### Modified:
 
-- ✅ `package.json` - Aggiunto electron-log
-- ✅ `electron/main.mjs` - Configurazione e handler logging
-- ✅ `electron/preload.cjs` - Esposizione metodi logging
-- ✅ `src/types/electron.ts` - Type definitions logging
-- ✅ `src/hooks/useElectronAPI.ts` - Metodi logging
-- ✅ `src/pages/Settings.tsx` - Integrazione LoggingSection
-- ✅ `src/hooks/useLogger.ts` - Bugfix console methods
+- ✅ `package.json` - Added electron-log
+- ✅ `electron/main.mjs` - Logging configuration and handlers
+- ✅ `electron/preload.cjs` - Exposed logging methods
+- ✅ `src/types/electron.ts` - Logging type definitions
+- ✅ `src/hooks/useElectronAPI.ts` - Logging methods
+- ✅ `src/pages/Settings.tsx` - LoggingSection integration
+- ✅ `src/hooks/useLogger.ts` - Console methods fix
 
-### Creati:
+### Created:
 
-- ✅ `src/hooks/useLogger.ts` - Hook React per logging
-- ✅ `src/components/LoggingSection.tsx` - UI component per settings
+- ✅ `src/hooks/useLogger.ts` - React hook for logging
+- ✅ `src/components/LoggingSection.tsx` - Settings UI component
 - ✅ `src/utils/loggingUtils.ts` - Utility helpers
-- ✅ `LOGGING.md` - Documentazione sistema
+- ✅ `LOGGING.md` - System documentation
 
-## Risoluzione Problemi
+## Troubleshooting
 
-### I log non vengono creati
+### Logs are not created
 
-1. Verifica di essere in **modalità produzione** (non `npm run dev`)
-2. Controlla che `C:\Users\{username}\AppData\Roaming\r3e-toolbox\` sia accessibile
-3. Verifica i permessi di scrittura
+1. Verify the app is running in **production mode** (not `npm run dev`)
+2. Check that `C:\Users\{username}\AppData\Roaming\r3e-toolbox\` is accessible
+3. Verify write permissions
 
-### La cartella logs non esiste
+### The logs folder does not exist
 
-- Verrà creata automaticamente al primo log
-- Se non viene creata, controlla i permessi
+- It will be created automatically on first log
+- If it is not created, check permissions
 
-### Log file è troppo grande
+### Log file is too large
 
-- Modifica `maxSize` in `main.mjs` per rotazione più frequente
-- Log vecchi vengono automaticamente archiviati
+- Adjust `maxSize` in `main.mjs` for more frequent rotation
+- Old logs are archived automatically
 
-## Note di Implementazione
+## Implementation Notes
 
-1. **Serializzazione IPC**: electron-log e Zustand usano `sanitizeForIPC()` per serializzare oggetti complessi
-2. **Asincrono**: Tutti i log sono asincroni ma non bloccano l'UI
-3. **Main + Renderer**: Entrambi i processi loggano nello stesso file
-4. **No Dependencies**: electron-log non dipende da altre librerie esterne
-5. **Performance**: Logging è molto veloce, safe da usare ovunque
+1. **IPC serialization**: electron-log and Zustand use `sanitizeForIPC()` to serialize complex objects
+2. **Async**: All logs are asynchronous but do not block the UI
+3. **Main + Renderer**: Both processes log to the same file
+4. **No Dependencies**: electron-log has no external dependencies
+5. **Performance**: Logging is fast and safe to use anywhere
 
-## Compatibilità
+## Compatibility
 
-- Windows: ✅ Testato
-- macOS: ✅ Dovrebbe funzionare (path è dinamico)
-- Linux: ✅ Dovrebbe funzionare (path è dinamico)
-- Web Browser: ✅ Fallback a console
+- Windows: ✅ Tested
+- macOS: ✅ Should work (path is dynamic)
+- Linux: ✅ Should work (path is dynamic)
+- Web Browser: ✅ Console fallback
 
 ---
 
-**Status**: ✅ **Implementato e Compilato**
+**Status**: ✅ **Implemented and Built**
 **Build**: npm run build ✅ Successful
-**Data**: March 4, 2026
+**Date**: March 4, 2026

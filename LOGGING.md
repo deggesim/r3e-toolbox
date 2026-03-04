@@ -1,25 +1,25 @@
-# Sistema di Logging
+# Logging System
 
 ## Overview
 
-Il sistema di logging sincerizza automaticamente i log dell'app in modalità produzione.
+The logging system automatically persists application logs when running in production mode.
 
-### Modalità di Funzionamento
+### Operating Modes
 
 #### Electron (Desktop)
 
-- **Produzione**: Log salvati in `C:\Users\{username}\AppData\Roaming\r3e-toolbox\logs\main.log`
-- **Sviluppo**: Log stampati con priorità `debug` in console (File: `info` level)
-- **Limite**: Massimo 5MB per file (rotazione automatica)
+- **Production**: Logs saved to `C:\Users\{username}\AppData\Roaming\r3e-toolbox\logs\main.log`
+- **Development**: Logs printed to the console with `debug` priority (file uses `info` level)
+- **Limit**: 5MB max per file (automatic rotation)
 
 #### Web (Browser)
 
-- **Fallback**: Console del browser
-- **No persistence**: I log non sono persistiti su disco
+- **Fallback**: Browser console
+- **No persistence**: Logs are not written to disk
 
-## Come Usare il Logger
+## How to Use the Logger
 
-### Nel Codice React
+### In React Code
 
 ```typescript
 import { useLogger } from "../hooks/useLogger";
@@ -30,7 +30,7 @@ export const MyComponent = () => {
   const handleClick = async () => {
     logger.info("Button clicked", { userId: 123 });
     try {
-      // ... operazione
+      // ... operation
     } catch (error) {
       logger.error("Operation failed", { error: error.message });
     }
@@ -40,23 +40,23 @@ export const MyComponent = () => {
 };
 ```
 
-### Livelli di Log
+### Log Levels
 
-- **info**: Informazioni generali
-- **error**: Errori
-- **warn**: Avvertimenti
-- **debug**: Debug info (solo in dev mode)
+- **info**: General information
+- **error**: Errors
+- **warn**: Warnings
+- **debug**: Debug info (dev mode only)
 
 ### Metadata
 
-Puoi passare metadata opzionale come secondo parametro:
+You can pass optional metadata as the second parameter:
 
 ```typescript
 logger.info("User logged in", { username: "john", timestamp: Date.now() });
 logger.error("API request failed", { status: 500, endpoint: "/api/data" });
 ```
 
-## Accesso ai Log
+## Accessing Logs
 
 ### Via IPC (Electron)
 
@@ -69,7 +69,7 @@ const MyComponent = () => {
   const openLogFolder = async () => {
     const path = await getLogsPath();
     console.log("Logs are stored in:", path);
-    // Apri la cartella in Windows Explorer
+    // Open the folder in Windows Explorer
     await openExternal(`file:///${path.replace(/\\/g, "/")}`);
   };
 
@@ -84,43 +84,43 @@ const MyComponent = () => {
 [2026-03-04 14:23:46.456] [ERROR] [MyComponent] Operation failed {"error": "Network timeout"}
 ```
 
-## Pulizia dei Log
+## Log Cleanup
 
-I log vengono automaticamente ruotati quando superano i 5MB. È possibile configurare questa dimensione modificando `main.mjs`:
+Logs are automatically rotated when they exceed 5MB. You can configure this size in `main.mjs`:
 
 ```javascript
 log.transports.file.maxSize = 5242880; // 5MB
 ```
 
-## Monitoraggio in Produzione
+## Production Monitoring
 
-In modalità produzione:
+In production mode:
 
-1. **Tutte le console.\* vengono redirect a electron-log**
-2. **I log non vengono stampati in console** (solo file)
-3. **Main process e Renderer process usano lo stesso file di log**
+1. **All `console.*` calls are redirected to electron-log**
+2. **Logs are not printed to the console** (file only)
+3. **Main and renderer processes share the same log file**
 
-### Controllo Livelli in Produzione vs Dev
+### Level Control in Production vs Dev
 
-| Ambiente   | Console | File |
-| ---------- | ------- | ---- |
-| Produzione | info    | info |
-| Sviluppo   | debug   | info |
+| Environment | Console | File |
+| ----------- | ------- | ---- |
+| Production  | info    | info |
+| Development | debug   | info |
 
 ## Troubleshooting
 
-### I log non vengono creati
+### Logs are not created
 
-- Verificare che l'app sia in **modalità produzione** (not running with `npm run dev`)
-- Controllare che la path `C:\Users\{username}\AppData\Roaming\r3e-toolbox\logs\` sia accessibile
-- Verificare i permessi di scrittura sulla cartella AppData
+- Make sure the app is running in **production mode** (not `npm run dev`)
+- Check that `C:\Users\{username}\AppData\Roaming\r3e-toolbox\logs\` is accessible
+- Verify write permissions for the AppData folder
 
-### La cartella logs non esiste
+### The logs folder does not exist
 
-- Verrà creata automaticamente al primo avvio
-- Se non viene creata, controllare i permessi su AppData\Roaming
+- It is created automatically on first launch
+- If it is not created, check permissions under AppData\Roaming
 
-### Come rebuilare l'app
+### How to rebuild the app
 
 ```bash
 npm run build:electron
