@@ -82,6 +82,7 @@ With the current configuration, each release includes:
 
 - **NSIS Installer** (`.exe`): Standard installer with wizard
 - **Portable** (`.exe`): Standalone version without installation
+- **Update metadata** (`latest.yml` + `.blockmap`): Required for auto-update
 
 ## Troubleshooting
 
@@ -94,6 +95,11 @@ With the current configuration, each release includes:
 
 - Make sure you pushed the tag: `git push origin v1.0.0`
 - The tag MUST start with `v` (e.g., `v1.0.0`, not `1.0.0`)
+
+### Auto-update metadata missing
+
+- Ensure the release assets include `latest.yml` and `.blockmap` files from `dist/`
+- The GitHub Actions upload step should include both metadata files
 
 ### Installer doesn't work
 

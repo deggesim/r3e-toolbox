@@ -4,20 +4,64 @@ import isDev from "electron-is-dev";
 let updateCheckInProgress = false;
 let autoUpdater = null;
 let pendingManualNoUpdateNotification = false;
+let devUpdateHandlers = null;
+let mainWindowRef = null;
+let updateMetadataUnavailable = false;
+
+const isMissingUpdateMetadataError = (error) => {
+  const message = String(error?.message ?? error ?? "");
+  return (
+    message.includes("Cannot find latest.yml") ||
+    (message.includes("latest.yml") && message.includes("404"))
+  );
+};
+
+const withSuppressedDep0169Warning = async (operation) => {
+  const originalEmitWarning = process.emitWarning;
+
+  process.emitWarning = function patchedEmitWarning(warning, ...args) {
+    const warningCode =
+      (typeof warning === "object" && warning?.code) ||
+      (typeof args[1] === "string" ? args[1] : undefined);
+
+    if (warningCode === "DEP0169") {
+      return;
+    }
+
+    return originalEmitWarning.call(process, warning, ...args);
+  };
+
+  try {
+    return await operation();
+  } finally {
+    process.emitWarning = originalEmitWarning;
+  }
+};
 
 // Lazy load autoUpdater at runtime to avoid bundling issues with electron-builder
 const getAutoUpdater = async () => {
   if (autoUpdater === null) {
     const module = await import("electron-updater");
-    autoUpdater = module.autoUpdater;
+    autoUpdater =
+      module.autoUpdater ?? module.default?.autoUpdater ?? module.default;
   }
   return autoUpdater;
 };
 
 export const initAutoUpdater = async (mainWindow) => {
+  mainWindowRef = mainWindow;
   const updater = isDev ? { on: () => {} } : await getAutoUpdater();
 
-  if (!isDev) {
+  if (!updater) {
+    console.error("[Updater] Auto-updater module is unavailable");
+    return;
+  }
+
+  if (isDev) {
+    console.log(
+      "[Updater] Running in development mode, auto-update checks disabled",
+    );
+  } else {
     // Configure electron-updater
     updater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
     updater.autoDownload = false; // Download only when user agrees
@@ -31,10 +75,6 @@ export const initAutoUpdater = async (mainWindow) => {
     setInterval(() => {
       checkForUpdates(updater);
     }, 3600000); // 1 hour
-  } else {
-    console.log(
-      "[Updater] Running in development mode, auto-update checks disabled",
-    );
   }
 
   // Handle update events (registered for both dev and prod)
@@ -54,6 +94,17 @@ export const initAutoUpdater = async (mainWindow) => {
   };
 
   const handleError = (error) => {
+    if (isMissingUpdateMetadataError(error)) {
+      if (!updateMetadataUnavailable) {
+        console.warn(
+          "[Updater] Update metadata (latest.yml) not found in the latest GitHub release. Auto-update checks are disabled until next app restart.",
+        );
+      }
+      updateMetadataUnavailable = true;
+      pendingManualNoUpdateNotification = false;
+      return;
+    }
+
     console.error("[Updater] Update check error:", error);
     pendingManualNoUpdateNotification = false;
   };
@@ -75,7 +126,7 @@ export const initAutoUpdater = async (mainWindow) => {
 
   // Store handlers for dev mode simulation
   if (isDev) {
-    global.updateHandlers = {
+    devUpdateHandlers = {
       handleUpdateAvailable,
       handleUpdateNotAvailable,
       handleError,
@@ -97,6 +148,17 @@ const checkForUpdates = async (updater, { manual = false } = {}) => {
     return;
   }
 
+  if (updateMetadataUnavailable) {
+    console.log(
+      "[Updater] Update checks are temporarily disabled: latest.yml is not available in the current GitHub release.",
+    );
+
+    if (manual && mainWindowRef) {
+      showUpdatesUnavailableDialog(mainWindowRef);
+    }
+    return;
+  }
+
   pendingManualNoUpdateNotification = manual;
   updateCheckInProgress = true;
   console.log("[Updater] Checking for updates...");
@@ -105,15 +167,25 @@ const checkForUpdates = async (updater, { manual = false } = {}) => {
     // In dev mode, simulate a check with a delay
     setTimeout(() => {
       console.log("[Updater] Dev mode: check simulated, no updates available");
-      if (global.updateHandlers?.handleUpdateNotAvailable) {
-        global.updateHandlers.handleUpdateNotAvailable();
+      if (devUpdateHandlers?.handleUpdateNotAvailable) {
+        devUpdateHandlers.handleUpdateNotAvailable();
       }
       updateCheckInProgress = false;
     }, 1000);
   } else {
-    updater
-      .checkForUpdates()
+    withSuppressedDep0169Warning(() => updater.checkForUpdates())
       .catch((error) => {
+        if (isMissingUpdateMetadataError(error)) {
+          if (!updateMetadataUnavailable) {
+            console.warn(
+              "[Updater] Update metadata (latest.yml) not found in the latest GitHub release. Auto-update checks are disabled until next app restart.",
+            );
+          }
+          updateMetadataUnavailable = true;
+          pendingManualNoUpdateNotification = false;
+          return;
+        }
+
         console.error("[Updater] Check for updates failed:", error.message);
       })
       .finally(() => {
@@ -193,8 +265,31 @@ const showNoUpdatesDialog = (mainWindow) => {
     });
 };
 
+const showUpdatesUnavailableDialog = (mainWindow) => {
+  dialog
+    .showMessageBox(mainWindow, {
+      type: "warning",
+      title: "Updates Temporarily Unavailable",
+      message: "Automatic updates are temporarily unavailable.",
+      detail:
+        "The latest GitHub release does not include update metadata (latest.yml). Publish a complete release artifact to restore update checks.",
+      buttons: ["OK"],
+      defaultId: 0,
+    })
+    .catch((error) => {
+      console.error(
+        "[Updater] Error showing updates-unavailable dialog:",
+        error,
+      );
+    });
+};
+
 // Manual check trigger (can be called from UI)
 export const manualCheckForUpdates = async (mainWindow) => {
   const updater = await getAutoUpdater();
+  if (!updater) {
+    console.error("[Updater] Auto-updater module is unavailable");
+    return;
+  }
   checkForUpdates(updater, { manual: true });
 };

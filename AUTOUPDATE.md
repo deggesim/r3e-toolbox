@@ -96,6 +96,12 @@ git push origin v1.4.0
    - Windows installer (`.exe`, `.nsis`)
    - electron-updater will use this for download
 
+4. **Release assets must include**:
+
+- `latest.yml`
+- `*.blockmap`
+- `*.exe` installers
+
 ## Important Notes
 
 ⚠️ **GitHub Token**: If many users download, the anonymous rate limit (60 req/h) might not be enough. Solution: Use `GH_TOKEN` during build for publish.
