@@ -89,7 +89,6 @@ src/
 │
 ├── components/
 │   ├── Layout.tsx                    ← Sidebar nav (NEW)
-│   ├── AIManagementGUI.tsx           ← AI dashboard
 │   ├── FileUploadSection.tsx         ← Shared file upload
 │   ├── ProcessingLog.tsx             ← Timestamp logs
 │   └── ...other components

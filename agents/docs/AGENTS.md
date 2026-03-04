@@ -463,7 +463,7 @@ Output JSON:
   },
   "formValidation": [
     {
-      "form": "AIManagementGUI",
+      "form": "AIManagement",
       "wrongTypeFile": "error shown correctly",
       "status": "pass"
     }
