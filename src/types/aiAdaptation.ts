@@ -80,9 +80,6 @@ export interface Database {
   classes: Record<string, DatabaseClass>;
 }
 
-// ProcessedDatabase is the result after applying fitting and validation
-export type ProcessedDatabase = Database;
-
 // Player times types
 
 export interface PlayerTimes {
