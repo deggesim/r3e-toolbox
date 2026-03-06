@@ -306,6 +306,26 @@ ipcMain.handle("fs:deleteDirectory", async (event, dirPath) => {
   }
 });
 
+ipcMain.handle("fs:create7zArchive", async (event, sourceDir, archivePath) => {
+  try {
+    const SevenZip = (await import("7zip-min")).default;
+
+    await new Promise((resolve, reject) => {
+      SevenZip.pack(sourceDir, archivePath, (err) => {
+        if (err) {
+          reject(new Error(err.message || String(err)));
+          return;
+        }
+        resolve(undefined);
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle("app:findR3eDataFile", async () => {
   const possiblePaths = [
     // Windows common paths
@@ -445,6 +465,16 @@ ipcMain.handle("app:openExternal", async (event, url) => {
     return { success: true };
   } catch (error) {
     console.error("[app:openExternal] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("app:showItemInFolder", async (event, filePath) => {
+  try {
+    shell.showItemInFolder(filePath);
+    return { success: true };
+  } catch (error) {
+    console.error("[app:showItemInFolder] Error:", error);
     return { success: false, error: error.message };
   }
 });

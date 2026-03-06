@@ -73,6 +73,11 @@ export const exportChampionshipsAsZip = async (
   }
 
   const zip = new JSZip();
+  const rootFolderName = "r3e-championships";
+  const rootFolder = zip.folder(rootFolderName);
+  if (!rootFolder) {
+    throw new Error("Failed to create export root folder in ZIP");
+  }
 
   // Generate index.html
   onProgress?.({
@@ -83,13 +88,7 @@ export const exportChampionshipsAsZip = async (
   });
 
   const indexHTML = generateChampionshipIndexHTML(championships, assetMap);
-  zip.file("index.html", indexHTML);
-
-  // Create championships folder
-  const championshipsFolder = zip.folder("championships");
-  if (!championshipsFolder) {
-    throw new Error("Failed to create championships folder in ZIP");
-  }
+  rootFolder.file("index.html", indexHTML);
 
   // Generate each championship HTML
   for (let i = 0; i < championships.length; i++) {
@@ -109,7 +108,7 @@ export const exportChampionshipsAsZip = async (
         leaderboardAssets,
         gameData,
       );
-      championshipsFolder.file(championship.fileName, html);
+      rootFolder.file(championship.fileName, html);
     } catch (error) {
       console.error(
         `Failed to generate HTML for ${championship.alias}:`,
@@ -150,6 +149,10 @@ export const exportChampionshipsAs7z = async (
       writeFile: (path: string, content: string) => Promise<void>;
       getTempDir: () => Promise<string>;
       deleteDirectory: (dirPath: string) => Promise<void>;
+      create7zArchive: (
+        sourceDir: string,
+        archivePath: string,
+      ) => Promise<void>;
     };
     savePath: string;
   },
@@ -172,11 +175,14 @@ export const exportChampionshipsAs7z = async (
     throw new Error("No championships to export");
   }
 
-  // Get temp directory
+  // Use a fixed staging folder name so only r3e-championships is archived
   const tempDir = await electronAPI.getTempDir();
-  const tempFolder = `${tempDir}/r3e-toolbox-export-${Date.now()}`;
+  const exportRoot = `${tempDir}/r3e-championships`;
 
   try {
+    // Clean previous staging content if present
+    await electronAPI.deleteDirectory(exportRoot);
+
     // Generate index.html
     onProgress?.({
       stage: "html",
@@ -186,7 +192,7 @@ export const exportChampionshipsAs7z = async (
     });
 
     const indexHTML = generateChampionshipIndexHTML(championships, assetMap);
-    await electronAPI.writeFile(`${tempFolder}/index.html`, indexHTML);
+    await electronAPI.writeFile(`${exportRoot}/index.html`, indexHTML);
 
     // Generate each championship HTML
     for (let i = 0; i < championships.length; i++) {
@@ -207,7 +213,7 @@ export const exportChampionshipsAs7z = async (
           gameData,
         );
         await electronAPI.writeFile(
-          `${tempFolder}/championships/${championship.fileName}`,
+          `${exportRoot}/${championship.fileName}`,
           html,
         );
       } catch (error) {
@@ -229,23 +235,14 @@ export const exportChampionshipsAs7z = async (
       message: "Creating 7z archive...",
     });
 
-    // Dynamic import of 7zip-min (Electron-only)
-    const SevenZip = (await import("7zip-min")).default;
+    await electronAPI.create7zArchive(exportRoot, savePath);
 
-    return new Promise((resolve, reject) => {
-      SevenZip.pack(tempFolder, savePath, (err) => {
-        if (err) {
-          reject(new Error(`Failed to create 7z archive: ${err.message}`));
-        } else {
-          // Clean up temp files
-          electronAPI.deleteDirectory(tempFolder).catch(console.warn);
-          resolve(savePath);
-        }
-      });
-    });
+    // Clean up temp files after successful archive creation
+    electronAPI.deleteDirectory(exportRoot).catch(console.warn);
+    return savePath;
   } catch (error) {
     // Clean up temp files on error
-    electronAPI.deleteDirectory(tempFolder).catch(console.warn);
+    electronAPI.deleteDirectory(exportRoot).catch(console.warn);
     throw error;
   }
 };

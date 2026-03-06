@@ -92,6 +92,22 @@ export const useElectronAPI = () => {
         }
       },
 
+      async create7zArchive(
+        sourceDir: string,
+        archivePath: string,
+      ): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.create7zArchive(
+          sourceDir,
+          archivePath,
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create 7z archive");
+        }
+      },
+
       async findR3eDataFile(): Promise<{
         success: boolean;
         data?: string;
@@ -150,6 +166,16 @@ export const useElectronAPI = () => {
         const result = await globalThis.electron.openExternal(url);
         if (!result.success) {
           throw new Error(result.error || "Failed to open external link");
+        }
+      },
+
+      async showItemInFolder(filePath: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.showItemInFolder(filePath);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to reveal file in folder");
         }
       },
 

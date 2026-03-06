@@ -11,6 +11,7 @@ import {
   faSpinner,
   faCheckCircle,
   faExclamationTriangle,
+  faFolderOpen,
 } from "@fortawesome/free-solid-svg-icons";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
@@ -52,6 +53,7 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [lastExportPath, setLastExportPath] = useState<string | null>(null);
 
   const championships = useChampionshipStore((state) => state.championships);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
@@ -69,6 +71,7 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
     try {
       setStage("assets");
       setErrorMessage("");
+      setLastExportPath(null);
       setStatusMessage("Preparing export...");
       addLog(
         "info",
@@ -164,6 +167,7 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
             writeFile: electronAPI.writeFile,
             getTempDir: electronAPI.getTempDir,
             deleteDirectory: electronAPI.deleteDirectory,
+            create7zArchive: electronAPI.create7zArchive,
           },
           savePath,
         });
@@ -172,6 +176,7 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
           "success",
           `Exported ${championships.length} championships as 7z: ${archivePath}`,
         );
+        setLastExportPath(archivePath);
         setStatusMessage(`Successfully exported to ${archivePath}`);
         setStage("complete");
       }
@@ -193,7 +198,23 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
     setProgress({ current: 0, total: 0 });
     setStatusMessage("");
     setErrorMessage("");
+    setLastExportPath(null);
     onHide();
+  };
+
+  const handleOpenExportFolder = async () => {
+    if (!electronAPI.isElectron || !lastExportPath) {
+      return;
+    }
+
+    try {
+      await electronAPI.showItemInFolder(lastExportPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setErrorMessage(message);
+      setStage("error");
+      addLog("error", `Failed to open export folder: ${message}`);
+    }
   };
 
   const isExporting =
@@ -202,15 +223,24 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
     progress.total > 0 ? (progress.current / progress.total) * 100 : 0;
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered>
-      <Modal.Header closeButton={!isExporting}>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      size="lg"
+      centered
+      data-bs-theme="dark"
+    >
+      <Modal.Header
+        closeButton={!isExporting}
+        className="bg-dark border-secondary"
+      >
         <Modal.Title>
           <FontAwesomeIcon icon={faFileArchive} className="me-2" />
           Export Website Archive
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body>
+      <Modal.Body className="bg-dark text-white">
         {stage === "idle" && (
           <>
             <p>
@@ -248,8 +278,8 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
               <ul className="mb-0 mt-2">
                 <li>index.html - Championship list homepage</li>
                 <li>
-                  championships/ - Individual championship HTML files (
-                  {championships.length} files)
+                  All exported files are inside <code>r3e-championships/</code>{" "}
+                  ({championships.length} files)
                 </li>
                 <li>
                   All leaderboard icons embedded as base64 (fully offline)
@@ -289,7 +319,7 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
         )}
       </Modal.Body>
 
-      <Modal.Footer>
+      <Modal.Footer className="bg-dark border-secondary">
         <Button
           variant="secondary"
           onClick={handleClose}
@@ -308,6 +338,12 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
           >
             <FontAwesomeIcon icon={faFileArchive} className="me-2" />
             Export as {format.toUpperCase()}
+          </Button>
+        )}
+        {stage === "complete" && electronAPI.isElectron && lastExportPath && (
+          <Button variant="outline-light" onClick={handleOpenExportFolder}>
+            <FontAwesomeIcon icon={faFolderOpen} className="me-2" />
+            Open Download Folder
           </Button>
         )}
       </Modal.Footer>
