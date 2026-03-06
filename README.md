@@ -169,7 +169,7 @@ const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
 ### Prerequisites
 
 - Node.js (version 24.x or higher)
-- npm or pnpm
+- npm
 - RaceRoom Racing Experience installation with `aiadaptation.xml` file
 
 ### Installation
@@ -184,7 +184,6 @@ const clearAssets = useLeaderboardAssetsStore((state) => state.clearAssets);
 2. Install dependencies:
    ```bash
    npm install
-   # or: pnpm install
    ```
 
 ### Development
