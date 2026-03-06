@@ -30,6 +30,14 @@ declare global {
     readdir: (
       dirPath: string,
     ) => Promise<{ success: boolean; data?: string[]; error?: string }>;
+    getTempDir: () => Promise<{
+      success: boolean;
+      data?: string;
+      error?: string;
+    }>;
+    deleteDirectory: (
+      dirPath: string,
+    ) => Promise<{ success: boolean; error?: string }>;
     findR3eDataFile: () => Promise<{
       success: boolean;
       data?: string;

@@ -29,7 +29,10 @@ export const useElectronAPI = () => {
         return globalThis.electron.openDirectory();
       },
 
-      async saveFile(defaultPath = "", filters = []): Promise<string | null> {
+      async saveFile(
+        defaultPath = "",
+        filters: ElectronDialogFilter[] = [],
+      ): Promise<string | null> {
         if (!isElectron) {
           throw new Error("Electron API not available");
         }
@@ -66,6 +69,27 @@ export const useElectronAPI = () => {
           throw new Error(result.error || "Failed to read directory");
         }
         return result.data || [];
+      },
+
+      async getTempDir(): Promise<string> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.getTempDir();
+        if (!result.success) {
+          throw new Error(result.error || "Failed to get temp directory");
+        }
+        return result.data || "";
+      },
+
+      async deleteDirectory(dirPath: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.deleteDirectory(dirPath);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to delete directory");
+        }
       },
 
       async findR3eDataFile(): Promise<{

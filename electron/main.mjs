@@ -11,7 +11,8 @@ import isDev from "electron-is-dev";
 import log from "electron-log";
 import Store from "electron-store";
 import { existsSync, mkdirSync } from "node:fs";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile, rm, mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { initAutoUpdater, manualCheckForUpdates } from "./updater.mjs";
@@ -267,6 +268,11 @@ ipcMain.handle("fs:readFile", async (event, filePath) => {
 
 ipcMain.handle("fs:writeFile", async (event, filePath, content) => {
   try {
+    // Ensure directory exists
+    const dir = path.dirname(filePath);
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
     await writeFile(filePath, content, "utf8");
     return { success: true };
   } catch (error) {
@@ -278,6 +284,23 @@ ipcMain.handle("fs:readdir", async (event, dirPath) => {
   try {
     const files = await readdir(dirPath);
     return { success: true, data: files };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:getTempDir", async () => {
+  try {
+    return { success: true, data: tmpdir() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:deleteDirectory", async (event, dirPath) => {
+  try {
+    await rm(dirPath, { recursive: true, force: true });
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }

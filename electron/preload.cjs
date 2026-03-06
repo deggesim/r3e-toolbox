@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld("electron", {
   writeFile: (filePath, content) =>
     ipcRenderer.invoke("fs:writeFile", filePath, content),
   readdir: (dirPath) => ipcRenderer.invoke("fs:readdir", dirPath),
+  getTempDir: () => ipcRenderer.invoke("fs:getTempDir"),
+  deleteDirectory: (dirPath) =>
+    ipcRenderer.invoke("fs:deleteDirectory", dirPath),
 
   // Application operations
   findR3eDataFile: () => ipcRenderer.invoke("app:findR3eDataFile"),

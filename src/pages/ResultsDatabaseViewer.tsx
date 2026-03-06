@@ -4,6 +4,7 @@ import { faCircleInfo } from "@fortawesome/free-solid-svg-icons/faCircleInfo";
 import { faCrown } from "@fortawesome/free-solid-svg-icons/faCrown";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faFileArchive } from "@fortawesome/free-solid-svg-icons/faFileArchive";
 import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
 import { faMedal } from "@fortawesome/free-solid-svg-icons/faMedal";
 import { faRankingStar } from "@fortawesome/free-solid-svg-icons/faRankingStar";
@@ -27,6 +28,7 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
+import { ExportWebsiteModal } from "../components/ExportWebsiteModal";
 import SectionTitle from "../components/SectionTitle";
 import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
 import { useChampionshipStore } from "../store/championshipStore";
@@ -64,6 +66,7 @@ const ResultsDatabaseViewer = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [isRefreshingDatabase, setIsRefreshingDatabase] = useState(false);
   const [isDownloadingDatabase, setIsDownloadingDatabase] = useState(false);
   const [isDownloadingIndex, setIsDownloadingIndex] = useState(false);
@@ -527,6 +530,14 @@ const ResultsDatabaseViewer = () => {
                     ? "Downloading..."
                     : "Download index.html"}
                 </Button>
+                <Button
+                  onClick={() => setShowExportModal(true)}
+                  disabled={championships.length === 0}
+                  variant="primary"
+                >
+                  <FontAwesomeIcon icon={faFileArchive} className="me-2" />
+                  Export Website Archive
+                </Button>
               </div>
               <Row className="g-3">
                 {filteredChampionships.map((championship) => (
@@ -587,6 +598,12 @@ const ResultsDatabaseViewer = () => {
               </Button>
             </Modal.Footer>
           </Modal>
+
+          {/* Export Website Modal */}
+          <ExportWebsiteModal
+            show={showExportModal}
+            onHide={() => setShowExportModal(false)}
+          />
         </Card.Body>
       </Card>
     </Container>
