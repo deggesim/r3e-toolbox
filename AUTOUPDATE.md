@@ -69,50 +69,27 @@ The system is **automatically disabled** in development:
 ```typescript
 if (isDev) {
   console.log("[Updater] Running in development mode, auto-updater disabled");
-  return;
 }
 ```
 
 ## Deployment Setup
 
-To create a release on GitHub:
+Releases are published automatically by semantic-release when changes are pushed to `master`.
 
-1. **Push with version tag**:
+1. **Push conventional commits to master**
+2. **GitHub Actions runs semantic-release**
 
-```bash
-git tag -a v1.4.0 -m "Release 1.4.0"
-git push origin v1.4.0
-```
+- Tags and GitHub Releases are created automatically
 
-2. **Create GitHub Release**:
-   - Go to https://github.com/deggesim/r3e-toolbox/releases
-   - "Create a new release"
-   - Use tag v1.4.0
-   - Upload installers from `dist/`
-   - electron-updater will automatically read the release
+3. **build-electron uploads assets** for auto-updates
 
-3. **electron-builder will generate**:
-   - `latest.yml` - Update metadata
-   - Windows installer (`.exe`, `.nsis`)
-   - electron-updater will use this for download
-
-4. **Release assets must include**:
+### Release assets must include
 
 - `latest.yml`
 - `*.blockmap`
 - `*.exe` installers
 
 ## Important Notes
-
-⚠️ **GitHub Token**: If many users download, the anonymous rate limit (60 req/h) might not be enough. Solution: Use `GH_TOKEN` during build for publish.
-
-⚠️ **Code Signing**: For Windows SmartScreen trusted builds, the executable should be signed. Currently:
-
-```json
-"win": {
-  "signAndEditExecutable": true  // Placeholder
-}
-```
 
 ⚠️ **Asset Size**: electron-updater will do delta updates (only differences). First download is ~200MB.
 
@@ -121,8 +98,8 @@ git push origin v1.4.0
 You cannot test the auto-updater in dev mode, but you can:
 
 1. Build for production: `npm run build:electron`
-2. Create a GitHub release with your `dist/`
-3. Launch the built app: `./dist/R3EToolbox.exe`
+2. Launch the built app from `dist/`
+3. For full update flow, push to `master` and let CI publish a release
 
 Alternatively, mock in tests, but this is not recommended for critical functionality.
 

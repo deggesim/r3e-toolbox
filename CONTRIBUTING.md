@@ -51,16 +51,21 @@ BREAKING CHANGE: localStorage cache now uses new structure.
 Users must manually reload leaderboard assets."
 ```
 
-## Other Types (do not trigger release)
+## Other Types
 
-- **docs**: Documentation changes
-- **style**: Code formatting (spaces, commas, etc.)
+### Patch release
+
+- **docs**: Documentation changes → PATCH
+- **style**: Code formatting (spaces, commas, etc.) → PATCH
 - **refactor**: Refactoring without fix or feature → PATCH
 - **perf**: Performance improvements → PATCH
+- **chore**: General maintenance → PATCH
+
+### No release
+
 - **test**: Test addition/modification
 - **build**: Build system changes
 - **ci**: CI/CD workflow changes
-- **chore**: General maintenance
 
 ## Real Examples
 

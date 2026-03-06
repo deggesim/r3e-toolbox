@@ -97,7 +97,7 @@
         "releaseVersion": null,
         "changelogPath": "CHANGELOG.md",
         "packageJsonPath": "package.json",
-        "electronBuilderConfig": "electron-builder.json",
+        "electronBuilderConfig": null,
         "publishTarget": "draft"
       },
       "blockingThreshold": "critical"
@@ -120,7 +120,7 @@
           "agents/docs/QA_AGENTS_QUICK_REFERENCE.md",
           "agents/docs/QA_AGENTS_ARCHITECTURE.md",
           "agents/docs/AGENT_NEXT_STEPS.md",
-          "docs/USER_GUIDE.md"
+          "src/docs/USER_GUIDE.md"
         ],
         "criticalSections": [
           "Prerequisites",

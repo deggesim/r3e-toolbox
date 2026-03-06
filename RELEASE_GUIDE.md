@@ -6,7 +6,7 @@
 
    ```bash
    git remote add origin https://github.com/deggesim/r3e-toolbox.git
-   git push -u origin main
+   git push -u origin master
    ```
 
 2. **Verify GitHub Actions permissions**:
@@ -15,7 +15,7 @@
 
 ## Creating a Release
 
-Every time you want to release a new version:
+Every time you want to release a new version, semantic-release handles versioning, tags, and release creation automatically.
 
 Before publishing, run the QA agent suite:
 
@@ -23,33 +23,21 @@ Before publishing, run the QA agent suite:
 npm run agent:workflow:pre-release --releaseVersion="x.y.z"
 ```
 
-### 1. Update the version in package.json
+### 1. Merge or push conventional commits to master
 
-```bash
-# Option A: Manually
-# Change "version": "0.0.0" to "version": "1.0.0" in package.json
+Ensure commits follow Conventional Commits (see CONTRIBUTING.md). Then push to `master`.
 
-# Option B: With npm
-npm version patch  # 1.0.0 → 1.0.1
-npm version minor  # 1.0.0 → 1.1.0
-npm version major  # 1.0.0 → 2.0.0
-```
-
-### 2. Commit and create the tag
-
-```bash
-git add package.json
-git commit -m "Release v1.0.0"
-git tag v1.0.0
-git push origin main
-git push origin v1.0.0
-```
-
-### 3. Wait for the automatic build
+### 2. Wait for the automatic release
 
 - GitHub Actions will automatically start the build
 - You can follow the progress at: `https://github.com/deggesim/r3e-toolbox/actions`
 - After 3-5 minutes, the release will appear at: `https://github.com/deggesim/r3e-toolbox/releases`
+
+### 3. Optional: dry-run locally
+
+```bash
+npx semantic-release --dry-run
+```
 
 ## Link to Add to README
 
@@ -93,8 +81,9 @@ With the current configuration, each release includes:
 
 ### Release not created
 
-- Make sure you pushed the tag: `git push origin v1.0.0`
-- The tag MUST start with `v` (e.g., `v1.0.0`, not `1.0.0`)
+- Make sure the commit is on `master`
+- Verify the commit message follows Conventional Commits
+- Check the semantic-release job logs in GitHub Actions
 
 ### Auto-update metadata missing
 

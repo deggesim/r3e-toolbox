@@ -16,7 +16,7 @@ graph TB
 
     subgraph "CI/CD Events"
         PR["Pull Request"]
-        PUSH["Push to main/develop"]
+        PUSH["Push to master"]
         SCHED["GitHub Scheduler<br/>Mon/Thu 2 AM UTC"]
         MAN["Manual Workflow Dispatch"]
     end

@@ -33,6 +33,8 @@ pnpm install
 
 ## Starting Development
 
+### Run Dev Environment
+
 ### Full Mode (Vite + Electron)
 
 ```bash
@@ -74,7 +76,7 @@ Requires Vite to already be running in another terminal. Useful for:
 
 ## Project Structure Post-Update
 
-### Component Organization (v1.3.2)
+### Component Organization (v1.5.0)
 
 ```
 src/
@@ -88,17 +90,19 @@ src/
 │   └── Settings.tsx                  ✅ Config and UI settings
 │
 ├── components/
-│   ├── Layout.tsx                    ← Sidebar nav (NEW)
+│   ├── Layout.tsx                    ← Sidebar nav
 │   ├── FileUploadSection.tsx         ← Shared file upload
-│   ├── ProcessingLog.tsx             ← Timestamp logs
+│   ├── FloatingProcessingLog.tsx     ← Global log panel
+│   ├── LoggingSection.tsx            ← App logs UI (Electron only)
+│   ├── UpdateProgressNotification.tsx← Auto-update progress UI
 │   └── ...other components
 ```
 
-### New Integrations (February 2026)
+### New Integrations (March 2026)
 
-- ✨ **Font Awesome Icons**: `@fortawesome/react-fontawesome` v7.1
+- ✨ **Font Awesome Icons**: `@fortawesome/react-fontawesome` v7.2
   - Solid SVG icons throughout the UI
-  - Used in ProcessingLog, sidebar menu, badges
+  - Used in FloatingProcessingLog, sidebar menu, badges
 
 - 📱 **Responsive Design**: Mobile-first Bootstrap
   - Sidebar auto-collapses
@@ -109,6 +113,12 @@ src/
   - Leaderboard icons cached in persistent storage
   - Cache status indicator badge
   - "Clear cache" button for manual reset
+
+- 🔔 **Auto Updates**: `electron-updater`
+  - Background update checks and download progress UI
+
+- 🧾 **Logging**: `electron-log` + `useLogger`
+  - Persistent logs in production with a Settings page viewer
 
 ## Contribution Workflow
 
@@ -355,4 +365,4 @@ localStorage.clear();
 
 ---
 
-**Last Updated**: February 26, 2026 (v1.3.2)
+**Last Updated**: March 6, 2026 (v1.5.0)

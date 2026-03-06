@@ -272,23 +272,13 @@ if (isValidR3eDataStructure(parsedJson)) {
 
 ## Testing
 
-Run validation tests:
+There is no automated unit test suite for the validator. Use the QA agent for validation checks:
 
 ```bash
-npm run test src/utils/__tests__/r3eDataValidator.test.ts
+npm run agent:data-integrity -- --filePaths="path/to/r3e-data.json"
 ```
 
-### Test Coverage
-
-- ✅ Correct structure validation
-- ✅ Rejection of null/undefined data
-- ✅ Rejection of missing properties
-- ✅ Class validation (Id, Name, Cars)
-- ✅ Track validation (Id, Name, layouts)
-- ✅ ID mismatch detection
-- ✅ JSON parsing with validation
-- ✅ Handling of malformed JSON
-- ✅ Quick structure check
+Or validate interactively by loading the file in the app (Game Data onboarding) and reviewing logs.
 
 ## Practical Examples
 
@@ -415,4 +405,4 @@ If the structure of `RaceRoomData` changes:
 
 ---
 
-**Last Updated:** February 26, 2026 | **Version:** 1.3.2
+**Last Updated:** March 6, 2026 | **Version:** 1.5.0

@@ -104,20 +104,11 @@ function MyComponent() {
 
 ## Testing Validation
 
-### Running Tests
+### Running Validation
 
 ```bash
-# Run all tests
-npm test
-
-# Run only validation tests
-npm test src/utils/__tests__/r3eDataValidator.test.ts
-
-# Run with watch mode
-npm test -- --watch
-
-# Run with coverage
-npm test -- --coverage
+# Use the QA agent to validate a file
+npm run agent:data-integrity -- --filePaths="path/to/r3e-data.json"
 ```
 
 ### Testing with Real Files
@@ -483,4 +474,4 @@ if (!gameDataStore.getState().gameData) {
 
 ---
 
-**Last Updated:** February 26, 2026 | **Version:** 1.3.2
+**Last Updated:** March 6, 2026 | **Version:** 1.5.0

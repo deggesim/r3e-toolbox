@@ -427,16 +427,24 @@ src/
 │   └── Settings.tsx              # Global settings panel
 │
 ├── components/
-│   ├── AISelectionTable.tsx      # AI level selection table
+│   ├── AILevels.tsx              # AI level visualization
+│   ├── AIModifications.tsx       # Player time modifications
+│   ├── AIModificationsModal.tsx  # Modal for edits
+│   ├── PlayerTimesTable.tsx      # Player lap times list
 │   ├── ChampionshipCard.tsx      # Viewer cards for saved championships
 │   ├── FileUploadSection.tsx     # Shared file input UI
 │   ├── Layout.tsx                # Navigation layout wrapper
-│   ├── ProcessingLog.tsx         # Standardized log UI
+│   ├── FloatingProcessingLog.tsx # Global processing log UI
+│   ├── LoggingSection.tsx        # App logs UI (Electron only)
+│   ├── UpdateProgressNotification.tsx # Auto-update progress UI
 │   └── SectionTitle.tsx          # Section title styling
 │
 ├── hooks/
+│   ├── useAutoUpdater.ts         # Auto-update progress hook
 │   ├── useElectronAPI.ts         # Electron IPC bridge (auto file detection)
-│   └── useProcessingLog.ts       # Timestamped logs with auto-scroll
+│   ├── useLogger.ts              # Logging helper (Electron + web fallback)
+│   ├── useProcessingLog.ts       # Legacy processing log hook
+│   └── useResolveCarInfo.ts      # Car info resolver
 │
 ├── store/
 │   ├── championshipStore.ts      # Saved championships (persistent storage)
@@ -637,7 +645,7 @@ package.json                  # Dependencies & scripts
 1. Create new component in `src/components/` (e.g., `ChartVisualization.tsx`)
 2. Use Zustand stores for state management (see [src/store/](src/store/))
 3. Import in appropriate page component (e.g., `src/pages/AIManagement.tsx`)
-4. Maintain consistency with existing UI patterns (Layout, ProcessingLog, FileUploadSection)
+4. Maintain consistency with existing UI patterns (Layout, FloatingProcessingLog, FileUploadSection)
 
 ## Integration with RaceRoom
 
@@ -699,18 +707,17 @@ package.json                  # Dependencies & scripts
 
 ## 🚀 Releasing New Versions (For Maintainers)
 
-To create a new release with automatic installers on GitHub:
+Releases are created automatically by semantic-release when conventional commits are pushed to `master`.
 
 ```bash
 # 1. Make sure everything is committed
 git add .
-git commit -m "Release v1.0.0"
+git commit -m "fix: describe change"
 
-# 2. Create and push a version tag
-git tag v1.0.0
-git push origin v1.0.0
+# 2. Push to master
+git push origin master
 
-# 3. GitHub Actions will automatically build and create the release
+# 3. GitHub Actions will build and publish the release
 # Installers will appear at: https://github.com/deggesim/r3e-toolbox/releases
 ```
 

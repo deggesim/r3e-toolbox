@@ -114,7 +114,7 @@ git add .github/workflows/agent-qa-suite.yml
 
 git commit -m "feat: Add specialized QA agents (Data Integrity, Parser Resilience, Fitting QA, Results Consistency, Electron IPC, UI Regression, Release, Docs Drift)"
 
-git push origin main
+git push origin master
 ```
 
 ---
@@ -159,7 +159,7 @@ Go to GitHub → Create PR → Observe:
 - [ ] Check results green ✓ or red 🛑
 - [ ] Click "Details" → see agent output in logs
 
-Once green, merge PR to `develop` or close it.
+Once green, merge PR to `master` or close it.
 
 ---
 
@@ -186,7 +186,7 @@ Then:
 ```bash
 git add .github/workflows/agent-qa-suite.yml
 git commit -m "config: adjust nightly schedule to team timezone"
-git push origin main
+git push origin master
 ```
 
 ---
@@ -358,7 +358,7 @@ Before publishing release:
 Once Phase 1-2 complete and passing:
 
 ```bash
-# 1. Main branch ready?
+# 1. Master branch ready?
 git status  # Should be clean
 
 # 2. All agents installed?

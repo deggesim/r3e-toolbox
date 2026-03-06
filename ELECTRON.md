@@ -2,7 +2,7 @@
 
 R3E Toolbox runs as both a desktop application (Electron) and web app at [https://r3e-toolbox.up.railway.app](https://r3e-toolbox.up.railway.app), providing native file system access on Windows while maintaining cross-platform compatibility.
 
-**Current Version**: 1.3.2 (Windows x64 focus)
+**Current Version**: 1.5.0 (Windows x64 focus)
 
 ## Architecture
 
@@ -15,7 +15,7 @@ R3E Toolbox runs as both a desktop application (Electron) and web app at [https:
   - `fs:writeFile` - Write file contents
   - `fs:readdir` - List directory contents
 
-### Preload Script (`electron/preload.mjs`)
+### Preload Script (`electron/preload.cjs`)
 
 - Secure IPC bridge between renderer and main process
 - Exposes `window.electron` API to React components
@@ -93,9 +93,9 @@ npm run build:electron
 
 # This generates:
 # - dist/ - Web assets and Electron app
-# - Installers in dist/Electron Releases/
-#   ├── R3E Toolbox Setup 0.4.3.exe (NSIS installer)
-#   ├── R3E Toolbox 0.4.3.exe (portable)
+# - Installers in dist/
+#   ├── R3E Toolbox Setup X.Y.Z.exe (NSIS installer)
+#   ├── R3E Toolbox X.Y.Z.exe (portable)
 #   └── win-unpacked/ (unpacked installer files)
 ```
 
@@ -111,11 +111,11 @@ Current configuration (`package.json` electron-builder section):
   - `electron/main.mjs`, `electron/preload.cjs` - Electron runtime
   - `public/` assets (icons, manifest)
 
-### Release Distribution
+## Release Distribution
 
 **Automated Releases** (GitHub Actions):
 
-- Triggered on version tag: `git tag v0.4.3 && git push --tags`
+- Triggered on pushes to `master` via semantic-release
 - Builds complete Windows installer + portable version
 - Uploads to GitHub Releases automatically
 - Download link: https://github.com/deggesim/r3e-toolbox/releases/latest

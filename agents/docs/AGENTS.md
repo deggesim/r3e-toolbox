@@ -539,7 +539,7 @@ Output JSON:
   "versioningCheck": {
     "packageJson": "1.4.0 ✓",
     "changelog": "1.4.0 entry found ✓",
-    "gitTag": "v1.4.0 missing (create before push)"
+    "gitTag": "tag will be created by semantic-release"
   },
   "buildCheck": {
     "electronBuild": "success",
@@ -550,7 +550,7 @@ Output JSON:
   },
   "autoUpdateSetup": {
     "electronUpdaterConfigured": true,
-    "draftReleaseReady": true,
+    "draftReleaseReady": false,
     "versionConsistency": "pass"
   },
   "changelogQuality": {
@@ -560,8 +560,8 @@ Output JSON:
     "status": "good"
   },
   "preReleaseChecklist": [
-    "Create git tag v1.4.0",
-    "Verify GitHub draft release created",
+    "Ensure commit merged to master",
+    "Verify GitHub Release created by CI",
     "Test auto-update on 2 machines before publish",
     "Review installer scan for malware"
   ],
@@ -696,7 +696,7 @@ name: Agent QA Suite
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [master]
   schedule:
     - cron: "0 2 * * MON" # Weekly Monday night
 

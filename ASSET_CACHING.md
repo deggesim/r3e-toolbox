@@ -156,4 +156,4 @@ Next data fetch will force a fresh network request from the leaderboard.
 
 ---
 
-**Ultimo aggiornamento**: 26 Febbraio 2026 | **Versione**: 1.3.2
+**Ultimo aggiornamento**: 6 Marzo 2026 | **Versione**: 1.5.0
