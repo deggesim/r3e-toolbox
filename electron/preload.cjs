@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("electron", {
   readFile: (filePath) => ipcRenderer.invoke("fs:readFile", filePath),
   writeFile: (filePath, content) =>
     ipcRenderer.invoke("fs:writeFile", filePath, content),
+  writeFileBase64: (filePath, base64) =>
+    ipcRenderer.invoke("fs:writeFileBase64", filePath, base64),
   readdir: (dirPath) => ipcRenderer.invoke("fs:readdir", dirPath),
   getTempDir: () => ipcRenderer.invoke("fs:getTempDir"),
   deleteDirectory: (dirPath) =>

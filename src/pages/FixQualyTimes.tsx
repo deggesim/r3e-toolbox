@@ -9,6 +9,7 @@ import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { getDownloadLabel, getDownloadedLabel } from "../utils/platformLabels";
+import { saveTextFile } from "../utils/fileSaver";
 
 type RaceResultDriver = {
   name: string;
@@ -23,7 +24,8 @@ type RaceResultFile = {
 };
 
 const FixQualyTimes = () => {
-  const { isElectron } = useElectronAPI();
+  const electronAPI = useElectronAPI();
+  const { isElectron } = electronAPI;
   const [qualFile, setQualFile] = useState<File | null>(null);
   const [raceFile, setRaceFile] = useState<File | null>(null);
   const qualInputRef = useRef<HTMLInputElement>(null);
@@ -44,34 +46,44 @@ const FixQualyTimes = () => {
 
   const processFiles = async () => {
     if (!qualFile || !raceFile) {
-      addLog("warning", "Please select both qualification and race files");
+      addLog(
+        "warning",
+        "Please select both qualification and race files.",
+        faExclamationTriangle,
+      );
       return;
     }
 
     setIsProcessing(true);
-
     try {
-      addLog("info", `Reading qualification file: ${qualFile.name}`);
-      addLog("info", `Reading race file: ${raceFile.name}`);
-
-      // Read files
       const qualText = await qualFile.text();
       const raceText = await raceFile.text();
-
       const qual = JSON.parse(qualText) as RaceResultFile;
       const race = JSON.parse(raceText) as RaceResultFile;
 
-      // Validation 1: event equality
-      if (!eventsAreEqual(qual.event, race.event)) {
-        throw new TypeError(
-          "EVENT: event attributes differ between qualification and race file.",
-        );
-      }
-      addLog("success", "event attribute is identical.", faCheck);
+      addLog(
+        "info",
+        `Qualification file loaded: ${qualFile.name} (${qual.drivers.length} drivers)`,
+        faClock,
+      );
+      addLog(
+        "info",
+        `Race file loaded: ${raceFile.name} (${race.drivers.length} drivers)`,
+        faClock,
+      );
 
-      // Validation 2: bestLapTimeMs must be valid
+      if (!eventsAreEqual(qual.event, race.event)) {
+        addLog(
+          "error",
+          "Qualification and race files do not belong to the same event.",
+          faXmark,
+        );
+        return;
+      }
+
+      // Validation 1: bestLapTimeMs must be a valid number
       qual.drivers.forEach((d: RaceResultDriver) => {
-        if (typeof d.bestLapTimeMs !== "number" || d.bestLapTimeMs <= -1) {
+        if (typeof d.bestLapTimeMs !== "number" || d.bestLapTimeMs <= 0) {
           throw new TypeError(
             `Driver '${d.name}' has invalid bestLapTimeMs: ${d.bestLapTimeMs}`,
           );
@@ -83,7 +95,7 @@ const FixQualyTimes = () => {
         faCheck,
       );
 
-      // Validation 3: raceTimeMs must be > -1
+      // Validation 2: raceTimeMs must be > -1
       race.drivers.forEach((d: RaceResultDriver) => {
         if (typeof d.raceTimeMs !== "number" || d.raceTimeMs <= -1) {
           throw new TypeError(
@@ -151,20 +163,27 @@ const FixQualyTimes = () => {
     if (raceInputRef.current) raceInputRef.current.value = "";
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!downloadData) return;
 
-    const blob = new Blob([downloadData.content], {
-      type: "application/json",
+    const saved = await saveTextFile({
+      electronAPI,
+      filename: downloadData.fileName,
+      content: downloadData.content,
+      mimeType: "application/json",
+      filters: [
+        { name: "JSON Files", extensions: ["json"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+      onCancel: () => {
+        addLog("info", `${getDownloadLabel(isElectron)} cancelled by user.`);
+        setShowDownloadModal(false);
+      },
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = downloadData.fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+
+    if (!saved) {
+      return;
+    }
 
     const verb = getDownloadedLabel(isElectron).toLowerCase();
     addLog("success", `File ${verb}: ${downloadData.fileName}`, faCheck);

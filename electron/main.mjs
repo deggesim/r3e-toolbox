@@ -280,6 +280,21 @@ ipcMain.handle("fs:writeFile", async (event, filePath, content) => {
   }
 });
 
+ipcMain.handle("fs:writeFileBase64", async (event, filePath, base64) => {
+  try {
+    // Ensure directory exists
+    const dir = path.dirname(filePath);
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
+    const buffer = Buffer.from(base64, "base64");
+    await writeFile(filePath, buffer);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle("fs:readdir", async (event, dirPath) => {
   try {
     const files = await readdir(dirPath);

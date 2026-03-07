@@ -60,6 +60,19 @@ export const useElectronAPI = () => {
         }
       },
 
+      async writeFileBase64(filePath: string, base64: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.writeFileBase64(
+          filePath,
+          base64,
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Failed to write file");
+        }
+      },
+
       async readdir(dirPath: string): Promise<string[]> {
         if (!isElectron) {
           throw new Error("Electron API not available");

@@ -27,6 +27,10 @@ declare global {
       filePath: string,
       content: string,
     ) => Promise<{ success: boolean; error?: string }>;
+    writeFileBase64: (
+      filePath: string,
+      base64: string,
+    ) => Promise<{ success: boolean; error?: string }>;
     readdir: (
       dirPath: string,
     ) => Promise<{ success: boolean; data?: string[]; error?: string }>;

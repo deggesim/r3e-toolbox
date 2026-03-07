@@ -13,7 +13,8 @@ import {
   getHumanDriverName,
   getSortedRaceSlots,
 } from "../utils/humanPlayerUtils";
-import { generateStandingsHTML, downloadHTML } from "../utils/htmlGenerator";
+import { generateStandingsHTML } from "../utils/htmlGenerator";
+import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
 import type { ParsedRace, RaceSlot } from "../types/raceResults";
 
@@ -373,7 +374,8 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
 };
 
 const ResultsDatabaseDetail = () => {
-  const { isElectron } = useElectronAPI();
+  const electronAPI = useElectronAPI();
+  const { isElectron } = electronAPI;
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
@@ -515,7 +517,7 @@ const ResultsDatabaseDetail = () => {
     return "";
   };
 
-  const handleDownloadHTML = () => {
+  const handleDownloadHTML = async () => {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
           cars: Object.fromEntries(
@@ -535,7 +537,16 @@ const ResultsDatabaseDetail = () => {
       championship.alias,
       leaderboardAssetsForExport,
     );
-    downloadHTML(html, `${championship.alias}.html`);
+    await saveTextFile({
+      electronAPI,
+      filename: `${championship.alias}.html`,
+      content: html,
+      mimeType: "text/html",
+      filters: [
+        { name: "HTML Files", extensions: ["html"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
   };
 
   return (

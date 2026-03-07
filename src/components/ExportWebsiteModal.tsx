@@ -26,9 +26,10 @@ import {
 import {
   exportChampionshipsAsZip,
   exportChampionshipsAs7z,
-  downloadBlob,
   type ExportProgress,
 } from "../utils/archiveExporter";
+import { getDownloadLabel } from "../utils/platformLabels";
+import { saveBlobFile } from "../utils/fileSaver";
 
 interface ExportWebsiteModalProps {
   show: boolean;
@@ -134,7 +135,24 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
         const blob = await exportChampionshipsAsZip(exportOptions);
         const fileName = `r3e-championships-${new Date().toISOString().split("T")[0]}.zip`;
 
-        downloadBlob(blob, fileName);
+        const saved = await saveBlobFile({
+          electronAPI,
+          filename: fileName,
+          blob,
+          filters: [{ name: "ZIP Archive", extensions: ["zip"] }],
+          onSaved: (filePath) => setLastExportPath(filePath),
+          onCancel: () => {
+            addLog(
+              "info",
+              `${getDownloadLabel(electronAPI.isElectron)} cancelled by user.`,
+            );
+            setStage("idle");
+          },
+        });
+
+        if (!saved) {
+          return;
+        }
 
         addLog(
           "success",
@@ -155,7 +173,10 @@ export const ExportWebsiteModal: React.FC<ExportWebsiteModalProps> = ({
         ]);
 
         if (!savePath) {
-          addLog("info", "Export cancelled by user");
+          addLog(
+            "info",
+            `${getDownloadLabel(electronAPI.isElectron)} cancelled by user.`,
+          );
           setStage("idle");
           return;
         }
