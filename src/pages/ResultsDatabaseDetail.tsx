@@ -6,6 +6,8 @@ import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel } from "../utils/platformLabels";
 import { makeTime, parseTimestring } from "../utils/timeUtils";
 import {
   getHumanDriverName,
@@ -371,6 +373,7 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
 };
 
 const ResultsDatabaseDetail = () => {
+  const { isElectron } = useElectronAPI();
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
@@ -566,7 +569,7 @@ const ResultsDatabaseDetail = () => {
         <div className="mt-3">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
-            Download as HTML
+            {getDownloadLabel(isElectron)} as HTML
           </Button>
         </div>
       </div>

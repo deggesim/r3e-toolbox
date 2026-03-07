@@ -36,6 +36,7 @@ import { parseJson } from "../utils/jsonParser";
 import { makeTime } from "../utils/timeUtils";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
+import { getDownloadedLabel, getDownloadLabel } from "../utils/platformLabels";
 
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
@@ -285,11 +286,8 @@ const AIManagement = () => {
         link.click();
         link.remove();
         URL.revokeObjectURL(url);
-        addLog(
-          "success",
-          "📥 Downloaded modified aiadaptation.xml",
-          faDownload,
-        );
+        const verb = getDownloadedLabel(electron.isElectron);
+        addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -467,12 +465,13 @@ const AIManagement = () => {
     }
 
     downloadXml(newDatabase, playerTimes);
-    addLog("success", "Downloaded modified aiadaptation.xml", faDownload);
+    const verb = getDownloadedLabel(electron.isElectron);
+    addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [database, assets, playerTimes, downloadXml, addLog]);
+  }, [database, assets, playerTimes, downloadXml, addLog, electron.isElectron]);
 
   const handleConfirmRemoveGenerated = useCallback(() => {
     setShowRemoveGeneratedModal(false);
@@ -505,13 +504,14 @@ const AIManagement = () => {
     addLog("success", "All AI data cleared from database");
 
     downloadXml(emptyDb, playerTimes);
-    addLog("success", "Downloaded reset aiadaptation.xml", faDownload);
+    const verb = getDownloadedLabel(electron.isElectron);
+    addLog("success", `${verb} reset aiadaptation.xml`, faDownload);
     addLog("success", "All AI times have been reset successfully", faThumbsUp);
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [downloadXml, playerTimes, addLog]);
+  }, [downloadXml, playerTimes, addLog, electron.isElectron]);
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
@@ -781,7 +781,10 @@ const AIManagement = () => {
           <ul>
             <li>Remove generated AI levels across all classes/tracks</li>
             <li>Recalculate min/max AI ranges</li>
-            <li>Download a modified aiadaptation.xml file</li>
+            <li>
+              {getDownloadLabel(electron.isElectron)} a modified
+              aiadaptation.xml file
+            </li>
           </ul>
           <p>Do you want to continue?</p>
         </Modal.Body>
@@ -809,7 +812,10 @@ const AIManagement = () => {
             <li>Clear all AI level data</li>
             <li>Remove all processed predictions</li>
             <li>Preserve your player times</li>
-            <li>Download a reset aiadaptation.xml file</li>
+            <li>
+              {getDownloadLabel(electron.isElectron)} a reset aiadaptation.xml
+              file
+            </li>
           </ul>
           <p>Are you sure you want to continue?</p>
         </Modal.Body>

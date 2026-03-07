@@ -31,6 +31,8 @@ import ChampionshipCard from "../components/ChampionshipCard";
 import { ExportWebsiteModal } from "../components/ExportWebsiteModal";
 import SectionTitle from "../components/SectionTitle";
 import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel, getDownloadedLabel } from "../utils/platformLabels";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
@@ -50,6 +52,7 @@ import { calculateChampionshipStandings } from "../utils/standingsCalculator";
 import { parseTime, parseTimestring } from "../utils/timeUtils";
 
 const ResultsDatabaseViewer = () => {
+  const { isElectron } = useElectronAPI();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
@@ -232,7 +235,8 @@ const ResultsDatabaseViewer = () => {
     try {
       const html = generateChampionshipIndexHTML(championships);
       downloadHTML(html, "index.html");
-      addLog("success", "Downloaded index.html");
+      const verb = getDownloadedLabel(isElectron);
+      addLog("success", `${verb} index.html`);
     } finally {
       setTimeout(() => setIsDownloadingIndex(false), 300);
     }
@@ -256,7 +260,8 @@ const ResultsDatabaseViewer = () => {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      addLog("success", "Downloaded championship database");
+      const verb = getDownloadedLabel(isElectron);
+      addLog("success", `${verb} championship database`);
     } finally {
       setTimeout(() => setIsDownloadingDatabase(false), 300);
     }
@@ -514,8 +519,8 @@ const ResultsDatabaseViewer = () => {
                     spin={isDownloadingDatabase}
                   />
                   {isDownloadingDatabase
-                    ? "Downloading..."
-                    : "Download database"}
+                    ? `${isElectron ? "Saving" : "Downloading"}...`
+                    : `${getDownloadLabel(isElectron)} database`}
                 </Button>
                 <Button
                   onClick={handleDownloadIndex}
@@ -527,8 +532,8 @@ const ResultsDatabaseViewer = () => {
                     spin={isDownloadingIndex}
                   />
                   {isDownloadingIndex
-                    ? "Downloading..."
-                    : "Download index.html"}
+                    ? `${isElectron ? "Saving" : "Downloading"}...`
+                    : `${getDownloadLabel(isElectron)} index.html`}
                 </Button>
                 <Button
                   onClick={() => setShowExportModal(true)}

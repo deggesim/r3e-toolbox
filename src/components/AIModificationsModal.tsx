@@ -1,4 +1,6 @@
 import { Button, Modal } from "react-bootstrap";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel } from "../utils/platformLabels";
 import type { Assets } from "../types/gameData";
 
 interface PlayerTimesModification {
@@ -36,6 +38,8 @@ const AIModificationsModal = ({
   onHide,
   onConfirm,
 }: AIModificationsModalProps) => {
+  const { isElectron } = useElectronAPI();
+
   return (
     <Modal show={show} onHide={onHide} data-bs-theme="dark">
       <Modal.Header closeButton className="bg-dark border-secondary">
@@ -78,7 +82,8 @@ const AIModificationsModal = ({
         )}
 
         <p className="text-muted mt-3 mb-0">
-          This will download the modified aiadaptation.xml file.
+          This will {getDownloadLabel(isElectron).toLowerCase()} the modified
+          aiadaptation.xml file.
         </p>
       </Modal.Body>
       <Modal.Footer className="bg-dark border-secondary">

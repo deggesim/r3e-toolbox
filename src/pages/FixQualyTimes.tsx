@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRef, useState } from "react";
 import { Button, Card, Container, Form, Modal } from "react-bootstrap";
 import { useProcessingLogStore } from "../store/processingLogStore";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel, getDownloadedLabel } from "../utils/platformLabels";
 
 type RaceResultDriver = {
   name: string;
@@ -21,6 +23,7 @@ type RaceResultFile = {
 };
 
 const FixQualyTimes = () => {
+  const { isElectron } = useElectronAPI();
   const [qualFile, setQualFile] = useState<File | null>(null);
   const [raceFile, setRaceFile] = useState<File | null>(null);
   const qualInputRef = useRef<HTMLInputElement>(null);
@@ -163,12 +166,14 @@ const FixQualyTimes = () => {
     a.remove();
     URL.revokeObjectURL(url);
 
-    addLog("success", `File downloaded: ${downloadData.fileName}`, faCheck);
+    const verb = getDownloadedLabel(isElectron).toLowerCase();
+    addLog("success", `File ${verb}: ${downloadData.fileName}`, faCheck);
     setShowDownloadModal(false);
   };
 
   const handleCancelDownload = () => {
-    addLog("info", "Download cancelled by user.");
+    const action = getDownloadLabel(isElectron);
+    addLog("info", `${action} cancelled by user.`);
     setShowDownloadModal(false);
   };
 
@@ -265,7 +270,8 @@ const FixQualyTimes = () => {
                 </li>
               </ul>
               <p className="text-muted">
-                Would you like to download the fixed file?
+                Would you like to {getDownloadLabel(isElectron).toLowerCase()}{" "}
+                the fixed file?
               </p>
             </>
           )}
@@ -276,7 +282,7 @@ const FixQualyTimes = () => {
           </Button>
           <Button variant="primary" onClick={handleDownload}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
-            Download
+            {getDownloadLabel(isElectron)}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -17,6 +17,8 @@ import {
   ListGroup,
   Modal,
 } from "react-bootstrap";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel } from "../utils/platformLabels";
 import type { ChampionshipEntry } from "../types/raceResults";
 
 interface ChampionshipCardProps {
@@ -34,6 +36,7 @@ const ChampionshipCard = ({
   onClick,
   onDownload,
 }: ChampionshipCardProps) => {
+  const { isElectron } = useElectronAPI();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newAlias, setNewAlias] = useState("");
@@ -183,7 +186,7 @@ const ChampionshipCard = ({
             className="text-nowrap px-2 w-100"
           >
             <FontAwesomeIcon icon={faDownload} className="me-2" />
-            Download as HTML
+            {getDownloadLabel(isElectron)} as HTML
           </Button>
         </Card.Body>
       </Card>
