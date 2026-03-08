@@ -369,7 +369,12 @@ export const generateStandingsHTML = (
     carNames?: Record<string, string>;
   },
   gameData?: RaceRoomData | null,
+  assetMap?: Map<string, string>,
 ): string => {
+  // Helper function to get embedded URL or fallback to original
+  const getEmbeddedUrl = (url: string): string => {
+    return assetMap?.get(url) || url;
+  };
   const getVehicleName = (vehicleId?: number, vehicleName?: string): string => {
     const vehicleIdStr =
       vehicleId !== undefined ? String(vehicleId) : undefined;
@@ -679,8 +684,9 @@ body {
           ${races
             .map((race) => {
               const trackImg = leaderboardAssets?.tracks[race.trackname] || "";
-              const imgHtml = trackImg
-                ? `<img src="${trackImg}" alt="${race.trackname}" />`
+              const embeddedImg = getEmbeddedUrl(trackImg);
+              const imgHtml = embeddedImg
+                ? `<img src="${embeddedImg}" alt="${race.trackname}" />`
                 : "";
               const timeHtml = race.timestring
                 ? `<span class="track-time">${race.timestring}</span>`
@@ -719,7 +725,7 @@ body {
             return `<tr class="${standing.isHuman ? "human-driver" : ""}">
               <td>${standing.position}</td>
               <td class="driver-name-cell">${standing.driver}</td>
-              <td>${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
+              <td>${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
               <td>${standing.team}</td>
               <td class="points-cell">${standing.points}</td>
               ${positionCells}
@@ -803,7 +809,7 @@ body {
 
             return `<tr>
               <td>${standing.position}</td>
-              <td>${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
+              <td>${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
               <td>${standing.entries}</td>
               <td class="points-cell">${standing.points}</td>
               ${standing.racePoints
@@ -855,7 +861,7 @@ body {
                     <div class="time-entry${time.isHuman ? " human-driver" : ""}">
                       <div class="time-driver">${time.driver}</div>
                       <div class="time-info">
-                        ${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}
+                        ${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}
                         <span class="time-value">${time.time}</span>
                         ${diff ? `<span class="time-diff">${diff}</span>` : ""}
                       </div>
@@ -914,7 +920,7 @@ body {
                     <div class="time-entry${time.isHuman ? " human-driver" : ""}">
                       <div class="time-driver">${time.driver}</div>
                       <div class="time-info">
-                        ${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}
+                        ${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}
                         <span class="time-value">${time.time}</span>
                         ${diff ? `<span class="time-diff">${diff}</span>` : ""}
                       </div>
@@ -990,7 +996,7 @@ body {
                   return `<td class="race-result-cell">
                     <div class="race-result-entry${isHuman ? " human-driver" : ""}">
                       <div class="result-driver">${slot.driver}</div>
-                      <div class="result-vehicle">${vehicleIcon ? `<img src="${vehicleIcon}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}<span>${displayVehicleName}</span></div>
+                      <div class="result-vehicle">${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}<span>${displayVehicleName}</span></div>
                       <div class="result-time">${formattedTime}</div>
                     </div>
                   </td>`;
@@ -1036,7 +1042,12 @@ body {
 
 export const generateChampionshipIndexHTML = (
   championships: ChampionshipEntry[],
+  assetMap?: Map<string, string>,
 ): string => {
+  // Helper function to get embedded URL or fallback to original
+  const getEmbeddedUrl = (url: string): string => {
+    return assetMap?.get(url) || url;
+  };
   const sorted = [...championships].sort((a, b) =>
     b.generatedAt.localeCompare(a.generatedAt),
   );
@@ -1055,7 +1066,7 @@ export const generateChampionshipIndexHTML = (
       const rowClass = idx % 2 === 0 ? "even" : "odd";
 
       const carIconHtml = c.carIcon
-        ? `<img src="${c.carIcon}" alt="${c.carName || "Car icon"}" />`
+        ? `<img src="${getEmbeddedUrl(c.carIcon)}" alt="${c.carName || "Car icon"}" />`
         : "";
       const carCell = c.carName
         ? `<div class="car-cell">

@@ -17,7 +17,7 @@ This toolbox implements those concepts with a modern GUI, TypeScript type safety
 
 - **Node.js 24.x** or higher
 - **Git** for version control
-- **pnpm** or **npm** (pnpm recommended for speed)
+- **npm**
 
 ### Installation
 
@@ -27,8 +27,7 @@ git clone https://github.com/deggesim/r3e-toolbox.git
 cd r3e-toolbox
 
 # Install dependencies
-pnpm install
-# or: npm install
+npm install
 ```
 
 ## Starting Development
@@ -38,7 +37,7 @@ pnpm install
 ### Full Mode (Vite + Electron)
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 **What it does**:
@@ -51,7 +50,7 @@ pnpm run dev
 ### Web Only Mode (Browser)
 
 ```bash
-pnpm run dev:vite
+npm run dev:vite
 ```
 
 Useful for:
@@ -65,7 +64,7 @@ Manually open `http://localhost:5173` in your browser.
 ### Electron Only Mode
 
 ```bash
-pnpm run dev:electron
+npm run dev:electron
 ```
 
 Requires Vite to already be running in another terminal. Useful for:
@@ -166,16 +165,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for complete details.
 
 ```bash
 # Type check
-pnpm run tsc --noEmit
+npm run tsc --noEmit
 
 # Linting
-pnpm run lint
+npm run lint
 
 # Local build
-pnpm run build
+npm run build
 
 # Build Electron (generates installer)
-pnpm run build:electron
+npm run build:electron
 ```
 
 ## QA Agents

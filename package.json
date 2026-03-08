@@ -32,6 +32,7 @@
     "agent:workflow:full": "ts-node agents/runner.ts --workflow full-suite"
   },
   "dependencies": {
+    "7zip-min": "^3.0.1",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.2.0",
@@ -42,6 +43,7 @@
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
     "fast-xml-parser": "^5.4.1",
+    "jszip": "^3.10.1",
     "mathjs": "^15.1.0",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
@@ -59,6 +61,7 @@
     "@semantic-release/npm": "^13.1.4",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/electron": "^1.6.10",
+    "@types/jszip": "^3.4.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

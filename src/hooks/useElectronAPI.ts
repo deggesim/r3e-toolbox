@@ -29,7 +29,10 @@ export const useElectronAPI = () => {
         return globalThis.electron.openDirectory();
       },
 
-      async saveFile(defaultPath = "", filters = []): Promise<string | null> {
+      async saveFile(
+        defaultPath = "",
+        filters: ElectronDialogFilter[] = [],
+      ): Promise<string | null> {
         if (!isElectron) {
           throw new Error("Electron API not available");
         }
@@ -57,6 +60,19 @@ export const useElectronAPI = () => {
         }
       },
 
+      async writeFileBase64(filePath: string, base64: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.writeFileBase64(
+          filePath,
+          base64,
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Failed to write file");
+        }
+      },
+
       async readdir(dirPath: string): Promise<string[]> {
         if (!isElectron) {
           throw new Error("Electron API not available");
@@ -66,6 +82,43 @@ export const useElectronAPI = () => {
           throw new Error(result.error || "Failed to read directory");
         }
         return result.data || [];
+      },
+
+      async getTempDir(): Promise<string> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.getTempDir();
+        if (!result.success) {
+          throw new Error(result.error || "Failed to get temp directory");
+        }
+        return result.data || "";
+      },
+
+      async deleteDirectory(dirPath: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.deleteDirectory(dirPath);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to delete directory");
+        }
+      },
+
+      async create7zArchive(
+        sourceDir: string,
+        archivePath: string,
+      ): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.create7zArchive(
+          sourceDir,
+          archivePath,
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create 7z archive");
+        }
       },
 
       async findR3eDataFile(): Promise<{
@@ -126,6 +179,16 @@ export const useElectronAPI = () => {
         const result = await globalThis.electron.openExternal(url);
         if (!result.success) {
           throw new Error(result.error || "Failed to open external link");
+        }
+      },
+
+      async showItemInFolder(filePath: string): Promise<void> {
+        if (!isElectron) {
+          throw new Error("Electron API not available");
+        }
+        const result = await globalThis.electron.showItemInFolder(filePath);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to reveal file in folder");
         }
       },
 

@@ -11,7 +11,8 @@ import isDev from "electron-is-dev";
 import log from "electron-log";
 import Store from "electron-store";
 import { existsSync, mkdirSync } from "node:fs";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile, rm, mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { initAutoUpdater, manualCheckForUpdates } from "./updater.mjs";
@@ -267,7 +268,27 @@ ipcMain.handle("fs:readFile", async (event, filePath) => {
 
 ipcMain.handle("fs:writeFile", async (event, filePath, content) => {
   try {
+    // Ensure directory exists
+    const dir = path.dirname(filePath);
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
     await writeFile(filePath, content, "utf8");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:writeFileBase64", async (event, filePath, base64) => {
+  try {
+    // Ensure directory exists
+    const dir = path.dirname(filePath);
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
+    const buffer = Buffer.from(base64, "base64");
+    await writeFile(filePath, buffer);
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -278,6 +299,43 @@ ipcMain.handle("fs:readdir", async (event, dirPath) => {
   try {
     const files = await readdir(dirPath);
     return { success: true, data: files };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:getTempDir", async () => {
+  try {
+    return { success: true, data: tmpdir() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:deleteDirectory", async (event, dirPath) => {
+  try {
+    await rm(dirPath, { recursive: true, force: true });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("fs:create7zArchive", async (event, sourceDir, archivePath) => {
+  try {
+    const SevenZip = (await import("7zip-min")).default;
+
+    await new Promise((resolve, reject) => {
+      SevenZip.pack(sourceDir, archivePath, (err) => {
+        if (err) {
+          reject(new Error(err.message || String(err)));
+          return;
+        }
+        resolve(undefined);
+      });
+    });
+
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -422,6 +480,16 @@ ipcMain.handle("app:openExternal", async (event, url) => {
     return { success: true };
   } catch (error) {
     console.error("[app:openExternal] Error:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("app:showItemInFolder", async (event, filePath) => {
+  try {
+    shell.showItemInFolder(filePath);
+    return { success: true };
+  } catch (error) {
+    console.error("[app:showItemInFolder] Error:", error);
     return { success: false, error: error.message };
   }
 });

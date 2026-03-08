@@ -6,12 +6,15 @@ import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel } from "../utils/platformLabels";
 import { makeTime, parseTimestring } from "../utils/timeUtils";
 import {
   getHumanDriverName,
   getSortedRaceSlots,
 } from "../utils/humanPlayerUtils";
-import { generateStandingsHTML, downloadHTML } from "../utils/htmlGenerator";
+import { generateStandingsHTML } from "../utils/htmlGenerator";
+import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
 import type { ParsedRace, RaceSlot } from "../types/raceResults";
 
@@ -371,6 +374,8 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
 };
 
 const ResultsDatabaseDetail = () => {
+  const electronAPI = useElectronAPI();
+  const { isElectron } = electronAPI;
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
@@ -512,7 +517,7 @@ const ResultsDatabaseDetail = () => {
     return "";
   };
 
-  const handleDownloadHTML = () => {
+  const handleDownloadHTML = async () => {
     const leaderboardAssetsForExport = leaderboardAssets
       ? {
           cars: Object.fromEntries(
@@ -532,7 +537,16 @@ const ResultsDatabaseDetail = () => {
       championship.alias,
       leaderboardAssetsForExport,
     );
-    downloadHTML(html, `${championship.alias}.html`);
+    await saveTextFile({
+      electronAPI,
+      filename: `${championship.alias}.html`,
+      content: html,
+      mimeType: "text/html",
+      filters: [
+        { name: "HTML Files", extensions: ["html"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
   };
 
   return (
@@ -566,7 +580,7 @@ const ResultsDatabaseDetail = () => {
         <div className="mt-3">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
-            Download as HTML
+            {getDownloadLabel(isElectron)} as HTML
           </Button>
         </div>
       </div>

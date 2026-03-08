@@ -42,6 +42,7 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 3000,
     rollupOptions: {
+      external: ["7zip-min"], // Exclude 7zip-min from browser build (Electron-only)
       output: {
         manualChunks: {
           // Separate vendor chunks to improve caching

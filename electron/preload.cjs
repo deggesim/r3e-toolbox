@@ -11,12 +11,21 @@ contextBridge.exposeInMainWorld("electron", {
   readFile: (filePath) => ipcRenderer.invoke("fs:readFile", filePath),
   writeFile: (filePath, content) =>
     ipcRenderer.invoke("fs:writeFile", filePath, content),
+  writeFileBase64: (filePath, base64) =>
+    ipcRenderer.invoke("fs:writeFileBase64", filePath, base64),
   readdir: (dirPath) => ipcRenderer.invoke("fs:readdir", dirPath),
+  getTempDir: () => ipcRenderer.invoke("fs:getTempDir"),
+  deleteDirectory: (dirPath) =>
+    ipcRenderer.invoke("fs:deleteDirectory", dirPath),
+  create7zArchive: (sourceDir, archivePath) =>
+    ipcRenderer.invoke("fs:create7zArchive", sourceDir, archivePath),
 
   // Application operations
   findR3eDataFile: () => ipcRenderer.invoke("app:findR3eDataFile"),
   findAiadaptationFile: () => ipcRenderer.invoke("app:findAiadaptationFile"),
   openExternal: (url) => ipcRenderer.invoke("app:openExternal", url),
+  showItemInFolder: (filePath) =>
+    ipcRenderer.invoke("app:showItemInFolder", filePath),
 
   // electron-store operations
   storeGet: (key) => ipcRenderer.invoke("store:get", key),

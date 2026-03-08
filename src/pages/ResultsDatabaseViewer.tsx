@@ -4,6 +4,7 @@ import { faCircleInfo } from "@fortawesome/free-solid-svg-icons/faCircleInfo";
 import { faCrown } from "@fortawesome/free-solid-svg-icons/faCrown";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faFileArchive } from "@fortawesome/free-solid-svg-icons/faFileArchive";
 import { faFlagCheckered } from "@fortawesome/free-solid-svg-icons/faFlagCheckered";
 import { faMedal } from "@fortawesome/free-solid-svg-icons/faMedal";
 import { faRankingStar } from "@fortawesome/free-solid-svg-icons/faRankingStar";
@@ -27,8 +28,12 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ChampionshipCard from "../components/ChampionshipCard";
+import { ExportWebsiteModal } from "../components/ExportWebsiteModal";
 import SectionTitle from "../components/SectionTitle";
 import { useResolveCarInfo } from "../hooks/useResolveCarInfo";
+import { useElectronAPI } from "../hooks/useElectronAPI";
+import { getDownloadLabel, getDownloadedLabel } from "../utils/platformLabels";
+import { saveTextFile } from "../utils/fileSaver";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
@@ -36,7 +41,6 @@ import { useProcessingLogStore } from "../store/processingLogStore";
 import type { ChampionshipEntry } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
-  downloadHTML,
   generateChampionshipIndexHTML,
   generateStandingsHTML,
 } from "../utils/htmlGenerator";
@@ -48,6 +52,8 @@ import { calculateChampionshipStandings } from "../utils/standingsCalculator";
 import { parseTime, parseTimestring } from "../utils/timeUtils";
 
 const ResultsDatabaseViewer = () => {
+  const electronAPI = useElectronAPI();
+  const { isElectron } = electronAPI;
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
   const removeChampionship = useChampionshipStore((state) => state.remove);
@@ -64,6 +70,7 @@ const ResultsDatabaseViewer = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [isRefreshingDatabase, setIsRefreshingDatabase] = useState(false);
   const [isDownloadingDatabase, setIsDownloadingDatabase] = useState(false);
   const [isDownloadingIndex, setIsDownloadingIndex] = useState(false);
@@ -193,7 +200,9 @@ const ResultsDatabaseViewer = () => {
 
   const htmlAssets = convertAssetsForHTML(leaderboardAssets, true);
 
-  const handleDownloadChampionship = (championship: ChampionshipEntry) => {
+  const handleDownloadChampionship = async (
+    championship: ChampionshipEntry,
+  ) => {
     if (!championship.raceData || championship.raceData.length === 0) {
       addLog(
         "error",
@@ -212,11 +221,27 @@ const ResultsDatabaseViewer = () => {
       gameData,
     );
 
-    downloadHTML(html, championship.fileName);
-    addLog("success", `Downloaded ${championship.fileName}`);
+    const saved = await saveTextFile({
+      electronAPI,
+      filename: championship.fileName,
+      content: html,
+      mimeType: "text/html",
+      filters: [
+        { name: "HTML Files", extensions: ["html"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+      onCancel: () => {
+        addLog("info", `${getDownloadLabel(isElectron)} cancelled by user.`);
+      },
+    });
+
+    if (saved) {
+      const verb = getDownloadedLabel(isElectron);
+      addLog("success", `${verb} ${championship.fileName}`);
+    }
   };
 
-  const handleDownloadIndex = () => {
+  const handleDownloadIndex = async () => {
     if (championships.length === 0) {
       addLog(
         "warning",
@@ -228,14 +253,30 @@ const ResultsDatabaseViewer = () => {
     setIsDownloadingIndex(true);
     try {
       const html = generateChampionshipIndexHTML(championships);
-      downloadHTML(html, "index.html");
-      addLog("success", "Downloaded index.html");
+      const saved = await saveTextFile({
+        electronAPI,
+        filename: "index.html",
+        content: html,
+        mimeType: "text/html",
+        filters: [
+          { name: "HTML Files", extensions: ["html"] },
+          { name: "All Files", extensions: ["*"] },
+        ],
+        onCancel: () => {
+          addLog("info", `${getDownloadLabel(isElectron)} cancelled by user.`);
+        },
+      });
+
+      if (saved) {
+        const verb = getDownloadedLabel(isElectron);
+        addLog("success", `${verb} index.html`);
+      }
     } finally {
       setTimeout(() => setIsDownloadingIndex(false), 300);
     }
   };
 
-  const handleDownloadDatabase = () => {
+  const handleDownloadDatabase = async () => {
     if (championships.length === 0) {
       addLog("warning", "No championships to download", faExclamationTriangle);
       return;
@@ -244,16 +285,24 @@ const ResultsDatabaseViewer = () => {
     setIsDownloadingDatabase(true);
     try {
       const databaseJSON = JSON.stringify(championships, null, 2);
-      const blob = new Blob([databaseJSON], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "r3e-championships.json";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      addLog("success", "Downloaded championship database");
+      const saved = await saveTextFile({
+        electronAPI,
+        filename: "r3e-championships.json",
+        content: databaseJSON,
+        mimeType: "application/json",
+        filters: [
+          { name: "JSON Files", extensions: ["json"] },
+          { name: "All Files", extensions: ["*"] },
+        ],
+        onCancel: () => {
+          addLog("info", `${getDownloadLabel(isElectron)} cancelled by user.`);
+        },
+      });
+
+      if (saved) {
+        const verb = getDownloadedLabel(isElectron);
+        addLog("success", `${verb} championship database`);
+      }
     } finally {
       setTimeout(() => setIsDownloadingDatabase(false), 300);
     }
@@ -511,8 +560,8 @@ const ResultsDatabaseViewer = () => {
                     spin={isDownloadingDatabase}
                   />
                   {isDownloadingDatabase
-                    ? "Downloading..."
-                    : "Download database"}
+                    ? `${isElectron ? "Saving" : "Downloading"}...`
+                    : `${getDownloadLabel(isElectron)} database`}
                 </Button>
                 <Button
                   onClick={handleDownloadIndex}
@@ -524,8 +573,16 @@ const ResultsDatabaseViewer = () => {
                     spin={isDownloadingIndex}
                   />
                   {isDownloadingIndex
-                    ? "Downloading..."
-                    : "Download index.html"}
+                    ? `${isElectron ? "Saving" : "Downloading"}...`
+                    : `${getDownloadLabel(isElectron)} index.html`}
+                </Button>
+                <Button
+                  onClick={() => setShowExportModal(true)}
+                  disabled={championships.length === 0}
+                  variant="primary"
+                >
+                  <FontAwesomeIcon icon={faFileArchive} className="me-2" />
+                  Export Website Archive
                 </Button>
               </div>
               <Row className="g-3">
@@ -587,6 +644,12 @@ const ResultsDatabaseViewer = () => {
               </Button>
             </Modal.Footer>
           </Modal>
+
+          {/* Export Website Modal */}
+          <ExportWebsiteModal
+            show={showExportModal}
+            onHide={() => setShowExportModal(false)}
+          />
         </Card.Body>
       </Card>
     </Container>

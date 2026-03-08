@@ -27,9 +27,25 @@ declare global {
       filePath: string,
       content: string,
     ) => Promise<{ success: boolean; error?: string }>;
+    writeFileBase64: (
+      filePath: string,
+      base64: string,
+    ) => Promise<{ success: boolean; error?: string }>;
     readdir: (
       dirPath: string,
     ) => Promise<{ success: boolean; data?: string[]; error?: string }>;
+    getTempDir: () => Promise<{
+      success: boolean;
+      data?: string;
+      error?: string;
+    }>;
+    deleteDirectory: (
+      dirPath: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    create7zArchive: (
+      sourceDir: string,
+      archivePath: string,
+    ) => Promise<{ success: boolean; error?: string }>;
     findR3eDataFile: () => Promise<{
       success: boolean;
       data?: string;
@@ -50,6 +66,9 @@ declare global {
     storeDelete: (key: string) => Promise<{ success: boolean; error?: string }>;
     openExternal: (
       url: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    showItemInFolder: (
+      filePath: string,
     ) => Promise<{ success: boolean; error?: string }>;
     logInfo: (
       message: string,

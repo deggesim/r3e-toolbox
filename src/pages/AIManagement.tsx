@@ -36,6 +36,8 @@ import { parseJson } from "../utils/jsonParser";
 import { makeTime } from "../utils/timeUtils";
 import { buildXML } from "../utils/xmlBuilder";
 import { parseAdaptive } from "../utils/xmlParser";
+import { getDownloadedLabel, getDownloadLabel } from "../utils/platformLabels";
+import { saveTextFile } from "../utils/fileSaver";
 
 /**
  * Removes generated AI levels from a track (where numberOfSampledRaces = 0)
@@ -225,34 +227,42 @@ const AIManagement = () => {
   // ============ XML DOWNLOAD HELPER ============
 
   const downloadXml = useCallback(
-    (db: Database, pt: PlayerTimes) => {
+    async (db: Database, pt: PlayerTimes): Promise<boolean> => {
       if (!assets) {
         addLog("error", "Please load RaceRoom data before exporting XML");
-        return;
+        return false;
       }
       try {
         const xmlContent = buildXML(db, pt, assets);
-        const blob = new Blob([xmlContent], { type: "application/xml" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "aiadaptation.xml";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        return await saveTextFile({
+          electronAPI: electron,
+          filename: "aiadaptation.xml",
+          content: xmlContent,
+          mimeType: "application/xml",
+          filters: [
+            { name: "XML Files", extensions: ["xml"] },
+            { name: "All Files", extensions: ["*"] },
+          ],
+          onCancel: () => {
+            addLog(
+              "info",
+              `${getDownloadLabel(electron.isElectron)} cancelled by user.`,
+            );
+          },
+        });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         addLog("error", `Error generating XML file: ${errorMessage}`);
+        return false;
       }
     },
-    [assets, addLog],
+    [assets, addLog, electron],
   );
 
   // ============ APPLY MODIFICATION ============
 
-  const handleConfirmApply = () => {
+  const handleConfirmApply = async () => {
     setShowApplyModal(false);
 
     let updatedDb = database;
@@ -270,26 +280,31 @@ const AIManagement = () => {
       );
     }
 
-    // Download the merged results
+    // Download/Save the merged results
     if (assets && updatedDb) {
       try {
         const xmlContent = buildXML(updatedDb, updatedPt, assets);
-        const blob = new Blob([xmlContent], {
-          type: "application/xml",
+        const saved = await saveTextFile({
+          electronAPI: electron,
+          filename: "aiadaptation.xml",
+          content: xmlContent,
+          mimeType: "application/xml",
+          filters: [
+            { name: "XML Files", extensions: ["xml"] },
+            { name: "All Files", extensions: ["*"] },
+          ],
+          onCancel: () => {
+            addLog(
+              "info",
+              `${getDownloadLabel(electron.isElectron)} cancelled by user.`,
+            );
+          },
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "aiadaptation.xml";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        addLog(
-          "success",
-          "📥 Downloaded modified aiadaptation.xml",
-          faDownload,
-        );
+
+        if (saved) {
+          const verb = getDownloadedLabel(electron.isElectron);
+          addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
+        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -428,7 +443,7 @@ const AIManagement = () => {
 
   // ============ REMOVE GENERATED ============
 
-  const handleRemoveGenerated = useCallback(() => {
+  const handleRemoveGenerated = useCallback(async () => {
     addLog("info", "Starting removal of generated AI levels...");
 
     const newDatabase = structuredClone(database);
@@ -466,13 +481,16 @@ const AIManagement = () => {
       );
     }
 
-    downloadXml(newDatabase, playerTimes);
-    addLog("success", "Downloaded modified aiadaptation.xml", faDownload);
+    const saved = await downloadXml(newDatabase, playerTimes);
+    if (saved) {
+      const verb = getDownloadedLabel(electron.isElectron);
+      addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
+    }
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [database, assets, playerTimes, downloadXml, addLog]);
+  }, [database, assets, playerTimes, downloadXml, addLog, electron.isElectron]);
 
   const handleConfirmRemoveGenerated = useCallback(() => {
     setShowRemoveGeneratedModal(false);
@@ -495,7 +513,7 @@ const AIManagement = () => {
     addLog("info", "Reset cancelled by user.");
   }, [addLog]);
 
-  const confirmResetAll = useCallback(() => {
+  const confirmResetAll = useCallback(async () => {
     setShowResetModal(false);
 
     addLog("info", "Starting reset of all AI times...");
@@ -504,14 +522,21 @@ const AIManagement = () => {
     setDatabase(emptyDb);
     addLog("success", "All AI data cleared from database");
 
-    downloadXml(emptyDb, playerTimes);
-    addLog("success", "Downloaded reset aiadaptation.xml", faDownload);
-    addLog("success", "All AI times have been reset successfully", faThumbsUp);
+    const saved = await downloadXml(emptyDb, playerTimes);
+    if (saved) {
+      const verb = getDownloadedLabel(electron.isElectron);
+      addLog("success", `${verb} reset aiadaptation.xml`, faDownload);
+      addLog(
+        "success",
+        "All AI times have been reset successfully",
+        faThumbsUp,
+      );
+    }
 
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [downloadXml, playerTimes, addLog]);
+  }, [downloadXml, playerTimes, addLog, electron.isElectron]);
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
@@ -781,7 +806,10 @@ const AIManagement = () => {
           <ul>
             <li>Remove generated AI levels across all classes/tracks</li>
             <li>Recalculate min/max AI ranges</li>
-            <li>Download a modified aiadaptation.xml file</li>
+            <li>
+              {getDownloadLabel(electron.isElectron)} a modified
+              aiadaptation.xml file
+            </li>
           </ul>
           <p>Do you want to continue?</p>
         </Modal.Body>
@@ -809,7 +837,10 @@ const AIManagement = () => {
             <li>Clear all AI level data</li>
             <li>Remove all processed predictions</li>
             <li>Preserve your player times</li>
-            <li>Download a reset aiadaptation.xml file</li>
+            <li>
+              {getDownloadLabel(electron.isElectron)} a reset aiadaptation.xml
+              file
+            </li>
           </ul>
           <p>Are you sure you want to continue?</p>
         </Modal.Body>

@@ -201,7 +201,7 @@ Each utility is self-contained:
 ### Prerequisites
 
 - **Node.js 24.x** or higher (tested on Windows, macOS, Linux)
-- **npm** or **pnpm** package manager
+- **npm** package manager
 
 ### Run Dev Environment
 
