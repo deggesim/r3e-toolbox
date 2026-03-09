@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/deggesim/r3e-toolbox/compare/v1.5.1...v1.6.0) (2026-03-09)
+
+
+### Features
+
+* add PR title validation workflow and update contribution guidelines [skip ci] ([30b0567](https://github.com/deggesim/r3e-toolbox/commit/30b0567dc23e6b9668459a1aa7d3e3a94007cdfa))
+
 ## [1.5.1](https://github.com/deggesim/r3e-toolbox/compare/v1.5.0...v1.5.1) (2026-03-08)
 
 # [1.5.0](https://github.com/deggesim/r3e-toolbox/compare/v1.4.1...v1.5.0) (2026-03-04)
