@@ -102,8 +102,12 @@
       "signAndEditExecutable": true
     },
     "nsis": {
+      "artifactName": "R3E-Toolbox-Setup-${version}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "portable": {
+      "artifactName": "R3E-Toolbox-Portable-${version}.${ext}"
     },
     "publish": {
       "provider": "github",
