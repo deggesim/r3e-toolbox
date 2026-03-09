@@ -1,0 +1,45 @@
+name: PR Title Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR Title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+
+          # Check if PR title follows Conventional Commits
+          if ! echo "$PR_TITLE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+'; then
+            echo "❌ PR title does not follow Conventional Commits format"
+            echo ""
+            echo "Required format: <type>(<scope>): <description>"
+            echo ""
+            echo "Valid types:"
+            echo "  - feat: New feature (MINOR version bump)"
+            echo "  - fix: Bug fix (PATCH version bump)"
+            echo "  - docs: Documentation changes (PATCH)"
+            echo "  - style: Code formatting (PATCH)"
+            echo "  - refactor: Code refactoring (PATCH)"
+            echo "  - perf: Performance improvements (PATCH)"
+            echo "  - test: Test changes (no release)"
+            echo "  - build: Build system changes (no release)"
+            echo "  - ci: CI/CD changes (no release)"
+            echo "  - chore: General maintenance (PATCH)"
+            echo "  - revert: Revert previous commit"
+            echo ""
+            echo "Examples:"
+            echo "  ✅ feat: add website export functionality"
+            echo "  ✅ fix(parser): correct XML parsing of qualification times"
+            echo "  ✅ feat!: remove support for legacy XML format"
+            echo "  ❌ Web site (#17)"
+            echo "  ❌ Add new feature"
+            exit 1
+          fi
+
+          echo "✅ PR title is valid"

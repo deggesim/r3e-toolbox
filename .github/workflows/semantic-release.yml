@@ -35,12 +35,6 @@ jobs:
           FIRST_LINE=$(echo "$COMMIT_MSG" | head -n1)
           echo "Commit message: $FIRST_LINE"
 
-          # Skip validation for PR squash/merge commits (contain PR references like #123)
-          if echo "$FIRST_LINE" | grep -qE '\(#[0-9]+\)'; then
-            echo "⏭️ Skipping validation for PR squash/merge commit"
-            exit 0
-          fi
-
           # Check if commit message follows conventional commits
           if ! echo "$FIRST_LINE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+'; then
             echo "❌ Commit message does not follow Conventional Commits"
