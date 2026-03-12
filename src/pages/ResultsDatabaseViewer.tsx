@@ -13,7 +13,7 @@ import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
 import { faTrophy } from "@fortawesome/free-solid-svg-icons/faTrophy";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -79,7 +79,7 @@ const ResultsDatabaseViewer = () => {
     navigate(`/results-database/${encodeURIComponent(alias)}`);
   };
 
-  const getHumanStats = () => {
+  const { wins, podiums, poles, championshipsWon } = useMemo(() => {
     let wins = 0;
     let podiums = 0;
     let poles = 0;
@@ -145,9 +145,7 @@ const ResultsDatabaseViewer = () => {
     }
 
     return { wins, podiums, poles, championshipsWon };
-  };
-
-  const { wins, podiums, poles, championshipsWon } = getHumanStats();
+  }, [championships]);
 
   const filteredChampionships = championships
     .filter((championship) => {

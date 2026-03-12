@@ -540,7 +540,7 @@ const AIManagement = () => {
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
-  const hasModifiedPlayerTimes = useCallback((): boolean => {
+  const hasModifiedPlayerTimes = useMemo((): boolean => {
     // Check if current playerTimes differs from original
     for (const [classId, classData] of Object.entries(playerTimes.classes)) {
       const origClass = originalPlayerTimes.classes[classId];
@@ -571,7 +571,7 @@ const AIManagement = () => {
     return false;
   }, [playerTimes, originalPlayerTimes]);
 
-  const getPlayerTimesModifications = useCallback((): Array<{
+  const playerTimesModifications = useMemo((): Array<{
     classId: string;
     className: string;
     trackId: string;
@@ -615,46 +615,57 @@ const AIManagement = () => {
 
   // ============ CALCULATE AVAILABLE DATA ============
 
-  const availableClasses = assets
-    ? getClassesSorted(assets).filter((classAsset) => {
-        if (Object.keys(fittedDatabase.classes).length === 0) {
-          return true;
-        }
-        const classData = fittedDatabase.classes[classAsset.id];
-        const playerClass = playerTimes?.classes[classAsset.id];
-        return classData || playerClass;
-      })
-    : [];
+  const availableClasses = useMemo(
+    () =>
+      assets
+        ? getClassesSorted(assets).filter((classAsset) => {
+            if (Object.keys(fittedDatabase.classes).length === 0) {
+              return true;
+            }
+            const classData = fittedDatabase.classes[classAsset.id];
+            const playerClass = playerTimes?.classes[classAsset.id];
+            return classData || playerClass;
+          })
+        : [],
+    [assets, fittedDatabase, playerTimes],
+  );
 
-  const availableTracks = assets
-    ? getTracksSorted(assets).filter((trackAsset) => {
-        if (!selectedClassId) return false;
-        if (Object.keys(fittedDatabase.classes).length === 0) {
-          return true;
-        }
-        const classData = fittedDatabase.classes[selectedClassId];
-        const track = classData?.tracks[trackAsset.id];
-        const playerClass = playerTimes?.classes[selectedClassId];
-        const playerTrack = playerClass?.tracks[trackAsset.id];
-        return track || playerTrack;
-      })
-    : [];
+  const availableTracks = useMemo(
+    () =>
+      assets
+        ? getTracksSorted(assets).filter((trackAsset) => {
+            if (!selectedClassId) return false;
+            if (Object.keys(fittedDatabase.classes).length === 0) {
+              return true;
+            }
+            const classData = fittedDatabase.classes[selectedClassId];
+            const track = classData?.tracks[trackAsset.id];
+            const playerClass = playerTimes?.classes[selectedClassId];
+            const playerTrack = playerClass?.tracks[trackAsset.id];
+            return track || playerTrack;
+          })
+        : [],
+    [assets, selectedClassId, fittedDatabase, playerTimes],
+  );
 
-  const aiLevels =
-    selectedTrackId &&
-    fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
-      ? Object.entries(
-          fittedDatabase.classes[selectedClassId].tracks[selectedTrackId]
-            .ailevels,
-        )
-          .map(([ai, times]) => ({
-            ai: Number(ai),
-            time: times[0],
-            num: times.length,
-          }))
-          .filter((x) => x.num > 0)
-          .sort((a, b) => a.ai - b.ai)
-      : [];
+  const aiLevels = useMemo(() => {
+    if (
+      !selectedTrackId ||
+      !fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
+    ) {
+      return [];
+    }
+    return Object.entries(
+      fittedDatabase.classes[selectedClassId].tracks[selectedTrackId].ailevels,
+    )
+      .map(([ai, times]) => ({
+        ai: Number(ai),
+        time: times[0],
+        num: times.length,
+      }))
+      .filter((x) => x.num > 0)
+      .sort((a, b) => a.ai - b.ai);
+  }, [selectedTrackId, selectedClassId, fittedDatabase]);
 
   // ============ RENDER ============
 
@@ -760,7 +771,7 @@ const AIManagement = () => {
                         spacing={spacing}
                         aifrom={aifrom}
                         aito={aito}
-                        hasModifiedPlayerTimes={hasModifiedPlayerTimes()}
+                        hasModifiedPlayerTimes={hasModifiedPlayerTimes}
                         onApply={() => setShowApplyModal(true)}
                         onRestorePlayerTimes={handleRestorePlayerTimes}
                       />
@@ -783,7 +794,7 @@ const AIManagement = () => {
         spacing={spacing}
         aifrom={aifrom}
         aito={aito}
-        playerTimesModifications={getPlayerTimesModifications()}
+        playerTimesModifications={playerTimesModifications}
         onHide={() => setShowApplyModal(false)}
         onConfirm={handleConfirmApply}
       />
