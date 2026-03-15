@@ -11,7 +11,6 @@ import type {
 } from "../types/aiAdaptation";
 import { fitLinear, computeTime } from "./fitting";
 import type { Config } from "../config";
-import { useConfigStore } from "../store/configStore";
 
 /**
  * Generates a linear fitting function for a track's AI lap times.
@@ -123,8 +122,7 @@ const trackGenerator = (
  * For each track with sufficient data points, a linear fit is computed and used
  * to generate predicted lap times for AI levels 80-120 in 1-point increments.
  */
-export const processDatabase = (database: Database): Database => {
-  const config = useConfigStore.getState().config;
+export const processDatabase = (database: Database, config: Config): Database => {
   const filtered: Database = { classes: {} };
 
   // Iterate through all classes and tracks to build prediction generators

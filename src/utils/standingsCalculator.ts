@@ -35,6 +35,37 @@ export interface ChampionshipStanding {
   positions: number[];
 }
 
+/**
+ * Sorts an array of driver standings in-place by total points (descending),
+ * with countback tiebreaker (most wins, then most 2nd places, etc.).
+ */
+const sortByPointsAndCountback = <
+  T extends { driver: string; points: number; positions: number[] },
+>(
+  entries: T[],
+  maxPositions: number,
+): T[] => {
+  const posCounts = new Map<string, Map<number, number>>();
+  for (const d of entries) {
+    const counts = new Map<number, number>();
+    for (const p of d.positions) counts.set(p, (counts.get(p) || 0) + 1);
+    posCounts.set(d.driver, counts);
+  }
+
+  return entries.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+
+    const aCounts = posCounts.get(a.driver)!;
+    const bCounts = posCounts.get(b.driver)!;
+    for (let position = 1; position <= maxPositions; position++) {
+      const diff = (bCounts.get(position) || 0) - (aCounts.get(position) || 0);
+      if (diff !== 0) return diff;
+    }
+
+    return 0;
+  });
+};
+
 export const calculateRacePoints = (
   race: ParsedRace,
   pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
@@ -162,26 +193,11 @@ export const buildStandings = (
     });
   }
 
-  // Sort by points (descending), then by countback (best finishing positions)
-  drivers.sort((a, b) => {
-    // Primary: sort by total points
-    if (b.points !== a.points) return b.points - a.points;
-
-    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-    for (
-      let position = 1;
-      position <= DEFAULT_POINTS_SYSTEM.default.length;
-      position++
-    ) {
-      const aCount = a.positions.filter((p) => p === position).length;
-      const bCount = b.positions.filter((p) => p === position).length;
-      if (bCount !== aCount) return bCount - aCount;
-    }
-
-    return 0;
-  });
-
-  return { drivers, teams: teamPoints, vehicles: vehiclePoints };
+  return {
+    drivers: sortByPointsAndCountback(drivers, DEFAULT_POINTS_SYSTEM.default.length),
+    teams: teamPoints,
+    vehicles: vehiclePoints,
+  };
 };
 
 export const getBestLapTimes = (
@@ -305,24 +321,11 @@ export const calculateChampionshipStandings = (
     });
   }
 
-  // Build and sort standings with tiebreaker
-  const standings = Array.from(driverPoints.entries())
-    .map(([driver, data]) => ({ driver, ...data }))
-    .sort((a, b) => {
-      // Primary: sort by total points
-      if (b.points !== a.points) return b.points - a.points;
+  const standingsArr = Array.from(driverPoints.entries()).map(
+    ([driver, data]) => ({ driver, ...data }),
+  );
 
-      // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-      for (let position = 1; position <= pointsSystem.length; position++) {
-        const aCount = a.positions.filter((p) => p === position).length;
-        const bCount = b.positions.filter((p) => p === position).length;
-        if (bCount !== aCount) return bCount - aCount;
-      }
-
-      return 0;
-    });
-
-  return standings;
+  return sortByPointsAndCountback(standingsArr, pointsSystem.length);
 };
 
 export const buildRaceDatabase = (

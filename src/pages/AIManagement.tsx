@@ -98,7 +98,7 @@ const AIManagement = () => {
   const [database, setDatabase] = useState<Database>({ classes: {} });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
 
-  const fittedDatabase = useMemo(() => processDatabase(database), [database]);
+  const fittedDatabase = useMemo(() => processDatabase(database, config), [database, config]);
 
   // UI state
   const [selectedClassId, setSelectedClassId] = useState<string>("");
@@ -160,8 +160,8 @@ const AIManagement = () => {
         const result = await electron.findAiadaptationFile();
         if (result.success && result.data) {
           try {
-            const newDatabase = { ...database };
-            const newPlayerTimes = { ...playerTimes };
+            const newDatabase = structuredClone(database);
+            const newPlayerTimes = structuredClone(playerTimes);
             const added = parseAdaptive(
               result.data,
               newDatabase,
@@ -206,8 +206,8 @@ const AIManagement = () => {
 
       try {
         const xmlText = await file.text();
-        const newDatabase = { ...database };
-        const newPlayerTimes = { ...playerTimes };
+        const newDatabase = structuredClone(database);
+        const newPlayerTimes = structuredClone(playerTimes);
         const added = parseAdaptive(xmlText, newDatabase, newPlayerTimes);
         if (added) {
           setDatabase(newDatabase);
@@ -281,35 +281,13 @@ const AIManagement = () => {
     }
 
     // Download/Save the merged results
-    if (assets && updatedDb) {
-      try {
-        const xmlContent = buildXML(updatedDb, updatedPt, assets);
-        const saved = await saveTextFile({
-          electronAPI: electron,
-          filename: "aiadaptation.xml",
-          content: xmlContent,
-          mimeType: "application/xml",
-          filters: [
-            { name: "XML Files", extensions: ["xml"] },
-            { name: "All Files", extensions: ["*"] },
-          ],
-          onCancel: () => {
-            addLog(
-              "info",
-              `${getDownloadLabel(electron.isElectron)} cancelled by user.`,
-            );
-          },
-        });
-
-        if (saved) {
-          const verb = getDownloadedLabel(electron.isElectron);
-          addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        addLog("error", `Error generating XML file: ${errorMessage}`);
-      }
+    const saved = await downloadXml(updatedDb, updatedPt);
+    if (saved) {
+      addLog(
+        "success",
+        `${getDownloadedLabel(electron.isElectron)} modified aiadaptation.xml`,
+        faDownload,
+      );
     }
   };
 
@@ -540,7 +518,7 @@ const AIManagement = () => {
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
-  const hasModifiedPlayerTimes = useCallback((): boolean => {
+  const hasModifiedPlayerTimes = useMemo((): boolean => {
     // Check if current playerTimes differs from original
     for (const [classId, classData] of Object.entries(playerTimes.classes)) {
       const origClass = originalPlayerTimes.classes[classId];
@@ -571,7 +549,7 @@ const AIManagement = () => {
     return false;
   }, [playerTimes, originalPlayerTimes]);
 
-  const getPlayerTimesModifications = useCallback((): Array<{
+  const playerTimesModifications = useMemo((): Array<{
     classId: string;
     className: string;
     trackId: string;
@@ -615,46 +593,57 @@ const AIManagement = () => {
 
   // ============ CALCULATE AVAILABLE DATA ============
 
-  const availableClasses = assets
-    ? getClassesSorted(assets).filter((classAsset) => {
-        if (Object.keys(fittedDatabase.classes).length === 0) {
-          return true;
-        }
-        const classData = fittedDatabase.classes[classAsset.id];
-        const playerClass = playerTimes?.classes[classAsset.id];
-        return classData || playerClass;
-      })
-    : [];
+  const availableClasses = useMemo(
+    () =>
+      assets
+        ? getClassesSorted(assets).filter((classAsset) => {
+            if (Object.keys(fittedDatabase.classes).length === 0) {
+              return true;
+            }
+            const classData = fittedDatabase.classes[classAsset.id];
+            const playerClass = playerTimes?.classes[classAsset.id];
+            return classData || playerClass;
+          })
+        : [],
+    [assets, fittedDatabase, playerTimes],
+  );
 
-  const availableTracks = assets
-    ? getTracksSorted(assets).filter((trackAsset) => {
-        if (!selectedClassId) return false;
-        if (Object.keys(fittedDatabase.classes).length === 0) {
-          return true;
-        }
-        const classData = fittedDatabase.classes[selectedClassId];
-        const track = classData?.tracks[trackAsset.id];
-        const playerClass = playerTimes?.classes[selectedClassId];
-        const playerTrack = playerClass?.tracks[trackAsset.id];
-        return track || playerTrack;
-      })
-    : [];
+  const availableTracks = useMemo(
+    () =>
+      assets
+        ? getTracksSorted(assets).filter((trackAsset) => {
+            if (!selectedClassId) return false;
+            if (Object.keys(fittedDatabase.classes).length === 0) {
+              return true;
+            }
+            const classData = fittedDatabase.classes[selectedClassId];
+            const track = classData?.tracks[trackAsset.id];
+            const playerClass = playerTimes?.classes[selectedClassId];
+            const playerTrack = playerClass?.tracks[trackAsset.id];
+            return track || playerTrack;
+          })
+        : [],
+    [assets, selectedClassId, fittedDatabase, playerTimes],
+  );
 
-  const aiLevels =
-    selectedTrackId &&
-    fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
-      ? Object.entries(
-          fittedDatabase.classes[selectedClassId].tracks[selectedTrackId]
-            .ailevels,
-        )
-          .map(([ai, times]) => ({
-            ai: Number(ai),
-            time: times[0],
-            num: times.length,
-          }))
-          .filter((x) => x.num > 0)
-          .sort((a, b) => a.ai - b.ai)
-      : [];
+  const aiLevels = useMemo(() => {
+    if (
+      !selectedTrackId ||
+      !fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
+    ) {
+      return [];
+    }
+    return Object.entries(
+      fittedDatabase.classes[selectedClassId].tracks[selectedTrackId].ailevels,
+    )
+      .map(([ai, times]) => ({
+        ai: Number(ai),
+        time: times[0],
+        num: times.length,
+      }))
+      .filter((x) => x.num > 0)
+      .sort((a, b) => a.ai - b.ai);
+  }, [selectedTrackId, selectedClassId, fittedDatabase]);
 
   // ============ RENDER ============
 
@@ -674,7 +663,6 @@ const AIManagement = () => {
 
           <FileUploadSection
             onXmlUpload={handleXmlUpload}
-            assets={assets}
             xmlInputRef={xmlInputRef}
           />
 
@@ -760,7 +748,7 @@ const AIManagement = () => {
                         spacing={spacing}
                         aifrom={aifrom}
                         aito={aito}
-                        hasModifiedPlayerTimes={hasModifiedPlayerTimes()}
+                        hasModifiedPlayerTimes={hasModifiedPlayerTimes}
                         onApply={() => setShowApplyModal(true)}
                         onRestorePlayerTimes={handleRestorePlayerTimes}
                       />
@@ -783,7 +771,7 @@ const AIManagement = () => {
         spacing={spacing}
         aifrom={aifrom}
         aito={aito}
-        playerTimesModifications={getPlayerTimesModifications()}
+        playerTimesModifications={playerTimesModifications}
         onHide={() => setShowApplyModal(false)}
         onConfirm={handleConfirmApply}
       />

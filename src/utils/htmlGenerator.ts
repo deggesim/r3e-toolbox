@@ -73,20 +73,6 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   return `${sign}${absDiff.toFixed(3)}`;
 };
 
-const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
-  const sortedSlots = [...slots].sort((a, b) => {
-    const aFinished = a.finishStatus === "Finished" || !!a.totalTime;
-    const bFinished = b.finishStatus === "Finished" || !!b.totalTime;
-    if (aFinished !== bFinished) return bFinished ? 1 : -1;
-
-    const aTime = parseTime(a.totalTime);
-    const bTime = parseTime(b.totalTime);
-    return aTime - bTime;
-  });
-
-  const index = sortedSlots.findIndex((s) => s.driver === driver);
-  return index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
-};
 
 const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
   if (!winner?.totalTime || !driver?.totalTime) return "-";
@@ -147,8 +133,18 @@ const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
   }
 
   races.forEach((race, raceIdx) => {
+    // Sort once per race and reuse across all drivers
+    const sortedSlots = [...race.slots].sort((a, b) => {
+      const aFinished = a.finishStatus === "Finished" || !!a.totalTime;
+      const bFinished = b.finishStatus === "Finished" || !!b.totalTime;
+      if (aFinished !== bFinished) return bFinished ? 1 : -1;
+      return parseTime(a.totalTime) - parseTime(b.totalTime);
+    });
+
     driverMap.forEach((data, driver) => {
-      const position = getRacePosition(race.slots, driver);
+      const index = sortedSlots.findIndex((s) => s.driver === driver);
+      const position =
+        index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
       data.raceResults[raceIdx] = position;
 
       if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
@@ -940,6 +936,16 @@ body {
     </div>`
     : "";
 
+  // Pre-sort race slots once per race for the results table
+  const sortedRaceSlots = races.map((race) =>
+    [...race.slots].sort((a, b) => {
+      const aFinished = a.finishStatus === "Finished" || !!a.totalTime;
+      const bFinished = b.finishStatus === "Finished" || !!b.totalTime;
+      if (aFinished !== bFinished) return bFinished ? 1 : -1;
+      return parseTime(a.totalTime) - parseTime(b.totalTime);
+    }),
+  );
+
   const raceResultsTable = maxRaceRows
     ? `
     <div class="results-table-wrapper">
@@ -957,18 +963,8 @@ body {
           ${Array.from({ length: maxRaceRows })
             .map((_, posIdx) => {
               const cells = races
-                .map((race) => {
-                  const sortedSlots = [...race.slots].sort((a, b) => {
-                    const aFinished =
-                      a.finishStatus === "Finished" || !!a.totalTime;
-                    const bFinished =
-                      b.finishStatus === "Finished" || !!b.totalTime;
-                    if (aFinished !== bFinished) return bFinished ? 1 : -1;
-
-                    const aTime = parseTime(a.totalTime);
-                    const bTime = parseTime(b.totalTime);
-                    return aTime - bTime;
-                  });
+                .map((_race, raceIdx) => {
+                  const sortedSlots = sortedRaceSlots[raceIdx];
 
                   const slot = sortedSlots[posIdx];
                   if (!slot?.totalTime) {

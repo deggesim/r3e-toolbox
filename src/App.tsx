@@ -11,6 +11,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 import "./App.css";
@@ -41,6 +42,15 @@ const ProtectedRoute = ({ element }: { element: ReactElement }) => {
   }
 
   return element;
+};
+
+// Scroll to top on every route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.querySelector(".main-content-col")?.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
 };
 
 // Navigation listener component (must be inside Router context)
@@ -152,6 +162,7 @@ const AppContent = () => {
 
   return (
     <>
+      <ScrollToTop />
       <NavigationListener />
       {gameData ? (
         <Layout>
