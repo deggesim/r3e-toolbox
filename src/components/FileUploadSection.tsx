@@ -1,10 +1,8 @@
 import type { ChangeEvent, RefObject } from "react";
 import { Form } from "react-bootstrap";
-import type { Assets } from "../types/gameData";
 
 interface FileUploadSectionProps {
   onXmlUpload: (event: ChangeEvent<HTMLInputElement>) => void;
-  assets: Assets | null;
   xmlInputRef: RefObject<HTMLInputElement | null>;
 }
 

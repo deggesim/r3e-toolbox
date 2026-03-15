@@ -98,7 +98,7 @@ const AIManagement = () => {
   const [database, setDatabase] = useState<Database>({ classes: {} });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
 
-  const fittedDatabase = useMemo(() => processDatabase(database), [database]);
+  const fittedDatabase = useMemo(() => processDatabase(database, config), [database, config]);
 
   // UI state
   const [selectedClassId, setSelectedClassId] = useState<string>("");
@@ -160,8 +160,8 @@ const AIManagement = () => {
         const result = await electron.findAiadaptationFile();
         if (result.success && result.data) {
           try {
-            const newDatabase = { ...database };
-            const newPlayerTimes = { ...playerTimes };
+            const newDatabase = structuredClone(database);
+            const newPlayerTimes = structuredClone(playerTimes);
             const added = parseAdaptive(
               result.data,
               newDatabase,
@@ -206,8 +206,8 @@ const AIManagement = () => {
 
       try {
         const xmlText = await file.text();
-        const newDatabase = { ...database };
-        const newPlayerTimes = { ...playerTimes };
+        const newDatabase = structuredClone(database);
+        const newPlayerTimes = structuredClone(playerTimes);
         const added = parseAdaptive(xmlText, newDatabase, newPlayerTimes);
         if (added) {
           setDatabase(newDatabase);
@@ -281,35 +281,13 @@ const AIManagement = () => {
     }
 
     // Download/Save the merged results
-    if (assets && updatedDb) {
-      try {
-        const xmlContent = buildXML(updatedDb, updatedPt, assets);
-        const saved = await saveTextFile({
-          electronAPI: electron,
-          filename: "aiadaptation.xml",
-          content: xmlContent,
-          mimeType: "application/xml",
-          filters: [
-            { name: "XML Files", extensions: ["xml"] },
-            { name: "All Files", extensions: ["*"] },
-          ],
-          onCancel: () => {
-            addLog(
-              "info",
-              `${getDownloadLabel(electron.isElectron)} cancelled by user.`,
-            );
-          },
-        });
-
-        if (saved) {
-          const verb = getDownloadedLabel(electron.isElectron);
-          addLog("success", `${verb} modified aiadaptation.xml`, faDownload);
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        addLog("error", `Error generating XML file: ${errorMessage}`);
-      }
+    const saved = await downloadXml(updatedDb, updatedPt);
+    if (saved) {
+      addLog(
+        "success",
+        `${getDownloadedLabel(electron.isElectron)} modified aiadaptation.xml`,
+        faDownload,
+      );
     }
   };
 
@@ -685,7 +663,6 @@ const AIManagement = () => {
 
           <FileUploadSection
             onXmlUpload={handleXmlUpload}
-            assets={assets}
             xmlInputRef={xmlInputRef}
           />
 

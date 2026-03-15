@@ -162,20 +162,29 @@ export const buildStandings = (
     });
   }
 
+  // Pre-compute position counts per driver for O(1) tiebreaker lookup
+  const posCounts = new Map<string, Map<number, number>>();
+  for (const d of drivers) {
+    const counts = new Map<number, number>();
+    for (const p of d.positions) counts.set(p, (counts.get(p) || 0) + 1);
+    posCounts.set(d.driver, counts);
+  }
+
   // Sort by points (descending), then by countback (best finishing positions)
   drivers.sort((a, b) => {
     // Primary: sort by total points
     if (b.points !== a.points) return b.points - a.points;
 
     // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+    const aCounts = posCounts.get(a.driver)!;
+    const bCounts = posCounts.get(b.driver)!;
     for (
       let position = 1;
       position <= DEFAULT_POINTS_SYSTEM.default.length;
       position++
     ) {
-      const aCount = a.positions.filter((p) => p === position).length;
-      const bCount = b.positions.filter((p) => p === position).length;
-      if (bCount !== aCount) return bCount - aCount;
+      const diff = (bCounts.get(position) || 0) - (aCounts.get(position) || 0);
+      if (diff !== 0) return diff;
     }
 
     return 0;
@@ -305,22 +314,33 @@ export const calculateChampionshipStandings = (
     });
   }
 
+  const standingsArr = Array.from(driverPoints.entries()).map(
+    ([driver, data]) => ({ driver, ...data }),
+  );
+
+  // Pre-compute position counts per driver for O(1) tiebreaker lookup
+  const posCounts = new Map<string, Map<number, number>>();
+  for (const d of standingsArr) {
+    const counts = new Map<number, number>();
+    for (const p of d.positions) counts.set(p, (counts.get(p) || 0) + 1);
+    posCounts.set(d.driver, counts);
+  }
+
   // Build and sort standings with tiebreaker
-  const standings = Array.from(driverPoints.entries())
-    .map(([driver, data]) => ({ driver, ...data }))
-    .sort((a, b) => {
-      // Primary: sort by total points
-      if (b.points !== a.points) return b.points - a.points;
+  const standings = standingsArr.sort((a, b) => {
+    // Primary: sort by total points
+    if (b.points !== a.points) return b.points - a.points;
 
-      // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-      for (let position = 1; position <= pointsSystem.length; position++) {
-        const aCount = a.positions.filter((p) => p === position).length;
-        const bCount = b.positions.filter((p) => p === position).length;
-        if (bCount !== aCount) return bCount - aCount;
-      }
+    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
+    const aCounts = posCounts.get(a.driver)!;
+    const bCounts = posCounts.get(b.driver)!;
+    for (let position = 1; position <= pointsSystem.length; position++) {
+      const diff = (bCounts.get(position) || 0) - (aCounts.get(position) || 0);
+      if (diff !== 0) return diff;
+    }
 
-      return 0;
-    });
+    return 0;
+  });
 
   return standings;
 };

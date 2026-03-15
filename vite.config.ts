@@ -48,7 +48,7 @@ export default defineConfig({
           // Separate vendor chunks to improve caching
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           "ui-vendor": ["bootstrap", "react-bootstrap"],
-          "utils-vendor": ["zustand", "fast-xml-parser", "mathjs"],
+          "utils-vendor": ["zustand", "fast-xml-parser"],
         },
       },
     },

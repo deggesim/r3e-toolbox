@@ -2,17 +2,17 @@ import React from "react";
 import { useAutoUpdater } from "../hooks/useAutoUpdater";
 import { ProgressBar } from "react-bootstrap";
 
+const formatBytes = (bytes: number) => {
+  const mb = bytes / (1024 * 1024);
+  return mb.toFixed(1) + " MB";
+};
+
 export const UpdateProgressNotification: React.FC = () => {
   const { downloadProgress } = useAutoUpdater();
 
   if (!downloadProgress) {
     return null;
   }
-
-  const formattedSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return mb.toFixed(1) + " MB";
-  };
 
   return (
     <div
@@ -38,8 +38,8 @@ export const UpdateProgressNotification: React.FC = () => {
         style={{ marginBottom: "8px" }}
       />
       <small style={{ color: "#666" }}>
-        {formattedSize(downloadProgress.transferred)} /{" "}
-        {formattedSize(downloadProgress.total)}
+        {formatBytes(downloadProgress.transferred)} /{" "}
+        {formatBytes(downloadProgress.total)}
       </small>
     </div>
   );

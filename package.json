@@ -32,11 +32,11 @@
     "agent:workflow:full": "ts-node agents/runner.ts --workflow full-suite"
   },
   "dependencies": {
-    "7zip-min": "^3.0.1",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.2.0",
     "@types/react-router-dom": "^5.3.3",
+    "7zip-min": "^3.0.1",
     "bootstrap": "^5.3.8",
     "electron-is-dev": "^3.0.0",
     "electron-log": "^5.2.0",
@@ -44,7 +44,6 @@
     "electron-updater": "^6.8.3",
     "fast-xml-parser": "^5.4.1",
     "jszip": "^3.10.1",
-    "mathjs": "^15.1.0",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card, Table } from "react-bootstrap";
 import type { ClassAsset } from "../types/gameData";
 
@@ -50,4 +51,4 @@ const Classes = ({
   );
 };
 
-export default Classes;
+export default memo(Classes);
