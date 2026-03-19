@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { Card, Table } from "react-bootstrap";
 import type { PlayerTimes } from "../types/aiAdaptation";
 import type { TrackAsset } from "../types/gameData";
@@ -65,4 +64,4 @@ const Tracks = ({
   );
 };
 
-export default memo(Tracks);
+export default Tracks;

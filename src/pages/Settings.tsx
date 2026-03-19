@@ -3,7 +3,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExcla
 import { faGear } from "@fortawesome/free-solid-svg-icons/faGear";
 import { faSync } from "@fortawesome/free-solid-svg-icons/faSync";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import type { Config } from "../config";
@@ -178,29 +178,26 @@ const Settings = () => {
     }
   };
 
-  const booleanFields = useMemo(
-    () => [
-      {
-        key: "fitAll" as BooleanConfigKey,
-        label: "Fit all lap times",
-        helper:
-          "If enabled, use every lap time instead of the average per AI level when fitting.",
-      },
-      {
-        key: "showLogs" as BooleanConfigKey,
-        label: "Show logs panel",
-        helper:
-          "Display the processing logs panel. Disable to hide it completely.",
-      },
-      {
-        key: "autoOpenLogs" as BooleanConfigKey,
-        label: "Auto-open logs panel",
-        helper:
-          "Automatically expand the logs panel when new messages are added.",
-      },
-    ],
-    [],
-  );
+  const booleanFields = [
+    {
+      key: "fitAll" as BooleanConfigKey,
+      label: "Fit all lap times",
+      helper:
+        "If enabled, use every lap time instead of the average per AI level when fitting.",
+    },
+    {
+      key: "showLogs" as BooleanConfigKey,
+      label: "Show logs panel",
+      helper:
+        "Display the processing logs panel. Disable to hide it completely.",
+    },
+    {
+      key: "autoOpenLogs" as BooleanConfigKey,
+      label: "Auto-open logs panel",
+      helper:
+        "Automatically expand the logs panel when new messages are added.",
+    },
+  ];
 
   const handleClearGameDataWeb = () => {
     addLog(

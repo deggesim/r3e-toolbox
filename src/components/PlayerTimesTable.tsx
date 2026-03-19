@@ -1,6 +1,6 @@
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons/faTrashCan";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { memo, useState } from "react";
+import { useState } from "react";
 import { Button, Card, Modal, Table } from "react-bootstrap";
 import type { PlayerTimes } from "../types/aiAdaptation";
 import { makeTime } from "../utils/timeUtils";
@@ -166,4 +166,4 @@ const PlayerTimesTable = ({
   );
 };
 
-export default memo(PlayerTimesTable);
+export default PlayerTimesTable;

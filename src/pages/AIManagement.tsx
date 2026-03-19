@@ -4,9 +4,7 @@ import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
 import { faThumbsUp } from "@fortawesome/free-solid-svg-icons/faThumbsUp";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -98,7 +96,7 @@ const AIManagement = () => {
   const [database, setDatabase] = useState<Database>({ classes: {} });
   const [playerTimes, setPlayerTimes] = useState<PlayerTimes>({ classes: {} });
 
-  const fittedDatabase = useMemo(() => processDatabase(database, config), [database, config]);
+  const fittedDatabase = processDatabase(database, config);
 
   // UI state
   const [selectedClassId, setSelectedClassId] = useState<string>("");
@@ -199,8 +197,7 @@ const AIManagement = () => {
 
   // ============ FILE UPLOAD HANDLERS ============
 
-  const handleXmlUpload = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleXmlUpload = async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -220,14 +217,11 @@ const AIManagement = () => {
           error instanceof Error ? error.message : String(error);
         addLog("error", `Error parsing XML file: ${errorMessage}`);
       }
-    },
-    [database, playerTimes, addLog],
-  );
+  };
 
   // ============ XML DOWNLOAD HELPER ============
 
-  const downloadXml = useCallback(
-    async (db: Database, pt: PlayerTimes): Promise<boolean> => {
+  const downloadXml = async (db: Database, pt: PlayerTimes): Promise<boolean> => {
       if (!assets) {
         addLog("error", "Please load RaceRoom data before exporting XML");
         return false;
@@ -256,9 +250,7 @@ const AIManagement = () => {
         addLog("error", `Error generating XML file: ${errorMessage}`);
         return false;
       }
-    },
-    [assets, addLog, electron],
-  );
+  };
 
   // ============ APPLY MODIFICATION ============
 
@@ -291,14 +283,13 @@ const AIManagement = () => {
     }
   };
 
-  const handleApplyModification = useCallback(
-    (
-      classid: string,
-      trackid: string,
-      aifrom: number,
-      aito: number,
-      aiSpacing: number,
-    ): Database => {
+  const handleApplyModification = (
+    classid: string,
+    trackid: string,
+    aifrom: number,
+    aito: number,
+    aiSpacing: number,
+  ): Database => {
       const classLabel = assets?.classes?.[classid]?.name || classid;
       const trackLabel = assets?.tracks?.[trackid]?.name || trackid;
 
@@ -366,14 +357,11 @@ const AIManagement = () => {
 
       setDatabase(newDatabase);
       return newDatabase;
-    },
-    [database, fittedDatabase, assets, addLog],
-  );
+  };
 
   // ============ REMOVE GENERATED ============
 
-  const handleDeletePlayerTime = useCallback(
-    (classid: string, trackid: string, timeIndex: number) => {
+  const handleDeletePlayerTime = (classid: string, trackid: string, timeIndex: number) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
       if (!track?.playertimes) return;
@@ -390,12 +378,9 @@ const AIManagement = () => {
 
       setPlayerTimes(newPlayerTimes);
       addLog("success", `Deleted player time: ${makeTime(deletedTime, ":")}`);
-    },
-    [playerTimes, addLog],
-  );
+  };
 
-  const handleDeleteAllButMinPlayerTime = useCallback(
-    (classid: string, trackid: string) => {
+  const handleDeleteAllButMinPlayerTime = (classid: string, trackid: string) => {
       const newPlayerTimes = structuredClone(playerTimes);
       const track = newPlayerTimes.classes[classid]?.tracks[trackid];
       if (!track?.playertimes || track.playertimes.length <= 1) return;
@@ -410,18 +395,16 @@ const AIManagement = () => {
         "success",
         `Deleted ${deletedCount} player time(s), kept best: ${makeTime(minTime, ":")}`,
       );
-    },
-    [playerTimes, addLog],
-  );
+  };
 
-  const handleRestorePlayerTimes = useCallback(() => {
+  const handleRestorePlayerTimes = () => {
     setPlayerTimes(structuredClone(originalPlayerTimes));
     addLog("success", "Player times restored to original state");
-  }, [originalPlayerTimes, addLog]);
+  };
 
   // ============ REMOVE GENERATED ============
 
-  const handleRemoveGenerated = useCallback(async () => {
+  const handleRemoveGenerated = async () => {
     addLog("info", "Starting removal of generated AI levels...");
 
     const newDatabase = structuredClone(database);
@@ -468,30 +451,30 @@ const AIManagement = () => {
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [database, assets, playerTimes, downloadXml, addLog, electron.isElectron]);
+  };
 
-  const handleConfirmRemoveGenerated = useCallback(() => {
+  const handleConfirmRemoveGenerated = () => {
     setShowRemoveGeneratedModal(false);
     handleRemoveGenerated();
-  }, [handleRemoveGenerated]);
+  };
 
-  const handleCancelRemoveGenerated = useCallback(() => {
+  const handleCancelRemoveGenerated = () => {
     setShowRemoveGeneratedModal(false);
     addLog("info", "Removal of generated AI levels cancelled by user.");
-  }, [addLog]);
+  };
 
   // ============ RESET ALL ============
 
-  const handleResetAll = useCallback(() => {
+  const handleResetAll = () => {
     setShowResetModal(true);
-  }, []);
+  };
 
-  const cancelResetAll = useCallback(() => {
+  const cancelResetAll = () => {
     setShowResetModal(false);
     addLog("info", "Reset cancelled by user.");
-  }, [addLog]);
+  };
 
-  const confirmResetAll = useCallback(async () => {
+  const confirmResetAll = async () => {
     setShowResetModal(false);
 
     addLog("info", "Starting reset of all AI times...");
@@ -514,11 +497,11 @@ const AIManagement = () => {
     if (xmlInputRef.current) {
       xmlInputRef.current.value = "";
     }
-  }, [downloadXml, playerTimes, addLog, electron.isElectron]);
+  };
 
   // ============ CHECK IF PLAYER TIMES MODIFIED ============
 
-  const hasModifiedPlayerTimes = useMemo((): boolean => {
+  const hasModifiedPlayerTimes = ((): boolean => {
     // Check if current playerTimes differs from original
     for (const [classId, classData] of Object.entries(playerTimes.classes)) {
       const origClass = originalPlayerTimes.classes[classId];
@@ -547,9 +530,9 @@ const AIManagement = () => {
       }
     }
     return false;
-  }, [playerTimes, originalPlayerTimes]);
+  })();
 
-  const playerTimesModifications = useMemo((): Array<{
+  const playerTimesModifications = ((): Array<{
     classId: string;
     className: string;
     trackId: string;
@@ -589,61 +572,50 @@ const AIManagement = () => {
     }
 
     return modifications;
-  }, [playerTimes, originalPlayerTimes, assets]);
+  })();
 
   // ============ CALCULATE AVAILABLE DATA ============
 
-  const availableClasses = useMemo(
-    () =>
-      assets
-        ? getClassesSorted(assets).filter((classAsset) => {
-            if (Object.keys(fittedDatabase.classes).length === 0) {
-              return true;
-            }
-            const classData = fittedDatabase.classes[classAsset.id];
-            const playerClass = playerTimes?.classes[classAsset.id];
-            return classData || playerClass;
-          })
-        : [],
-    [assets, fittedDatabase, playerTimes],
-  );
+  const availableClasses = assets
+    ? getClassesSorted(assets).filter((classAsset) => {
+        if (Object.keys(fittedDatabase.classes).length === 0) {
+          return true;
+        }
+        const classData = fittedDatabase.classes[classAsset.id];
+        const playerClass = playerTimes?.classes[classAsset.id];
+        return classData || playerClass;
+      })
+    : [];
 
-  const availableTracks = useMemo(
-    () =>
-      assets
-        ? getTracksSorted(assets).filter((trackAsset) => {
-            if (!selectedClassId) return false;
-            if (Object.keys(fittedDatabase.classes).length === 0) {
-              return true;
-            }
-            const classData = fittedDatabase.classes[selectedClassId];
-            const track = classData?.tracks[trackAsset.id];
-            const playerClass = playerTimes?.classes[selectedClassId];
-            const playerTrack = playerClass?.tracks[trackAsset.id];
-            return track || playerTrack;
-          })
-        : [],
-    [assets, selectedClassId, fittedDatabase, playerTimes],
-  );
+  const availableTracks = assets
+    ? getTracksSorted(assets).filter((trackAsset) => {
+        if (!selectedClassId) return false;
+        if (Object.keys(fittedDatabase.classes).length === 0) {
+          return true;
+        }
+        const classData = fittedDatabase.classes[selectedClassId];
+        const track = classData?.tracks[trackAsset.id];
+        const playerClass = playerTimes?.classes[selectedClassId];
+        const playerTrack = playerClass?.tracks[trackAsset.id];
+        return track || playerTrack;
+      })
+    : [];
 
-  const aiLevels = useMemo(() => {
-    if (
-      !selectedTrackId ||
-      !fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
-    ) {
-      return [];
-    }
-    return Object.entries(
-      fittedDatabase.classes[selectedClassId].tracks[selectedTrackId].ailevels,
-    )
-      .map(([ai, times]) => ({
-        ai: Number(ai),
-        time: times[0],
-        num: times.length,
-      }))
-      .filter((x) => x.num > 0)
-      .sort((a, b) => a.ai - b.ai);
-  }, [selectedTrackId, selectedClassId, fittedDatabase]);
+  const aiLevels =
+    !selectedTrackId ||
+    !fittedDatabase.classes[selectedClassId]?.tracks[selectedTrackId]
+      ? []
+      : Object.entries(
+          fittedDatabase.classes[selectedClassId].tracks[selectedTrackId]
+            .ailevels,
+        )
+          .map(([ai, times]) => ({
+            ai: Number(ai),
+            time: times[0],
+            num: times.length,
+          }))
+          .filter((x) => x.num > 0)
+          .sort((a, b) => a.ai - b.ai);
 
   // ============ RENDER ============
 

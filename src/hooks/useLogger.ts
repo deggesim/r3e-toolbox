@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useElectronAPI } from "./useElectronAPI";
 
 type LogLevel = "info" | "error" | "warn" | "debug";
@@ -6,16 +5,12 @@ type LogLevel = "info" | "error" | "warn" | "debug";
 export const useLogger = (prefix = "") => {
   const { isElectron, logInfo, logError, logWarn, logDebug } = useElectronAPI();
 
-  const formatMessage = useCallback(
-    (message: string) => {
-      return prefix ? `[${prefix}] ${message}` : message;
-    },
-    [prefix],
-  );
+  const formatMessage = (message: string) => {
+    return prefix ? `[${prefix}] ${message}` : message;
+  };
 
-  const log = useCallback(
-    async (level: LogLevel, message: string, metadata?: unknown) => {
-      const formattedMessage = formatMessage(message);
+  const log = async (level: LogLevel, message: string, metadata?: unknown) => {
+    const formattedMessage = formatMessage(message);
 
       if (!isElectron) {
         // Fallback to console in web mode
@@ -62,9 +57,7 @@ export const useLogger = (prefix = "") => {
       } catch (error) {
         console.error("Failed to log to file:", error);
       }
-    },
-    [formatMessage, isElectron, logInfo, logError, logWarn, logDebug],
-  );
+  };
 
   return {
     info: (message: string, metadata?: unknown) =>
