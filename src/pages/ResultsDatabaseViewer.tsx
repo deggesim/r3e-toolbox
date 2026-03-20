@@ -174,8 +174,8 @@ const ResultsDatabaseViewer = () => {
       const dateA = getFirstRaceDate(a);
       const dateB = getFirstRaceDate(b);
 
-      // Ordine cronologico (piu vecchi prima)
-      return dateA - dateB;
+      // Ordine cronologico inverso (più recenti prima)
+      return dateB - dateA;
     });
 
   const handleClearAll = () => {
