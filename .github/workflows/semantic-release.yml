@@ -1,5 +1,8 @@
 name: Semantic Release
 
+env:
+  GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+
 on:
   push:
     branches:
