@@ -1,3 +1,19 @@
+# [1.6.0](https://github.com/deggesim/r3e-toolbox/compare/v1.5.1...v1.6.0) (2026-03-20)
+
+
+### Bug Fixes
+
+* revert version to 1.5.1 in package.json and package-lock.json [skip ci] ([0d1e001](https://github.com/deggesim/r3e-toolbox/commit/0d1e001be07f32fb261e2a97cff36772fab97bd2))
+* update GitHub token usage in semantic-release workflow [skip ci] ([32ae891](https://github.com/deggesim/r3e-toolbox/commit/32ae891d2175336bb13b741c1819a31f217c4eb7))
+
+
+### Features
+
+* add artifact name configuration for setup and portable builds in package.json ([962c82a](https://github.com/deggesim/r3e-toolbox/commit/962c82aee19f628b37cbef946db7c2f61ca17bef))
+* add CLAUDE.md, performance optimizations with useMemo, and fitting improvements ([#19](https://github.com/deggesim/r3e-toolbox/issues/19)) ([bdda423](https://github.com/deggesim/r3e-toolbox/commit/bdda42346e027ed315cf37c126015dff53fe8ab9))
+* add PR title validation workflow and update contribution guidelines [skip ci] ([30b0567](https://github.com/deggesim/r3e-toolbox/commit/30b0567dc23e6b9668459a1aa7d3e3a94007cdfa))
+* add React compiler integration ([#20](https://github.com/deggesim/r3e-toolbox/issues/20)) ([6f5e3a0](https://github.com/deggesim/r3e-toolbox/commit/6f5e3a0725f8db6917240b10e5f0d605229a26b6))
+
 # [1.6.0](https://github.com/deggesim/r3e-toolbox/compare/v1.5.1...v1.6.0) (2026-03-09)
 
 
