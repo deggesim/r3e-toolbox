@@ -37,7 +37,14 @@ export const LAST_UPDATED = "${lastUpdated}"
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), buildInfoPlugin()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [["babel-plugin-react-compiler"]],
+      },
+    }),
+    buildInfoPlugin(),
+  ],
   base: "./",
   build: {
     chunkSizeWarningLimit: 3000,

@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from "react";
+import { Fragment } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Alert, Button, Container } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -381,9 +381,7 @@ const ResultsDatabaseDetail = () => {
   const championships = useChampionshipStore((state) => state.championships);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
 
-  const championship = useMemo(() => {
-    return championships.find((c) => c.alias === alias);
-  }, [championships, alias]);
+  const championship = championships.find((c) => c.alias === alias);
 
   const {
     driverStandings,
@@ -392,7 +390,7 @@ const ResultsDatabaseDetail = () => {
     bestLapTimes,
     bestQualTimes,
     raceHeaders,
-  } = useMemo(() => {
+  } = (() => {
     if (!championship?.raceData || championship.raceData.length === 0) {
       return {
         driverStandings: [],
@@ -428,7 +426,7 @@ const ResultsDatabaseDetail = () => {
         time: r.timestring || "",
       })),
     };
-  }, [championship]);
+  })();
 
   const getVehicleIcon = (vehicleId?: number) => {
     if (vehicleId === undefined || !leaderboardAssets) return null;

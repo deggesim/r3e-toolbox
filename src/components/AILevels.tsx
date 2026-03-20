@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { Card, Form, Table } from "react-bootstrap";
 import { makeTime } from "../utils/timeUtils";
 
@@ -79,4 +78,4 @@ const AILevels = ({
   );
 };
 
-export default memo(AILevels);
+export default AILevels;

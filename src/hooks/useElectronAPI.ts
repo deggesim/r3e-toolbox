@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 /**
  * Hook to use Electron file operations in the React app.
  * Falls back to browser File API if running in web mode.
@@ -9,9 +7,8 @@ export const useElectronAPI = () => {
     typeof globalThis.window !== "undefined" && globalThis.electron,
   );
 
-  return useMemo(
-    () => ({
-      isElectron,
+  return {
+    isElectron,
 
       async openFile(
         options?: ElectronOpenFileOptions,
@@ -226,7 +223,5 @@ export const useElectronAPI = () => {
         }
         return globalThis.electron.getLogsPath();
       },
-    }),
-    [isElectron],
-  );
+  };
 };

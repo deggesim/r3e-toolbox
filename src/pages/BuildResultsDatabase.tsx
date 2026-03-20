@@ -4,9 +4,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExcla
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -178,10 +176,10 @@ const BuildResultsDatabase = () => {
   );
   const setAllChampionships = useChampionshipStore((state) => state.setAll);
 
-  const resultsSummary = useMemo(() => {
-    if (resultFiles.length === 0) return "No files selected";
-    return `${resultFiles.length} result file${resultFiles.length > 1 ? "s" : ""} selected`;
-  }, [resultFiles.length]);
+  const resultsSummary =
+    resultFiles.length === 0
+      ? "No files selected"
+      : `${resultFiles.length} result file${resultFiles.length > 1 ? "s" : ""} selected`;
 
   // Initialize assets from cache on component mount
   useEffect(() => {
@@ -210,7 +208,7 @@ const BuildResultsDatabase = () => {
     }
   }, [championshipAlias, parsedRaces]);
 
-  const handleAssetsDownload = useCallback(async () => {
+  const handleAssetsDownload = async () => {
     setIsLoadingAssets(true);
     setAssetsError(null);
     try {
@@ -237,10 +235,9 @@ const BuildResultsDatabase = () => {
     } finally {
       setIsLoadingAssets(false);
     }
-  }, [htmlOverride]);
+  };
 
-  const onFilesSelected = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
+  const onFilesSelected = async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
       setChampionshipAlias(""); // Reset alias when files are selected
@@ -259,16 +256,14 @@ const BuildResultsDatabase = () => {
       } else {
         setParsedRaces([]);
       }
-    },
-    [gameData],
-  );
+  };
 
   const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
     gameData,
     assets,
   );
 
-  const resolveCarInfo = useCallback(() => {
+  const resolveCarInfo = () => {
     const humanSlot = parsedRaces
       .flatMap((race) => race.slots)
       .find((slot) => typeof slot.userId === "number" && slot.userId > 0);
@@ -284,10 +279,9 @@ const BuildResultsDatabase = () => {
       carName: resolveCarName(slot),
       carIcon: resolveCarIcon(slot),
     };
-  }, [parsedRaces, resolveCarName, resolveCarIcon]);
+  };
 
-  const handleRestoreDatabase = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleRestoreDatabase = async (event: ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -322,11 +316,9 @@ const BuildResultsDatabase = () => {
           databaseInputRef.current.value = "";
         }
       }
-    },
-    [addLog],
-  );
+  };
 
-  const confirmRestoreDatabase = useCallback(() => {
+  const confirmRestoreDatabase = () => {
     if (!pendingRestoreFile) return;
 
     setShowRestoreModal(false);
@@ -343,9 +335,9 @@ const BuildResultsDatabase = () => {
     if (databaseInputRef.current) {
       databaseInputRef.current.value = "";
     }
-  }, [pendingRestoreFile, setAllChampionships, addLog]);
+  };
 
-  const handleCreateOrUpdate = useCallback(() => {
+  const handleCreateOrUpdate = () => {
     const aliasTrimmed = championshipAlias.trim();
 
     setIsProcessing(true);
@@ -439,14 +431,7 @@ const BuildResultsDatabase = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [
-    championshipAlias,
-    addLog,
-    parsedRaces,
-    championships,
-    resolveCarInfo,
-    addOrUpdateChampionship,
-  ]);
+  };
 
   return (
     <Container fluid className="py-4">
