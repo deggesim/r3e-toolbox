@@ -1,8 +1,5 @@
 name: Semantic Release
 
-env:
-  GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
-
 on:
   push:
     branches:
@@ -77,9 +74,9 @@ jobs:
       - name: Run Semantic Release
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN || secrets.SEMANTIC_RELEASE_TOKEN }}
 
   build-electron:
     needs: release
