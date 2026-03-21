@@ -66,6 +66,8 @@ Inspired by [url=https://github.com/pixeljetstream/r3e-open-championship]pixelje
 • [b]Modern tech stack[/b]: React + TypeScript with a clean, responsive UI
 • [b]Local storage[/b]: All data stays on your machine (electron-store for desktop, localStorage for web)
 • [b]No backend required[/b]: Completely self-contained application
+• [b]Auto-updates[/b]: The desktop app checks for new releases automatically and updates in one click
+• [b]Persistent logging[/b]: Detailed logs saved to disk via electron-log for easy troubleshooting
 • [b]Open source[/b]: MIT License - contributions welcome!
 
 [b][size=4]Credits[/size][/b]
@@ -111,12 +113,13 @@ If this tool saves you time and enhances your RaceRoom experience, consider supp
 
 [b][size=4]Version History[/size][/b]
 
-Currently at [b]v1.3.0[/b] with:
+Currently at [b]v1.6.0[/b]. Key milestones since the initial release:
 
-• Floating processing logs for better UX
-• Application menu integration
-• Enhanced UI consistency
-• Stable production-ready release
+[b]v1.6.0[/b] — Performance optimizations (React Compiler + useMemo), improved AI fitting accuracy
+[b]v1.5.0[/b] — Comprehensive logging system with electron-log (persistent log files on disk)
+[b]v1.4.0[/b] — Automatic updates via electron-updater, enhanced logging configuration
+[b]v1.3.x[/b] — Floating processing logs, application menu, human player detection fix in standings
+[b]v1.0.0[/b] — First stable release with all core features
 
 ---
 
