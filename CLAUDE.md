@@ -12,6 +12,7 @@ npm run build            # TypeScript + Vite production build → dist/
 npm run build:electron   # Full Electron app: clean + build + electron-builder → Windows NSIS + portable
 npm run lint             # ESLint checks
 npm run clean            # Clean dist/ directory
+npm run preview          # Preview Vite production build in browser
 ```
 
 **QA Agents** (AI-based, no traditional unit tests):
@@ -25,6 +26,16 @@ npm run agent:electron-ipc         # After IPC/storage changes (main.mjs, preloa
 npm run agent:parser-resilience    # After changing parser logic or adding file format support
 npm run agent:results-consistency  # After modifying standings calculation or result parsing
 npm run agent:ui-regression        # After UI component or routing changes
+npm run agent:release              # Release readiness check
+npm run agent:docs-drift           # After documentation changes
+```
+
+Additional workflows:
+
+```bash
+npm run agent:workflow:nightly     # Nightly automated run
+npm run agent:workflow:weekly      # Weekly automated run
+npm run agent:workflow:full        # Full suite (all agents + all workflows)
 ```
 
 Agent reports saved to `.agent-reports/` as JSON. CI/CD runs agents automatically on PR.
@@ -77,7 +88,7 @@ addLog("success" | "info" | "warning" | "error", "message");
 
 ### Routing
 
-Routes defined in [src/App.tsx](src/App.tsx): `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-database`, `/results-database/:alias`, `/settings`, `/help`, `/game-data-onboarding`.
+Routes defined in [src/App.tsx](src/App.tsx): `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-database`, `/results-database/:alias`, `/settings`, `/help`. When `gameData` is null, all routes render `GameDataOnboarding` at `/` instead — there is no `/game-data-onboarding` path.
 
 ## Code Style
 
