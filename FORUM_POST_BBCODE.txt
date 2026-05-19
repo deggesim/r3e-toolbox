@@ -85,7 +85,7 @@ The toolbox consolidates these tools into a single, user-friendly interface with
 2. [b]Load your r3e-data.json[/b] file (the app can auto-detect it from your RaceRoom installation)
 3. [b]Choose your tool[/b] from the sidebar and start processing your race data!
 
-Full documentation and user guide available in the [url=https://github.com/deggesim/r3e-toolbox]GitHub repository[/url].
+Full documentation and user guide are [b]built into the app[/b] (Help section) and also available in the [url=https://github.com/deggesim/r3e-toolbox]GitHub repository[/url].
 
 [b][size=4]What's Next?[/size][/b]
 
@@ -109,12 +109,13 @@ If this tool saves you time and enhances your RaceRoom experience, consider supp
 • [b]Support on Ko-fi[/b]: [url=https://ko-fi.com/C1C11UJY38]https://ko-fi.com/C1C11UJY38[/url]
 • [b]Download Latest Release[/b]: [url=https://github.com/deggesim/r3e-toolbox/releases/latest]https://github.com/deggesim/r3e-toolbox/releases/latest[/url]
 • [b]Web Version[/b]: [url=https://r3e-toolbox.up.railway.app]https://r3e-toolbox.up.railway.app[/url]
-• [b]User Guide[/b]: [url=https://github.com/deggesim/r3e-toolbox/blob/main/src/docs/USER_GUIDE.md]Included in the app and repository[/url]
+• [b]User Guide[/b]: [url=https://r3e-toolbox.up.railway.app/#/help]Built into the app[/url] (also in the GitHub repository)
 
 [b][size=4]Version History[/size][/b]
 
-Currently at [b]v1.6.0[/b]. Key milestones since the initial release:
+Currently at [b]v1.6.1[/b]. Key milestones since the initial release:
 
+[b]v1.6.1[/b] — Built-in user guide (Help section integrated directly in the app)
 [b]v1.6.0[/b] — Performance optimizations (React Compiler + useMemo), improved AI fitting accuracy
 [b]v1.5.0[/b] — Comprehensive logging system with electron-log (persistent log files on disk)
 [b]v1.4.0[/b] — Automatic updates via electron-updater, enhanced logging configuration
