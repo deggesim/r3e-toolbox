@@ -1,3 +1,11 @@
+## [1.6.1](https://github.com/deggesim/r3e-toolbox/compare/v1.6.0...v1.6.1) (2026-05-19)
+
+
+### Bug Fixes
+
+* update user guide references and version history in FORUM_POST_BBCODE.txt ([2e2adbc](https://github.com/deggesim/r3e-toolbox/commit/2e2adbca46be1a116c99cf452e595236d5a86f18))
+* update version history and add new features to FORUM_POST_BBCODE.txt [skip ci] ([73e58f7](https://github.com/deggesim/r3e-toolbox/commit/73e58f74896ff80e43c7ee26fd17ffb482272b72))
+
 # [1.6.0](https://github.com/deggesim/r3e-toolbox/compare/v1.5.1...v1.6.0) (2026-03-20)
 
 
