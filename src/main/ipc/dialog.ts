@@ -1,6 +1,6 @@
 // src/main/ipc/dialog.ts
-import { dialog, BrowserWindow } from "electron";
-import type { IpcMain } from "electron";
+import { dialog } from "electron";
+import type { BrowserWindow, IpcMain } from "electron";
 
 export function registerDialogHandlers(
   ipcMain: IpcMain,
