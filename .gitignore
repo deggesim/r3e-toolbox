@@ -9,6 +9,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+out
 *.local
 
 # Generated agent reports (runtime artifacts)
