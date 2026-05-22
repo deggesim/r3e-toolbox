@@ -1,4 +1,6 @@
+// src/preload/index.ts
 import { contextBridge, ipcRenderer } from "electron";
+import type { IpcEvents } from "../shared/ipc-contracts";
 
 contextBridge.exposeInMainWorld("electron", {
   openFile: (options?: unknown) => ipcRenderer.invoke("dialog:openFile", options),
@@ -39,11 +41,20 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("log:debug", message, metadata),
   getLogsPath: () => ipcRenderer.invoke("log:getPath"),
 
+  onNavigate: (callback: (path: IpcEvents["navigate-to"]) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, path: IpcEvents["navigate-to"]) =>
+      callback(path);
+    ipcRenderer.on("navigate-to", listener);
+    return () => ipcRenderer.removeListener("navigate-to", listener);
+  },
+
   onUpdateDownloadProgress: (
-    callback: (data: { percent: number; transferred: number; total: number }) => void,
+    callback: (data: IpcEvents["update-download-progress"]) => void,
   ) => {
-    const listener = (_event: Electron.IpcRendererEvent, data: { percent: number; transferred: number; total: number }) =>
-      callback(data);
+    const listener = (
+      _e: Electron.IpcRendererEvent,
+      data: IpcEvents["update-download-progress"],
+    ) => callback(data);
     ipcRenderer.on("update-download-progress", listener);
     return () => ipcRenderer.removeListener("update-download-progress", listener);
   },
