@@ -1,5 +1,5 @@
 // src/main/ipc/filesystem.ts
-import { IpcMain } from "electron";
+import type { IpcMain } from "electron";
 import { existsSync } from "node:fs";
 import { readdir, readFile, writeFile, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";

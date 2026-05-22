@@ -1,5 +1,5 @@
 // src/main/ipc/logging.ts
-import { IpcMain } from "electron";
+import type { IpcMain } from "electron";
 import type log from "electron-log";
 
 export function registerLoggingHandlers(

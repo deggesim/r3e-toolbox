@@ -1,5 +1,5 @@
 // src/main/ipc/store.ts
-import { IpcMain } from "electron";
+import type { IpcMain } from "electron";
 import type Store from "electron-store";
 
 export function registerStoreHandlers(ipcMain: IpcMain, store: Store): void {

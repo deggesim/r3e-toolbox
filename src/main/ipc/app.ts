@@ -1,5 +1,6 @@
 // src/main/ipc/app.ts
-import { app, IpcMain, shell } from "electron";
+import { app, shell } from "electron";
+import type { IpcMain } from "electron";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
