@@ -43,6 +43,7 @@ export default defineConfig({
   },
   renderer: {
     root: "src/renderer",
+    publicDir: path.resolve(__dirname, "public"),
     plugins: [
       react({
         babel: {
