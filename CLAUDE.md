@@ -18,6 +18,8 @@ npm run preview          # Preview Vite production build in browser
 **QA Agents** (AI-based, no traditional unit tests):
 
 ```bash
+npm run agent:help                 # List all available agents
+npm run agent:all                  # Run all QA agents
 npm run agent:workflow:pr          # Before opening a PR (data-integrity + parser-resilience + ui-regression)
 npm run agent:workflow:pre-release # Before releasing (all 8 agents)
 npm run agent:data-integrity       # After modifying parsers (xmlParser.ts, jsonParser.ts)
@@ -49,7 +51,7 @@ The app runs as either an Electron desktop app or a web browser app. File I/O is
 - **Electron mode**: Native file dialogs, auto-detects game files, uses IPC bridge to `electron/main.mjs` + `electron/preload.cjs`. Context isolation + sandbox enabled — no `nodeIntegration`.
 - **Web mode**: Falls back to browser File API. Cannot auto-load from filesystem.
 
-IPC channels: `dialog:openFile`, `dialog:openDirectory`, `dialog:saveFile`, `fs:readFile`, `fs:writeFile`, `fs:readdir`, `app:findR3eDataFile`, `app:findAiadaptationFile`, `store:get/set/delete`, `app:openExternal`.
+IPC channels: `dialog:openFile`, `dialog:openDirectory`, `dialog:saveFile`, `fs:readFile`, `fs:writeFile`, `fs:writeFileBase64`, `fs:readdir`, `fs:getTempDir`, `fs:deleteDirectory`, `fs:create7zArchive`, `app:findR3eDataFile`, `app:findAiadaptationFile`, `app:showItemInFolder`, `app:openExternal`, `store:get/set/delete`, `log:info/error/warn/debug/getPath`.
 
 ### Storage: electron-store vs localStorage
 
@@ -88,7 +90,44 @@ addLog("success" | "info" | "warning" | "error", "message");
 
 ### Routing
 
+The app uses `HashRouter` — all URLs have a `#/` prefix (e.g. `/#/ai-management`). Do not use `BrowserRouter` or absolute links without `#`.
+
 Routes defined in [src/App.tsx](src/App.tsx): `/ai-management`, `/fix-qualy-times`, `/build-results-database`, `/results-database`, `/results-database/:alias`, `/settings`, `/help`. When `gameData` is null, all routes render `GameDataOnboarding` at `/` instead — there is no `/game-data-onboarding` path.
+
+### Auto-updater
+
+`electron-updater` handles automatic updates. `useAutoUpdater` hook exposes `downloadProgress`; `UpdateProgressNotification` is integrated globally in `App.tsx`. Update events are emitted via `window.electron.onUpdateDownloadProgress`.
+
+### Logging
+
+In renderer code, use the `useLogger` hook (calls `log:info/error/warn/debug` via IPC) — messages are persisted by `electron-log` in the main process. Avoid bare `console.log` for anything that needs to survive across sessions.
+
+## Workflow di sviluppo — Skill e Agenti
+
+Prima di iniziare qualsiasi task di sviluppo, invocare la skill corrispondente tramite il tool `Skill`.
+
+**Legenda colonne:**
+- **Skill** — sequenza da invocare nell'ordine indicato (`→` = passo successivo)
+- **Agente** — sottoagente da spawnare per quel sottocompito specifico (`|` = alternativa, scegliere uno)
+- Gli agenti sono sempre sequenziali rispetto alle skill. Il parallelismo tra agenti si attiva solo con `superpowers:dispatching-parallel-agents` quando i sottocompiti sono davvero indipendenti.
+
+| Task | Skill (nell'ordine) | Agente (uno, in base al bisogno) |
+|------|---------------------|----------------------------------|
+| Nuova feature | 1. `superpowers:brainstorming` (concordare design) → 2. `feature-dev:feature-dev` (implementazione) | `feature-dev:code-architect` se serve progettare nuovi layer/file \| `feature-dev:code-explorer` se serve esplorare il codebase esistente |
+| Bug fix | `superpowers:systematic-debugging` | `voltagent-qa-sec:debugger` (crash/eccezioni) \| `voltagent-qa-sec:error-detective` (correlazione errori tra moduli) |
+| Code review | `superpowers:requesting-code-review` | `feature-dev:code-reviewer` |
+| Refactoring TypeScript / tipi avanzati | `typescript-advanced-types` | `voltagent-lang:typescript-pro` |
+| Componente React / hook / store Zustand | `react-vite-best-practices` | `voltagent-lang:react-specialist` |
+| Electron (IPC, sicurezza, packaging) | `electron-best-practices` | `voltagent-core-dev:electron-pro` |
+| Parser XML/JSON (`xmlParser.ts`, `jsonParser.ts`, `xmlBuilder.ts`) | `superpowers:brainstorming` → `feature-dev:feature-dev` | `feature-dev:code-explorer` (tracing del flusso dati XML esistente) |
+| Algoritmi di fitting / statistiche (`fitting.ts`, `databaseProcessor.ts`) | `superpowers:brainstorming` → `feature-dev:feature-dev` | `voltagent-data-ai:data-scientist` |
+| Fine branch / PR / commit | `superpowers:finishing-a-development-branch` | — |
+| Sottocompiti indipendenti in parallelo | `superpowers:dispatching-parallel-agents` | due o più agenti `Explore` simultanei |
+| Verifica prima di completare | `superpowers:verification-before-completion` | — |
+
+**Regola multi-dominio**: se il task copre più aree (es. nuova feature React + IPC Electron, oppure parser XML + UI), invocare prima `superpowers:brainstorming`, poi usare le skill di dominio durante l'implementazione (`react-vite-best-practices`, `electron-best-practices`).
+
+**Regola subagent-driven-development**: quando si usa `superpowers:subagent-driven-development`, includere nel prompt di ogni implementer subagent la skill di dominio rilevante (dalla tabella sopra). Non usare solo `general-purpose` senza indicare la skill — ogni subagent deve invocarla prima di implementare.
 
 ## Code Style
 
