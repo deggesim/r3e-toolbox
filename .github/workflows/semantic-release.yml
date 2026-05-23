@@ -103,7 +103,7 @@ jobs:
         run: npm ci
 
       - name: Build Electron app
-        run: npm run clean && electron-vite build && electron-builder --publish never
+        run: npm run build:electron:ci
 
       - name: Get version from package.json
         id: package-version

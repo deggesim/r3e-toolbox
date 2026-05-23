@@ -13,6 +13,7 @@
     "clean": "rimraf dist out",
     "build": "electron-vite build",
     "build:electron": "npm run clean && electron-vite build && electron-builder",
+    "build:electron:ci": "npm run clean && electron-vite build && electron-builder --publish never",
     "lint": "eslint .",
     "preview": "electron-vite preview",
     "agent:help": "ts-node agents/runner.ts",
