@@ -1,16 +1,16 @@
-# Leaderboard File Import — Design Spec
+# Server Event File Import — Design Spec
 
 **Date:** 2026-05-23
 **Branch:** leaderboard
 
 ## Overview
 
-Add support for importing RaceRoom multi-player server "Leaderboard" result files
-(e.g. `202604170943.txt`) into the Results Database. The Leaderboard format is a
+Add support for importing RaceRoom multi-player server event result files
+(e.g. `202604170943.txt`) into the Results Database. The server event format is a
 JSON file produced by RaceRoom's dedicated server, structurally distinct from the
 single-player result format already supported.
 
-## Leaderboard File Format
+## Server Event File Format
 
 Top-level fields of interest:
 
@@ -50,7 +50,7 @@ If no Qualify session is found, `qualTime` is omitted for all drivers (not an er
 
 ### Approach: Dedicated parser module (Approach A)
 
-A new file `src/renderer/utils/leaderboardParser.ts` handles all Leaderboard
+A new file `src/renderer/utils/serverEventParser.ts` handles all server event
 parsing. It does **not** duplicate logic from `raceResultParser.ts`; instead, the
 following functions are exported from `raceResultParser.ts` and reused:
 
@@ -59,7 +59,7 @@ following functions are exported from `raceResultParser.ts` and reused:
 - `resolveVehicleName(vehicleId, gameData)` — resolves vehicle display name
 - `millisecondsToTime(ms)` — formats ms → `"M:SS.mmm"` string
 
-All functions in `leaderboardParser.ts` use arrow function syntax
+All functions in `serverEventParser.ts` use arrow function syntax
 (`const fn = () => {}`). No `function` keyword anywhere.
 
 ### New Types (`raceResults.ts`)
@@ -67,25 +67,25 @@ All functions in `leaderboardParser.ts` use arrow function syntax
 Appended at the end of the existing file, no changes to existing types:
 
 ```typescript
-export type LeaderboardLap = { ... }
-export type LeaderboardPlayer = { ... }
-export type LeaderboardSession = { Type: "Practice" | "Qualify" | "Race"; Players: LeaderboardPlayer[] }
-export type LeaderboardResult = { Server: string; StartTime: number; Track: string; TrackLayout: string; Sessions: LeaderboardSession[] }
+export type ServerEventLap = { ... }
+export type ServerEventPlayer = { ... }
+export type ServerEventSession = { Type: "Practice" | "Qualify" | "Race"; Players: ServerEventPlayer[] }
+export type ServerEventResult = { Server: string; StartTime: number; Track: string; TrackLayout: string; Sessions: ServerEventSession[] }
 ```
 
-### New Parser (`leaderboardParser.ts`)
+### New Parser (`serverEventParser.ts`)
 
-**`isLeaderboardFormat(json: unknown): json is LeaderboardResult`**
+**`isServerEventFormat(json: unknown): json is ServerEventResult`**
 Type guard. Checks for presence of `Sessions` (array), `Track` (string),
 `Server` (string).
 
-**`extractLeaderboardAlias(data: LeaderboardResult): string`**
+**`extractServerEventAlias(data: ServerEventResult): string`**
 Returns `data.Server` as the alias suggestion.
 
-**`parseLeaderboardFile(file: File, gameData: RaceRoomData, ruleset?: string): Promise<ParsedRace[] | null>`**
+**`parseServerEventFile(file: File, gameData: RaceRoomData, ruleset?: string): Promise<ParsedRace[] | null>`**
 
 Steps:
-1. Read file text, parse JSON, validate with `isLeaderboardFormat`.
+1. Read file text, parse JSON, validate with `isServerEventFormat`.
 2. Build track lookup via `buildTrackLookup(gameData)`.
 3. Resolve track: `"${Track} - ${TrackLayout}"` → lookup. If not found, use the
    raw combined string as `trackname` and `trackid: 0`; log a warning.
@@ -111,19 +111,19 @@ existing single-player file input, separated by an `── or ──` divider.
 
 New state:
 ```typescript
-const [leaderboardFile, setLeaderboardFile] = useState<File | null>(null);
-const leaderboardInputRef = useRef<HTMLInputElement>(null);
+const [serverEventFile, setServerEventFile] = useState<File | null>(null);
+const serverEventInputRef = useRef<HTMLInputElement>(null);
 ```
 
-Handler `onLeaderboardFileSelected`:
-1. Parse with `parseLeaderboardFile(file, gameData, "default")`.
+Handler `onServerEventFileSelected`:
+1. Parse with `parseServerEventFile(file, gameData, "default")`.
 2. `setParsedRaces(races)` — replaces current parsed races.
-3. Always auto-fill `setChampionshipAlias(extractLeaderboardAlias(data))` when
-   a Leaderboard file is selected (overrides any previous value, since the file
+3. Always auto-fill `setChampionshipAlias(extractServerEventAlias(data))` when
+   a server event file is selected (overrides any previous value, since the file
    effectively replaces the previous source).
 4. Reset the single-player file input (`resultsInputRef.current.value = ""`).
 
-Selecting single-player files resets `leaderboardFile` and `leaderboardInputRef`
+Selecting single-player files resets `serverEventFile` and `serverEventInputRef`
 symmetrically.
 
 **Step 3 ("Save to database") is unchanged** — it reads from `parsedRaces`
@@ -131,7 +131,7 @@ regardless of source.
 
 ## Track Name Resolution
 
-The Leaderboard format uses human-readable strings (`Track` + `TrackLayout`).
+The server event format uses human-readable strings (`Track` + `TrackLayout`).
 Resolution strategy:
 
 1. Combine as `"${Track} - ${TrackLayout}"` and look up via `buildTrackLookup`.
@@ -141,20 +141,20 @@ Resolution strategy:
 
 ## Error Handling
 
-| Condition                     | Behaviour                                        |
-|-------------------------------|--------------------------------------------------|
-| Invalid JSON                  | Return `null`, log warning                       |
-| Not Leaderboard format        | Return `null`, log warning                       |
-| No Race session               | Return `null`, log warning                       |
-| Track not found in game data  | Import with `trackid: 0`, log warning            |
-| No Qualify session            | Import without `qualTime` fields, no error       |
-| Player with invalid times     | Times omitted (not formatted), not an error      |
+| Condition                       | Behaviour                                        |
+|---------------------------------|--------------------------------------------------|
+| Invalid JSON                    | Return `null`, log warning                       |
+| Not server event format         | Return `null`, log warning                       |
+| No Race session                 | Return `null`, log warning                       |
+| Track not found in game data    | Import with `trackid: 0`, log warning            |
+| No Qualify session              | Import without `qualTime` fields, no error       |
+| Player with invalid times       | Times omitted (not formatted), not an error      |
 
 ## Files Modified / Created
 
 | File                                              | Change        |
 |---------------------------------------------------|---------------|
-| `src/renderer/types/raceResults.ts`               | Add Leaderboard types (append only) |
+| `src/renderer/types/raceResults.ts`               | Add ServerEvent types (append only) |
 | `src/renderer/utils/raceResultParser.ts`          | Export 4 shared utility functions   |
-| `src/renderer/utils/leaderboardParser.ts`         | **New file**                        |
-| `src/renderer/pages/BuildResultsDatabase.tsx`     | Add Leaderboard input section       |
+| `src/renderer/utils/serverEventParser.ts`         | **New file**                        |
+| `src/renderer/pages/BuildResultsDatabase.tsx`     | Add server event input section      |
