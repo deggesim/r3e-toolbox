@@ -12,7 +12,7 @@
 - **State management**: Zustand. Use `create()` from `zustand` for all global state. Prefer slices for large stores. No Redux, no Context API for app state.
 - **HTTP**: Axios for all REST service calls. Define typed request/response shapes. Create a shared axios instance (base URL, interceptors) rather than calling `axios.get/post` directly in components.
 - **JavaScript spec**: Target ES2024+ (latest stable). Use modern syntax: `structuredClone`, `Promise.withResolvers`, `Array.toSorted/toReversed/findLast`, `Object.groupBy`, logical assignment operators, `at()`, etc.
-- **Build tool**: Vite. Keep `vite.config.ts` minimal. Use `import.meta.env` for environment variables — never `process.env` in frontend code.
+- **Build tool**: electron-vite. Keep `electron.vite.config.ts` minimal. Use `import.meta.env` for environment variables in renderer code — never `process.env`.
 - **Icons**: Prefer [Font Awesome Free](https://fontawesome.com/icons) icons via `@fortawesome/react-fontawesome`. Import icons individually — never import the full bundle. Always destructure the specific icon from its package:
   ```tsx
   import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
