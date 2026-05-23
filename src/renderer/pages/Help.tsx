@@ -5,7 +5,7 @@ import { useElectronAPI } from "../hooks/useElectronAPI";
 import "../pages/Help.css";
 
 // Import the USER_GUIDE markdown as raw text
-import helpContent from "../docs/USER_GUIDE.md?raw";
+import helpContent from "../../docs/USER_GUIDE.md?raw";
 // Import build info (version and last updated date from package.json modification)
 import { VERSION, LAST_UPDATED } from "virtual:build-info";
 

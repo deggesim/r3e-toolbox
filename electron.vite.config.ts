@@ -1,9 +1,8 @@
+import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
-import { defineConfig } from "vite";
 
-// Plugin to inject build info (version and last updated date)
 const buildInfoPlugin = () => {
   return {
     name: "build-info",
@@ -35,27 +34,43 @@ export const LAST_UPDATED = "${lastUpdated}"
   };
 };
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react({
-      babel: {
-        plugins: [["babel-plugin-react-compiler"]],
+  main: {
+    plugins: [externalizeDepsPlugin()],
+  },
+  preload: {
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          format: "cjs",
+          entryFileNames: "[name].js",
+        },
       },
-    }),
-    buildInfoPlugin(),
-  ],
-  base: "./",
-  build: {
-    chunkSizeWarningLimit: 3000,
-    rollupOptions: {
-      external: ["7zip-min"], // Exclude 7zip-min from browser build (Electron-only)
-      output: {
-        manualChunks: {
-          // Separate vendor chunks to improve caching
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": ["bootstrap", "react-bootstrap"],
-          "utils-vendor": ["zustand", "fast-xml-parser"],
+    },
+  },
+  renderer: {
+    root: "src/renderer",
+    publicDir: path.resolve(__dirname, "public"),
+    plugins: [
+      react({
+        babel: {
+          plugins: [["babel-plugin-react-compiler"]],
+        },
+      }),
+      buildInfoPlugin(),
+    ],
+    base: "./",
+    build: {
+      chunkSizeWarningLimit: 3000,
+      rollupOptions: {
+        external: ["7zip-min"],
+        output: {
+          manualChunks: {
+            "react-vendor": ["react", "react-dom", "react-router-dom"],
+            "ui-vendor": ["bootstrap", "react-bootstrap"],
+            "utils-vendor": ["zustand", "fast-xml-parser"],
+          },
         },
       },
     },

@@ -1,34 +1,50 @@
-import { dialog } from "electron";
+import { dialog, BrowserWindow } from "electron";
 import isDev from "electron-is-dev";
+import type { AppUpdater, UpdateInfo, ProgressInfo } from "electron-updater";
 
 let updateCheckInProgress = false;
-let autoUpdater = null;
+let autoUpdater: AppUpdater | null = null;
 let pendingManualNoUpdateNotification = false;
-let devUpdateHandlers = null;
-let mainWindowRef = null;
+let devUpdateHandlers: {
+  handleUpdateAvailable: (info: UpdateInfo) => void;
+  handleUpdateNotAvailable: () => void;
+  handleError: (error: Error) => void;
+  handleDownloadProgress: (progressObj: ProgressInfo) => void;
+  handleUpdateDownloaded: () => void;
+} | null = null;
+let mainWindowRef: BrowserWindow | null = null;
 let updateMetadataUnavailable = false;
 
-const isMissingUpdateMetadataError = (error) => {
-  const message = String(error?.message ?? error ?? "");
+const isMissingUpdateMetadataError = (error: unknown): boolean => {
+  const message = String((error as Error)?.message ?? error ?? "");
   return (
     message.includes("Cannot find latest.yml") ||
     (message.includes("latest.yml") && message.includes("404"))
   );
 };
 
-const withSuppressedDep0169Warning = async (operation) => {
+const withSuppressedDep0169Warning = async <T>(
+  operation: () => Promise<T>,
+): Promise<T> => {
   const originalEmitWarning = process.emitWarning;
 
-  process.emitWarning = function patchedEmitWarning(warning, ...args) {
+  process.emitWarning = function patchedEmitWarning(
+    warning: string | Error,
+    ...args: unknown[]
+  ) {
     const warningCode =
-      (typeof warning === "object" && warning?.code) ||
+      (typeof warning === "object" && (warning as NodeJS.ErrnoException)?.code) ||
       (typeof args[1] === "string" ? args[1] : undefined);
 
     if (warningCode === "DEP0169") {
       return;
     }
 
-    return originalEmitWarning.call(process, warning, ...args);
+    return (originalEmitWarning as (...a: unknown[]) => void).call(
+      process,
+      warning,
+      ...args,
+    );
   };
 
   try {
@@ -39,18 +55,23 @@ const withSuppressedDep0169Warning = async (operation) => {
 };
 
 // Lazy load autoUpdater at runtime to avoid bundling issues with electron-builder
-const getAutoUpdater = async () => {
+const getAutoUpdater = async (): Promise<AppUpdater | null> => {
   if (autoUpdater === null) {
     const module = await import("electron-updater");
     autoUpdater =
-      module.autoUpdater ?? module.default?.autoUpdater ?? module.default;
+      module.autoUpdater ??
+      (module as unknown as { default?: { autoUpdater?: AppUpdater } }).default?.autoUpdater ??
+      (module as unknown as { default?: AppUpdater }).default ??
+      null;
   }
   return autoUpdater;
 };
 
-export const initAutoUpdater = async (mainWindow) => {
+export const initAutoUpdater = async (mainWindow: BrowserWindow): Promise<void> => {
   mainWindowRef = mainWindow;
-  const updater = isDev ? { on: () => {} } : await getAutoUpdater();
+  const updater = isDev
+    ? ({ on: () => {} } as unknown as AppUpdater)
+    : await getAutoUpdater();
 
   if (!updater) {
     console.error("[Updater] Auto-updater module is unavailable");
@@ -63,7 +84,6 @@ export const initAutoUpdater = async (mainWindow) => {
     );
   } else {
     // Configure electron-updater
-    updater.checkForUpdatesAndNotify = false; // We'll handle notifications manually
     updater.autoDownload = false; // Download only when user agrees
 
     // Check for updates on startup (after 5 seconds)
@@ -78,13 +98,13 @@ export const initAutoUpdater = async (mainWindow) => {
   }
 
   // Handle update events (registered for both dev and prod)
-  const handleUpdateAvailable = (info) => {
+  const handleUpdateAvailable = (info: UpdateInfo): void => {
     console.log("[Updater] Update available:", info);
     pendingManualNoUpdateNotification = false;
     if (!isDev) showUpdateDialog(mainWindow, info, updater);
   };
 
-  const handleUpdateNotAvailable = () => {
+  const handleUpdateNotAvailable = (): void => {
     console.log("[Updater] Already on latest version");
 
     if (pendingManualNoUpdateNotification) {
@@ -93,7 +113,7 @@ export const initAutoUpdater = async (mainWindow) => {
     }
   };
 
-  const handleError = (error) => {
+  const handleError = (error: Error): void => {
     if (isMissingUpdateMetadataError(error)) {
       if (!updateMetadataUnavailable) {
         console.warn(
@@ -109,7 +129,7 @@ export const initAutoUpdater = async (mainWindow) => {
     pendingManualNoUpdateNotification = false;
   };
 
-  const handleDownloadProgress = (progressObj) => {
+  const handleDownloadProgress = (progressObj: ProgressInfo): void => {
     const percent = Math.round(progressObj.percent);
     console.log(`[Updater] Download progress: ${percent}%`);
     mainWindow.webContents.send("update-download-progress", {
@@ -119,7 +139,7 @@ export const initAutoUpdater = async (mainWindow) => {
     });
   };
 
-  const handleUpdateDownloaded = () => {
+  const handleUpdateDownloaded = (): void => {
     console.log("[Updater] Update downloaded successfully");
     if (!isDev) showInstallDialog(mainWindow, updater);
   };
@@ -142,7 +162,10 @@ export const initAutoUpdater = async (mainWindow) => {
   }
 };
 
-const checkForUpdates = async (updater, { manual = false } = {}) => {
+const checkForUpdates = async (
+  updater: AppUpdater,
+  { manual = false }: { manual?: boolean } = {},
+): Promise<void> => {
   if (updateCheckInProgress) {
     console.log("[Updater] Check already in progress, skipping");
     return;
@@ -174,7 +197,7 @@ const checkForUpdates = async (updater, { manual = false } = {}) => {
     }, 1000);
   } else {
     withSuppressedDep0169Warning(() => updater.checkForUpdates())
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (isMissingUpdateMetadataError(error)) {
           if (!updateMetadataUnavailable) {
             console.warn(
@@ -186,7 +209,7 @@ const checkForUpdates = async (updater, { manual = false } = {}) => {
           return;
         }
 
-        console.error("[Updater] Check for updates failed:", error.message);
+        console.error("[Updater] Check for updates failed:", (error as Error).message);
       })
       .finally(() => {
         updateCheckInProgress = false;
@@ -194,7 +217,11 @@ const checkForUpdates = async (updater, { manual = false } = {}) => {
   }
 };
 
-const showUpdateDialog = (mainWindow, updateInfo, updater) => {
+const showUpdateDialog = (
+  mainWindow: BrowserWindow,
+  updateInfo: UpdateInfo,
+  updater: AppUpdater,
+): void => {
   const currentVersion = updater.currentVersion.version;
   const newVersion = updateInfo.version;
 
@@ -220,12 +247,15 @@ const showUpdateDialog = (mainWindow, updateInfo, updater) => {
       }
       // response === 1: Remind me later (do nothing)
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("[Updater] Error showing update dialog:", error);
     });
 };
 
-const showInstallDialog = (mainWindow, updater) => {
+const showInstallDialog = (
+  mainWindow: BrowserWindow,
+  updater: AppUpdater,
+): void => {
   dialog
     .showMessageBox(mainWindow, {
       type: "info",
@@ -246,12 +276,12 @@ const showInstallDialog = (mainWindow, updater) => {
         console.log("[Updater] Update will be installed on next startup");
       }
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("[Updater] Error showing install dialog:", error);
     });
 };
 
-const showNoUpdatesDialog = (mainWindow) => {
+const showNoUpdatesDialog = (mainWindow: BrowserWindow): void => {
   dialog
     .showMessageBox(mainWindow, {
       type: "info",
@@ -260,12 +290,12 @@ const showNoUpdatesDialog = (mainWindow) => {
       buttons: ["OK"],
       defaultId: 0,
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error("[Updater] Error showing no-updates dialog:", error);
     });
 };
 
-const showUpdatesUnavailableDialog = (mainWindow) => {
+const showUpdatesUnavailableDialog = (mainWindow: BrowserWindow): void => {
   dialog
     .showMessageBox(mainWindow, {
       type: "warning",
@@ -276,7 +306,7 @@ const showUpdatesUnavailableDialog = (mainWindow) => {
       buttons: ["OK"],
       defaultId: 0,
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error(
         "[Updater] Error showing updates-unavailable dialog:",
         error,
@@ -285,7 +315,7 @@ const showUpdatesUnavailableDialog = (mainWindow) => {
 };
 
 // Manual check trigger (can be called from UI)
-export const manualCheckForUpdates = async (mainWindow) => {
+export const manualCheckForUpdates = async (_mainWindow: BrowserWindow): Promise<void> => {
   const updater = await getAutoUpdater();
   if (!updater) {
     console.error("[Updater] Auto-updater module is unavailable");
