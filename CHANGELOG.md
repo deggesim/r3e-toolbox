@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/deggesim/r3e-toolbox/compare/v1.6.4...v1.7.0) (2026-05-25)
+
+
+### Features
+
+* add server event file import to Results Database ([#22](https://github.com/deggesim/r3e-toolbox/issues/22)) ([ec0d5ad](https://github.com/deggesim/r3e-toolbox/commit/ec0d5adbc357e83000ccd848338d3d653fe1fb9b))
+
 ## [1.6.4](https://github.com/deggesim/r3e-toolbox/compare/v1.6.3...v1.6.4) (2026-05-24)
 
 
