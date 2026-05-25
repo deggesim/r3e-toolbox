@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/deggesim/r3e-toolbox/compare/v1.6.3...v1.6.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* update Dockerfile and Caddyfile to use electron-vite out/renderer path ([#23](https://github.com/deggesim/r3e-toolbox/issues/23)) ([f7aac3a](https://github.com/deggesim/r3e-toolbox/commit/f7aac3a322aa93212f29bd8135c537fdf89d678f))
+
 ## [1.6.3](https://github.com/deggesim/r3e-toolbox/compare/v1.6.2...v1.6.3) (2026-05-23)
 
 ## [1.6.2](https://github.com/deggesim/r3e-toolbox/compare/v1.6.1...v1.6.2) (2026-05-22)
