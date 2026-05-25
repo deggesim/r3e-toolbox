@@ -1,4 +1,4 @@
-import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import { defineConfig } from "electron-vite";
 import react from "@vitejs/plugin-react";
 import fs from "fs";
 import path from "path";
@@ -35,11 +35,8 @@ export const LAST_UPDATED = "${lastUpdated}"
 };
 
 export default defineConfig({
-  main: {
-    plugins: [externalizeDepsPlugin()],
-  },
+  main: {},
   preload: {
-    plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
         output: {

@@ -131,11 +131,9 @@ Prima di iniziare qualsiasi task di sviluppo, invocare la skill corrispondente t
 
 ## Code Style
 
-- TypeScript strict mode. Prefer `type` over `interface` for unions/intersections.
-- Named exports everywhere except page components (which use default export).
-- Relative imports only (`../utils/parser`), no path aliases.
+See [CODE_STYLE.md](CODE_STYLE.md).
+
 - Comment statistical/validation logic; not obvious UI code.
-- English for all comments, docs, commit messages, and code.
 - Conventional commits for releases (semantic-release automated on `master` push).
 
 ## Common Pitfalls

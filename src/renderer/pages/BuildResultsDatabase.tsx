@@ -36,6 +36,11 @@ import {
   fetchLeaderboardAssetsWithCache,
 } from "../utils/leaderboardAssets";
 import { parseResultFiles } from "../utils/raceResultParser";
+import {
+  extractServerEventAlias,
+  isServerEventFormat,
+  parseServerEventData,
+} from "../utils/serverEventParser";
 
 const buildRaceKey = (race: ParsedRace): string => {
   const classInfo = race.slots.find(
@@ -165,6 +170,8 @@ const BuildResultsDatabase = () => {
   >(null);
   const databaseInputRef = useRef<HTMLInputElement>(null);
   const resultsInputRef = useRef<HTMLInputElement>(null);
+  const serverEventInputRef = useRef<HTMLInputElement>(null);
+  const [serverEventFile, setServerEventFile] = useState<File | null>(null);
   const addLog = useProcessingLogStore((state) => state.addLog);
 
   // Use store to read cached assets
@@ -241,6 +248,10 @@ const BuildResultsDatabase = () => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
       setChampionshipAlias(""); // Reset alias when files are selected
+      setServerEventFile(null);
+      if (serverEventInputRef.current) {
+        serverEventInputRef.current.value = "";
+      }
 
       // Parse races immediately when files are selected
       if (files.length > 0 && gameData) {
@@ -256,6 +267,46 @@ const BuildResultsDatabase = () => {
       } else {
         setParsedRaces([]);
       }
+  };
+
+  const onServerEventFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setServerEventFile(file);
+
+    setResultFiles([]);
+    if (resultsInputRef.current) {
+      resultsInputRef.current.value = "";
+    }
+
+    if (!file || !gameData) {
+      setParsedRaces([]);
+      return;
+    }
+
+    setIsParsingRaces(true);
+    try {
+      const text = await file.text();
+      const json: unknown = JSON.parse(text);
+
+      if (!isServerEventFormat(json)) {
+        addLog("warning", `File is not a valid server event format: ${file.name}`, faXmark);
+        setParsedRaces([]);
+        return;
+      }
+
+      setChampionshipAlias(extractServerEventAlias(json));
+      const races = parseServerEventData(json, gameData);
+      setParsedRaces(races ?? []);
+
+      if (!races || races.length === 0) {
+        addLog("warning", `No Race session found in ${file.name}`, faXmark);
+      }
+    } catch {
+      addLog("error", `Failed to parse server event file: ${file.name}`, faXmark);
+      setParsedRaces([]);
+    } finally {
+      setIsParsingRaces(false);
+    }
   };
 
   const { resolveCarName, resolveCarIcon } = useResolveCarInfo(
@@ -589,6 +640,40 @@ const BuildResultsDatabase = () => {
                   </div>
                 )}
               </Alert>
+              <div className="text-center text-white-50 my-3">
+                <small>── or ──</small>
+              </div>
+              <Form.Group controlId="serverEventFile" className="mb-3">
+                <Form.Label className="text-white">
+                  Server event file
+                </Form.Label>
+                <Form.Control
+                  type="file"
+                  accept=".txt,.json"
+                  ref={serverEventInputRef}
+                  onChange={onServerEventFileSelected}
+                />
+                <Form.Text className="text-white-50">
+                  Select a RaceRoom dedicated server event file (e.g. 202604170943.txt).
+                  Imports Race result and Qualify times automatically.
+                </Form.Text>
+              </Form.Group>
+              {serverEventFile && (
+                <Alert variant="secondary" className="py-2 mb-3">
+                  {serverEventFile.name}
+                  {parsedRaces.length > 0 && (
+                    <div className="mt-2">
+                      <Badge bg="success" className="me-2">
+                        {parsedRaces.length} race
+                        {parsedRaces.length > 1 ? "s" : ""} parsed
+                      </Badge>
+                      {isParsingRaces && (
+                        <Spinner animation="border" size="sm" className="ms-2" />
+                      )}
+                    </div>
+                  )}
+                </Alert>
+              )}
               <div className="mt-3">
                 <Form.Group controlId="restoreDatabase" className="mb-3">
                   <Form.Label className="text-white">

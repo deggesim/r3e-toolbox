@@ -20,16 +20,16 @@ export const UpdateProgressNotification: React.FC = () => {
         position: "fixed",
         bottom: 20,
         right: 20,
-        backgroundColor: "#fff",
-        border: "1px solid #ddd",
+        backgroundColor: "#242424",
+        border: "1px solid #3a3a3a",
         borderRadius: "8px",
         padding: "16px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.6)",
         zIndex: 9999,
         minWidth: "300px",
       }}
     >
-      <h6 style={{ marginBottom: "12px", marginTop: 0 }}>
+      <h6 style={{ marginBottom: "12px", marginTop: 0, color: "#e0e0e0" }}>
         Downloading Update...
       </h6>
       <ProgressBar
@@ -37,7 +37,7 @@ export const UpdateProgressNotification: React.FC = () => {
         label={`${downloadProgress.percent}%`}
         style={{ marginBottom: "8px" }}
       />
-      <small style={{ color: "#666" }}>
+      <small style={{ color: "#95a5a6" }}>
         {formatBytes(downloadProgress.transferred)} /{" "}
         {formatBytes(downloadProgress.total)}
       </small>

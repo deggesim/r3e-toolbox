@@ -194,3 +194,42 @@ export const DEFAULT_POINTS_SYSTEM: Record<string, number[]> = {
   /** DTM 2023 points system */
   dtm2023: [28, 25, 22, 19, 16, 13, 10, 8, 6, 4, 3, 2, 1],
 };
+
+// ============================================================================
+// Server Event Format Types (RaceRoom dedicated server multi-player session)
+// ============================================================================
+
+export type ServerEventLap = {
+  Time: number;
+  SectorTimes: number[];
+  Valid: boolean;
+  Position: number;
+  PositionInClass: number;
+  PitStopOccured: boolean;
+};
+
+export type ServerEventPlayer = {
+  UserId: number;
+  FullName: string;
+  CarId: number;
+  Car: string;
+  Position: number;
+  PositionInClass: number;
+  BestLapTime: number;
+  TotalTime: number;
+  FinishStatus: string;
+  RaceSessionLaps: ServerEventLap[];
+};
+
+export type ServerEventSession = {
+  Type: "Practice" | "Qualify" | "Race";
+  Players: ServerEventPlayer[];
+};
+
+export type ServerEventResult = {
+  Server: string;
+  StartTime: number;
+  Track: string;
+  TrackLayout: string;
+  Sessions: ServerEventSession[];
+};

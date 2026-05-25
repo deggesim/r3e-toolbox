@@ -11,7 +11,7 @@ interface TrackInfo {
   name: string;
 }
 
-const formatTime = (seconds: number): string => {
+export const formatTime = (seconds: number): string => {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -21,7 +21,7 @@ const formatTime = (seconds: number): string => {
   return `${m}:${s.toFixed(3)}`;
 };
 
-const millisecondsToTime = (ms: number): string => {
+export const millisecondsToTime = (ms: number): string => {
   return formatTime(ms / 1000);
 };
 
@@ -60,7 +60,7 @@ const resolveFinishStatus = (driver: RaceResultDriver): string => {
   return "DNF";
 };
 
-const resolveClassInfo = (
+export const resolveClassInfo = (
   vehicleId: number | undefined,
   gameData: RaceRoomData,
 ): { classId?: number; className?: string } => {
@@ -73,7 +73,7 @@ const resolveClassInfo = (
   return { classId, className };
 };
 
-const resolveVehicleName = (
+export const resolveVehicleName = (
   vehicleId: number | undefined,
   gameData: RaceRoomData,
 ): string | undefined => {
@@ -82,7 +82,7 @@ const resolveVehicleName = (
   return car?.Name;
 };
 
-const buildTrackLookup = (
+export const buildTrackLookup = (
   data: RaceRoomData,
 ): {
   byName: Map<string, TrackInfo>;
