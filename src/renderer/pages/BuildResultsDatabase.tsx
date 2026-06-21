@@ -171,7 +171,7 @@ const BuildResultsDatabase = () => {
   const databaseInputRef = useRef<HTMLInputElement>(null);
   const resultsInputRef = useRef<HTMLInputElement>(null);
   const serverEventInputRef = useRef<HTMLInputElement>(null);
-  const [serverEventFile, setServerEventFile] = useState<File | null>(null);
+  const [serverEventFiles, setServerEventFiles] = useState<File[]>([]);
   const addLog = useProcessingLogStore((state) => state.addLog);
 
   // Use store to read cached assets
@@ -248,7 +248,7 @@ const BuildResultsDatabase = () => {
       const files = event.target.files ? Array.from(event.target.files) : [];
       setResultFiles(files);
       setChampionshipAlias(""); // Reset alias when files are selected
-      setServerEventFile(null);
+      setServerEventFiles([]);
       if (serverEventInputRef.current) {
         serverEventInputRef.current.value = "";
       }
@@ -270,40 +270,43 @@ const BuildResultsDatabase = () => {
   };
 
   const onServerEventFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    setServerEventFile(file);
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    setServerEventFiles(files);
 
     setResultFiles([]);
-    if (resultsInputRef.current) {
-      resultsInputRef.current.value = "";
-    }
+    if (resultsInputRef.current) resultsInputRef.current.value = "";
 
-    if (!file || !gameData) {
+    if (files.length === 0 || !gameData) {
       setParsedRaces([]);
       return;
     }
 
     setIsParsingRaces(true);
     try {
-      const text = await file.text();
-      const json: unknown = JSON.parse(text);
-
-      if (!isServerEventFormat(json)) {
-        addLog("warning", `File is not a valid server event format: ${file.name}`, faXmark);
-        setParsedRaces([]);
-        return;
+      const all: ParsedRace[] = [];
+      let aliasSet = false;
+      for (const file of files) {
+        try {
+          const json: unknown = JSON.parse(await file.text());
+          if (!isServerEventFormat(json)) {
+            addLog("warning", `File is not a valid server event format: ${file.name}`, faXmark);
+            continue;
+          }
+          if (!aliasSet) {
+            setChampionshipAlias(extractServerEventAlias(json));
+            aliasSet = true;
+          }
+          const races = parseServerEventData(json, gameData);
+          if (!races || races.length === 0) {
+            addLog("warning", `No Race session found in ${file.name}`, faXmark);
+            continue;
+          }
+          all.push(...races);
+        } catch {
+          addLog("error", `Failed to parse server event file: ${file.name}`, faXmark);
+        }
       }
-
-      setChampionshipAlias(extractServerEventAlias(json));
-      const races = parseServerEventData(json, gameData);
-      setParsedRaces(races ?? []);
-
-      if (!races || races.length === 0) {
-        addLog("warning", `No Race session found in ${file.name}`, faXmark);
-      }
-    } catch {
-      addLog("error", `Failed to parse server event file: ${file.name}`, faXmark);
-      setParsedRaces([]);
+      setParsedRaces(all);
     } finally {
       setIsParsingRaces(false);
     }
@@ -471,10 +474,14 @@ const BuildResultsDatabase = () => {
 
       // Clear input fields after successful creation/update
       setResultFiles([]);
+      setServerEventFiles([]);
       setChampionshipAlias("");
       setParsedRaces([]);
       if (resultsInputRef.current) {
         resultsInputRef.current.value = "";
+      }
+      if (serverEventInputRef.current) {
+        serverEventInputRef.current.value = "";
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -649,23 +656,23 @@ const BuildResultsDatabase = () => {
                 </Form.Label>
                 <Form.Control
                   type="file"
+                  multiple
                   accept=".txt,.json"
                   ref={serverEventInputRef}
                   onChange={onServerEventFileSelected}
                 />
                 <Form.Text className="text-white-50">
-                  Select a RaceRoom dedicated server event file (e.g. 202604170943.txt).
-                  Imports Race result and Qualify times automatically.
+                  Select one or more RaceRoom dedicated server event files. Imports Race result and Qualify times automatically.
                 </Form.Text>
               </Form.Group>
-              {serverEventFile && (
+              {serverEventFiles.length > 0 && (
                 <Alert variant="secondary" className="py-2 mb-3">
-                  {serverEventFile.name}
+                  {serverEventFiles.length} server event file
+                  {serverEventFiles.length > 1 ? "s" : ""} selected
                   {parsedRaces.length > 0 && (
                     <div className="mt-2">
                       <Badge bg="success" className="me-2">
-                        {parsedRaces.length} race
-                        {parsedRaces.length > 1 ? "s" : ""} parsed
+                        {parsedRaces.length} race{parsedRaces.length > 1 ? "s" : ""} parsed
                       </Badge>
                       {isParsingRaces && (
                         <Spinner animation="border" size="sm" className="ms-2" />
