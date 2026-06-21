@@ -239,7 +239,7 @@ Shows three standings tables:
 
 Click **Edit** on the championship detail page to unlock:
 
-- **Custom Points System**: Replace the default points with any comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (25-18-15-12-10-8-6-4-2-1 for 10 positions) — or type your own. The points system is saved with the championship and applied to every calculation.
+- **Custom Points System**: Replace the default points with any comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (28-25-22-19-16-13-10-8-6-4-3-2-1) — or type your own. The points system is saved with the championship and applied to every calculation.
 - **Time Penalties** (per driver, per race): Enter a penalty in seconds. Finishing positions are re-sorted after applying the time penalty, so a driver who benefited from it may lose a position.
 - **Points Penalties** (per driver, per race): Enter a penalty in championship points. Points are deducted from the driver's race score before the standing is computed.
 
