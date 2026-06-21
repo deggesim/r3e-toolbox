@@ -138,7 +138,10 @@ const ResultsDatabaseViewer = () => {
 
       // Determine championship winner using utility function
       if (humanDriverName && races.length > 0) {
-        const standings = calculateChampionshipStandings(races);
+        const standings = calculateChampionshipStandings(
+          races,
+          resolvePointsSystem(championship),
+        );
         if (standings.length > 0 && standings[0].driver === humanDriverName) {
           championshipsWon += 1;
         }
