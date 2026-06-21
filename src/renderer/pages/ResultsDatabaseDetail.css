@@ -84,6 +84,13 @@
   font-weight: bold;
 }
 
+.results-table td.points-cell.penalized {
+  color: #e74c3c;
+}
+.results-table td.points-cell.penalized::after {
+  content: " *";
+}
+
 .results-table .pos1 {
   background-color: #d4af37 !important;
   color: #000 !important;

@@ -9,44 +9,17 @@ import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { getDownloadLabel } from "../utils/platformLabels";
 import { makeTime, parseTimestring } from "../utils/timeUtils";
-import {
-  getHumanDriverName,
-  getSortedRaceSlots,
-} from "../utils/humanPlayerUtils";
+import { getSortedRaceSlots } from "../utils/humanPlayerUtils";
 import { generateStandingsHTML } from "../utils/htmlGenerator";
 import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
-import type { ParsedRace, RaceSlot } from "../types/raceResults";
+import type { ParsedRace } from "../types/raceResults";
 import { resolvePointsSystem } from "../types/raceResults";
-
-interface DriverStanding {
-  position: number;
-  driver: string;
-  vehicle: string;
-  vehicleId?: number;
-  isHuman: boolean;
-  team: string;
-  points: number;
-  raceResults: (number | null)[];
-  racePoints: (number | null)[];
-}
-
-interface TeamStanding {
-  position: number;
-  team: string;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
-
-interface VehicleStanding {
-  position: number;
-  vehicle: string;
-  vehicleId?: number;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
+import {
+  buildDriverStandings,
+  buildTeamStandings,
+  buildVehicleStandings,
+} from "../utils/standingsCalculator";
 
 interface BestTime {
   driver: string;
@@ -56,8 +29,6 @@ interface BestTime {
   time: string;
   timeMs: number;
 }
-
-const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
@@ -80,13 +51,10 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   return `${sign}${absDiff.toFixed(3)}`;
 };
 
-const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
-  const sortedSlots = getSortedRaceSlots(slots);
-  const index = sortedSlots.findIndex((s) => s.driver === driver);
-  return index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
-};
-
-const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
+const calculateGapFromWinner = (
+  winner: { totalTime?: string; totalLaps?: number },
+  driver: { totalTime?: string; totalLaps?: number },
+): string => {
   if (!winner?.totalTime || !driver?.totalTime) return "-";
 
   const winnerLaps = winner.totalLaps ?? 0;
@@ -107,222 +75,13 @@ const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
   }
 };
 
-const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
-  // Identify human players in each race
-  const humanDriverNames = new Set<string>();
-  for (const race of races) {
-    const humanDriver = getHumanDriverName(race);
-    if (humanDriver) {
-      humanDriverNames.add(humanDriver);
-    }
-  }
-
-  const driverMap = new Map<
-    string,
-    {
-      vehicle: string;
-      vehicleId?: number;
-      isHuman: boolean;
-      team: string;
-      raceResults: (number | null)[];
-      racePoints: (number | null)[];
-    }
-  >();
-
-  for (const race of races) {
-    for (const slot of race.slots) {
-      if (driverMap.has(slot.driver)) {
-        // Driver already exists, no need to update isHuman
-      } else {
-        driverMap.set(slot.driver, {
-          vehicle: slot.vehicle,
-          vehicleId: slot.vehicleId,
-          isHuman: humanDriverNames.has(slot.driver),
-          team: slot.team,
-          raceResults: [],
-          racePoints: [],
-        });
-      }
-    }
-  }
-
-  races.forEach((race, raceIdx) => {
-    driverMap.forEach((data, driver) => {
-      const position = getRacePosition(race.slots, driver);
-      data.raceResults[raceIdx] = position;
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        data.racePoints[raceIdx] = DEFAULT_POINTS_SYSTEM[position - 1];
-      } else {
-        data.racePoints[raceIdx] = null;
-      }
-    });
-  });
-
-  const standings: DriverStanding[] = [];
-  driverMap.forEach((data, driver) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      driver,
-      vehicle: data.vehicle,
-      vehicleId: data.vehicleId,
-      team: data.team,
-      points,
-      raceResults: data.raceResults,
-      racePoints: data.racePoints,
-      isHuman: data.isHuman,
-    });
-  });
-
-  // Sort by points (descending), then by countback (best finishing positions)
-  standings.sort((a, b) => {
-    // Primary: sort by total points
-    if (b.points !== a.points) return b.points - a.points;
-
-    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-    for (
-      let position = 1;
-      position <= DEFAULT_POINTS_SYSTEM.length;
-      position++
-    ) {
-      const aCount = a.raceResults.filter((pos) => pos === position).length;
-      const bCount = b.raceResults.filter((pos) => pos === position).length;
-      if (bCount !== aCount) return bCount - aCount;
-    }
-
-    return 0;
-  });
-
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateTeamStandings = (races: ParsedRace[]): TeamStanding[] => {
-  const teamMap = new Map<
-    string,
-    { entries: Set<string>; racePoints: (number | null)[] }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    const teamRacePoints = new Map<string, number>();
-
-    race.slots.forEach((slot: RaceSlot) => {
-      const team = slot.team || "No Team";
-      const position = getRacePosition(race.slots, slot.driver);
-
-      if (!teamMap.has(team)) {
-        teamMap.set(team, { entries: new Set(), racePoints: [] });
-      }
-
-      teamMap.get(team)!.entries.add(slot.driver);
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        const pts = DEFAULT_POINTS_SYSTEM[position - 1];
-        teamRacePoints.set(team, (teamRacePoints.get(team) || 0) + pts);
-      }
-    });
-
-    teamMap.forEach((data, team) => {
-      data.racePoints[raceIdx] = teamRacePoints.get(team) || null;
-    });
-  });
-
-  const standings: TeamStanding[] = [];
-  teamMap.forEach((data, team) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      team,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateVehicleStandings = (races: ParsedRace[]): VehicleStanding[] => {
-  const vehicleMap = new Map<
-    string,
-    {
-      vehicleId?: number;
-      entries: Set<string>;
-      racePoints: (number | null)[];
-    }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    const vehicleRacePoints = new Map<string, number>();
-
-    race.slots.forEach((slot: RaceSlot) => {
-      const vehicle = slot.vehicle;
-      const position = getRacePosition(race.slots, slot.driver);
-
-      if (!vehicleMap.has(vehicle)) {
-        vehicleMap.set(vehicle, {
-          vehicleId: slot.vehicleId,
-          entries: new Set(),
-          racePoints: [],
-        });
-      }
-
-      vehicleMap.get(vehicle)!.entries.add(slot.driver);
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        const pts = DEFAULT_POINTS_SYSTEM[position - 1];
-        vehicleRacePoints.set(
-          vehicle,
-          (vehicleRacePoints.get(vehicle) || 0) + pts,
-        );
-      }
-    });
-
-    vehicleMap.forEach((data, vehicle) => {
-      data.racePoints[raceIdx] = vehicleRacePoints.get(vehicle) || null;
-    });
-  });
-
-  const standings: VehicleStanding[] = [];
-  vehicleMap.forEach((data, vehicle) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      vehicle,
-      vehicleId: data.vehicleId,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
 const getBestLapTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
   return races.map((race) => {
     const raceLapTimes: BestTime[] = [];
     const humanDriver =
       race.slots && race.slots.length > 0 ? race.slots[0].driver : null;
 
-    race.slots.forEach((slot: RaceSlot) => {
+    race.slots.forEach((slot) => {
       if (slot.bestLap) {
         const timeMs = parseTime(slot.bestLap) * 1000;
         if (Number.isFinite(timeMs) && timeMs > 0) {
@@ -351,7 +110,7 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
     const humanDriver =
       race.slots && race.slots.length > 0 ? race.slots[0].driver : null;
 
-    race.slots.forEach((slot: RaceSlot) => {
+    race.slots.forEach((slot) => {
       if (slot.qualTime) {
         const timeMs = parseTime(slot.qualTime) * 1000;
         if (Number.isFinite(timeMs) && timeMs > 0) {
@@ -391,6 +150,7 @@ const ResultsDatabaseDetail = () => {
     bestLapTimes,
     bestQualTimes,
     raceHeaders,
+    races,
   } = (() => {
     if (!championship?.raceData || championship.raceData.length === 0) {
       return {
@@ -400,11 +160,12 @@ const ResultsDatabaseDetail = () => {
         bestLapTimes: [],
         bestQualTimes: [],
         raceHeaders: [],
+        races: [] as ParsedRace[],
       };
     }
 
     // Sort races chronologically by timestring (oldest first)
-    const races = [...championship.raceData].sort((a, b) => {
+    const sortedRaces = [...championship.raceData].sort((a, b) => {
       const timeA = parseTimestring(a.timestring);
       const timeB = parseTimestring(b.timestring);
 
@@ -416,16 +177,18 @@ const ResultsDatabaseDetail = () => {
       return 0;
     });
 
+    const pointsSystem = resolvePointsSystem(championship);
     return {
-      driverStandings: calculateDriverStandings(races),
-      teamStandings: calculateTeamStandings(races),
-      vehicleStandings: calculateVehicleStandings(races),
-      bestLapTimes: getBestLapTimesPerRace(races),
-      bestQualTimes: getBestQualifyingTimesPerRace(races),
-      raceHeaders: races.map((r) => ({
+      driverStandings: buildDriverStandings(sortedRaces, pointsSystem),
+      teamStandings: buildTeamStandings(sortedRaces, pointsSystem),
+      vehicleStandings: buildVehicleStandings(sortedRaces, pointsSystem),
+      bestLapTimes: getBestLapTimesPerRace(sortedRaces),
+      bestQualTimes: getBestQualifyingTimesPerRace(sortedRaces),
+      raceHeaders: sortedRaces.map((r) => ({
         name: r.trackname || "Unknown Track",
         time: r.timestring || "",
       })),
+      races: sortedRaces,
     };
   })();
 
@@ -653,13 +416,22 @@ const ResultsDatabaseDetail = () => {
                   {raceHeaders.map((_, idx) => {
                     const pts = standing.racePoints[idx];
                     const result = standing.raceResults[idx];
+                    const penalty =
+                      races[idx]?.slots?.find(
+                        (s) => s.driver === standing.driver,
+                      )?.pointsPenalty ?? 0;
                     const posClass =
                       result !== null && result <= 3
                         ? getPositionClass(result)
                         : "";
                     return (
                       <Fragment key={`race-${standing.driver}-${idx}`}>
-                        <td className="points-cell">{pts ?? "-"}</td>
+                        <td
+                          className={`points-cell${penalty > 0 ? " penalized" : ""}`}
+                          title={penalty > 0 ? `Points penalty: -${penalty}` : undefined}
+                        >
+                          {pts ?? "-"}
+                        </td>
                         <td className={posClass}>{result ?? "-"}</td>
                       </Fragment>
                     );
