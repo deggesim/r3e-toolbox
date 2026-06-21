@@ -5,6 +5,7 @@
       "Bash(npm install:*)",
       "Bash(npm list:*)",
       "Bash(git worktree *)",
+      "Bash(npx ts-node *)",
       "mcp__plugin_context7_context7__resolve-library-id",
       "mcp__plugin_context7_context7__query-docs",
       "Skill(commit-commands:commit)"
