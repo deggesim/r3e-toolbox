@@ -177,6 +177,14 @@ Generate professional championship standings with car and track icons from offic
 - Warnings appear for unrecognized tracks or vehicle classes
 - **Important**: If you select a championship alias that already exists, the new races will be **added to the existing championship** (merged, not replaced)
 
+#### Importing Dedicated-Server Event Files
+
+You can also import **dedicated-server event files** directly instead of a folder of `.txt` files:
+
+- The file picker accepts **multiple files at once** — select all event files for the championship in a single pick
+- Each selected file is parsed and added as a separate race
+- Combine with the folder workflow: existing races are merged, not replaced
+
 #### Step 3: Enter Championship Name
 
 - Give your championship a memorable alias (e.g., "DTM 2026 Season")
@@ -191,11 +199,11 @@ Generate professional championship standings with car and track icons from offic
 
 ### Understanding the Standings
 
-- **Points System**: Standard motorsport points (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
+- **Points System**: Standard motorsport points (25, 18, 15, 12, 10, 8, 6, 4, 2, 1) — customisable per championship (see below)
 - **Races**: Total number of races competed
 - **Wins**: Number of race victories
 - **Podiums**: Number of top-3 finishes
-- **Points**: Total championship points
+- **Points**: Total championship points (after any points penalties)
 
 ### Tips
 
@@ -227,9 +235,19 @@ Shows three standings tables:
 - **Team Standings**: Aggregate team performance
 - **Vehicle Standings**: Performance by car class
 
+#### Edit Mode
+
+Click **Edit** on the championship detail page to unlock:
+
+- **Custom Points System**: Replace the default points with any comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (25-18-15-12-10-8-6-4-2-1 for 10 positions) — or type your own. The points system is saved with the championship and applied to every calculation.
+- **Time Penalties** (per driver, per race): Enter a penalty in seconds. Finishing positions are re-sorted after applying the time penalty, so a driver who benefited from it may lose a position.
+- **Points Penalties** (per driver, per race): Enter a penalty in championship points. Points are deducted from the driver's race score before the standing is computed.
+
+All edits apply consistently to the **on-screen standings tables** and to any **exported HTML** file. Save changes with the **Save** button; discard with **Cancel**.
+
 ### Managing Championships
 
-- All championships are stored locally
+- All championships are stored locally, including any custom points system and penalties you have set
 - Use "Clear cache" in Settings to remove stored data
 - Each championship can be re-exported or deleted individually
 
