@@ -252,6 +252,17 @@
   color: #fff;
 }
 
+/* Dark-theme overrides for editor form controls */
+.results-table-wrapper .form-control {
+  background: var(--bg2, #141a33);
+  color: var(--text, #f7f8ff);
+  border-color: var(--border, #1f2747);
+}
+.results-table-wrapper .form-control:focus {
+  background: var(--bg2, #141a33);
+  color: var(--text, #f7f8ff);
+}
+
 /* Mobile responsive styles */
 @media (max-width: 767px) {
   .results-title {

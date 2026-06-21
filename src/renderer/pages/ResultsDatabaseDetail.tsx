@@ -1,9 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Alert, Button, Container } from "react-bootstrap";
+import { Alert, Button, Container, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
+import { faPenToSquare } from "@fortawesome/free-solid-svg-icons/faPenToSquare";
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons/faFloppyDisk";
+import { faRotateLeft } from "@fortawesome/free-solid-svg-icons/faRotateLeft";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
@@ -14,7 +17,7 @@ import { generateStandingsHTML } from "../utils/htmlGenerator";
 import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
 import type { ParsedRace } from "../types/raceResults";
-import { resolvePointsSystem } from "../types/raceResults";
+import { DEFAULT_POINTS_SYSTEM, resolvePointsSystem } from "../types/raceResults";
 import {
   buildDriverStandings,
   buildTeamStandings,
@@ -139,7 +142,23 @@ const ResultsDatabaseDetail = () => {
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
+  const addOrUpdate = useChampionshipStore((state) => state.addOrUpdate);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
+
+  const [isEditing, setIsEditing] = useState(false);
+  // Draft of the chronologically-sorted races + points input string.
+  const [draftRaces, setDraftRaces] = useState<ParsedRace[] | null>(null);
+  const [pointsInput, setPointsInput] = useState("");
+
+  const parsePointsInput = (input: string): number[] | null => {
+    const parts = input
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return null;
+    const nums = parts.map(Number);
+    return nums.some((n) => !Number.isFinite(n) || n < 0) ? null : nums;
+  };
 
   const championship = championships.find((c) => c.alias === alias);
 
@@ -165,7 +184,7 @@ const ResultsDatabaseDetail = () => {
     }
 
     // Sort races chronologically by timestring (oldest first)
-    const sortedRaces = [...championship.raceData].sort((a, b) => {
+    const sortedSource = [...championship.raceData].sort((a, b) => {
       const timeA = parseTimestring(a.timestring);
       const timeB = parseTimestring(b.timestring);
 
@@ -177,18 +196,26 @@ const ResultsDatabaseDetail = () => {
       return 0;
     });
 
-    const pointsSystem = resolvePointsSystem(championship);
+    // While editing, use the draft (live preview); otherwise use the sorted source.
+    const races = isEditing && draftRaces ? draftRaces : sortedSource;
+
+    // Resolve the points system from the draft input while editing.
+    const pointsSystem =
+      isEditing && parsePointsInput(pointsInput)
+        ? parsePointsInput(pointsInput)!
+        : resolvePointsSystem(championship);
+
     return {
-      driverStandings: buildDriverStandings(sortedRaces, pointsSystem),
-      teamStandings: buildTeamStandings(sortedRaces, pointsSystem),
-      vehicleStandings: buildVehicleStandings(sortedRaces, pointsSystem),
-      bestLapTimes: getBestLapTimesPerRace(sortedRaces),
-      bestQualTimes: getBestQualifyingTimesPerRace(sortedRaces),
-      raceHeaders: sortedRaces.map((r) => ({
+      driverStandings: buildDriverStandings(races, pointsSystem),
+      teamStandings: buildTeamStandings(races, pointsSystem),
+      vehicleStandings: buildVehicleStandings(races, pointsSystem),
+      bestLapTimes: getBestLapTimesPerRace(races),
+      bestQualTimes: getBestQualifyingTimesPerRace(races),
+      raceHeaders: races.map((r) => ({
         name: r.trackname || "Unknown Track",
         time: r.timestring || "",
       })),
-      races: sortedRaces,
+      races,
     };
   })();
 
@@ -224,6 +251,51 @@ const ResultsDatabaseDetail = () => {
       }
     }
     return vehicleName || vehicleIdStr || "";
+  };
+
+  const startEditing = () => {
+    if (!championship?.raceData) return;
+    const sorted = [...championship.raceData].sort((a, b) => {
+      const ta = parseTimestring(a.timestring);
+      const tb = parseTimestring(b.timestring);
+      return !Number.isNaN(ta) && !Number.isNaN(tb) ? ta - tb : 0;
+    });
+    setDraftRaces(structuredClone(sorted));
+    setPointsInput(resolvePointsSystem(championship).join(", "));
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setDraftRaces(null);
+  };
+
+  const saveEditing = () => {
+    if (!draftRaces || !championship) return;
+    const parsed = parsePointsInput(pointsInput);
+    addOrUpdate({
+      ...championship,
+      raceData: draftRaces,
+      races: draftRaces.length,
+      pointsSystem: parsed ?? undefined,
+    });
+    setIsEditing(false);
+    setDraftRaces(null);
+  };
+
+  const updateSlotPenalty = (
+    raceIdx: number,
+    driver: string,
+    field: "timePenaltySeconds" | "pointsPenalty",
+    value: number | undefined,
+  ) => {
+    setDraftRaces((prev) => {
+      if (!prev) return prev;
+      const next = structuredClone(prev);
+      const slot = next[raceIdx].slots.find((s) => s.driver === driver);
+      if (slot) slot[field] = value;
+      return next;
+    });
   };
 
   if (!championship) {
@@ -342,13 +414,130 @@ const ResultsDatabaseDetail = () => {
         <p className="results-subtitle mb-0">
           Generated from R3E Toolbox • {formattedDate}
         </p>
-        <div className="mt-3">
+        <div className="mt-3 d-flex flex-wrap gap-2 align-items-center">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
             {getDownloadLabel(isElectron)} as HTML
           </Button>
+          {!isEditing ? (
+            <Button variant="outline-light" size="sm" onClick={startEditing}>
+              <FontAwesomeIcon icon={faPenToSquare} className="me-2" />
+              Edit
+            </Button>
+          ) : (
+            <>
+              <Button variant="success" size="sm" onClick={saveEditing}>
+                <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+                Save
+              </Button>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={cancelEditing}
+              >
+                <FontAwesomeIcon icon={faRotateLeft} className="me-2" />
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Editor panel — shown only when editing */}
+      {isEditing && draftRaces && (
+        <div className="results-table-wrapper p-3">
+          <Form.Group className="mb-3" controlId="pointsSystemInput">
+            <Form.Label className="text-white">
+              Championship points system
+            </Form.Label>
+            <Form.Control
+              type="text"
+              value={pointsInput}
+              isInvalid={parsePointsInput(pointsInput) === null}
+              onChange={(e) => setPointsInput(e.target.value)}
+              placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
+            />
+            <div className="mt-2 d-flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setPointsInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
+                }
+              >
+                F1
+              </Button>
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setPointsInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
+                }
+              >
+                DTM
+              </Button>
+            </div>
+          </Form.Group>
+
+          {draftRaces.map((race, raceIdx) => (
+            <div key={`edit-race-${raceIdx}`} className="mb-3">
+              <h6 className="text-white">{race.trackname}</h6>
+              <table className="results-table">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>Time penalty (s)</th>
+                    <th>Points penalty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getSortedRaceSlots(race.slots).map((slot) => (
+                    <tr key={`edit-${raceIdx}-${slot.driver}`}>
+                      <td className="driver-name-cell">{slot.driver}</td>
+                      <td>
+                        <Form.Control
+                          type="number"
+                          min={0}
+                          size="sm"
+                          value={slot.timePenaltySeconds ?? ""}
+                          onChange={(e) =>
+                            updateSlotPenalty(
+                              raceIdx,
+                              slot.driver,
+                              "timePenaltySeconds",
+                              e.target.value === ""
+                                ? undefined
+                                : Math.max(0, Number(e.target.value)),
+                            )
+                          }
+                        />
+                      </td>
+                      <td>
+                        <Form.Control
+                          type="number"
+                          min={0}
+                          size="sm"
+                          value={slot.pointsPenalty ?? ""}
+                          onChange={(e) =>
+                            updateSlotPenalty(
+                              raceIdx,
+                              slot.driver,
+                              "pointsPenalty",
+                              e.target.value === ""
+                                ? undefined
+                                : Math.max(0, Number(e.target.value)),
+                            )
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Driver Standings */}
       <div className="results-table-wrapper">
