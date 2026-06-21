@@ -427,10 +427,12 @@ export const buildDriverStandings = (
     });
   });
 
-  return sortByPointsAndCountback(
+  const sorted = sortByPointsAndCountback(
     standings.map((s) => ({ ...s, positions: numericPositions(s.raceResults) })),
     pointsSystem.length,
-  ).map(({ positions: _omit, ...rest }) => rest);
+  );
+  sorted.forEach((s, i) => (s.position = i + 1));
+  return sorted.map(({ positions: _omit, ...rest }) => rest);
 };
 
 export interface TeamStanding {
