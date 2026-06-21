@@ -55,6 +55,7 @@ const generateChampionshipHTML = (
     leaderboardAssets,
     gameData,
     assetMap,
+    championship.pointsSystem,
   );
 };
 

@@ -17,6 +17,7 @@ import { generateStandingsHTML } from "../utils/htmlGenerator";
 import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
 import type { ParsedRace, RaceSlot } from "../types/raceResults";
+import { resolvePointsSystem } from "../types/raceResults";
 
 interface DriverStanding {
   position: number;
@@ -534,6 +535,9 @@ const ResultsDatabaseDetail = () => {
       championship.raceData!,
       championship.alias,
       leaderboardAssetsForExport,
+      undefined,
+      undefined,
+      resolvePointsSystem(championship),
     );
     await saveTextFile({
       electronAPI,

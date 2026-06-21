@@ -39,6 +39,7 @@ import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import type { ChampionshipEntry } from "../types/raceResults";
+import { resolvePointsSystem } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   generateChampionshipIndexHTML,
@@ -217,6 +218,8 @@ const ResultsDatabaseViewer = () => {
       championship.alias,
       assetsForHTML,
       gameData,
+      undefined,
+      resolvePointsSystem(championship),
     );
 
     const saved = await saveTextFile({
