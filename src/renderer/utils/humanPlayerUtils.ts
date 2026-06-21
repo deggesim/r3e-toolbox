@@ -67,9 +67,13 @@ export const getSortedRaceSlots = (slots: RaceSlot[]): RaceSlot[] => {
     const statusA = a.finishStatus;
     const statusB = b.finishStatus;
 
-    // Parse lap times: returns undefined for invalid/missing times
-    const timeA = parseTime(a.totalTime || a.finishTime);
-    const timeB = parseTime(b.totalTime || b.finishTime);
+    // Parse lap times: returns undefined for invalid/missing times.
+    // Time penalties are added to the base time so positions re-order accordingly.
+    const baseA = parseTime(a.totalTime || a.finishTime);
+    const baseB = parseTime(b.totalTime || b.finishTime);
+    const timeA = baseA === undefined ? undefined : baseA + (a.timePenaltySeconds ?? 0);
+    const timeB = baseB === undefined ? undefined : baseB + (b.timePenaltySeconds ?? 0);
+    // ponytail: penalty only re-orders within the same lap count; dropping a driver below a lapped car is not modelled.
 
     // Determine if each driver finished the race
     const validA =
