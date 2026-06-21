@@ -505,7 +505,7 @@ const ResultsDatabaseDetail = () => {
                               raceIdx,
                               slot.driver,
                               "timePenaltySeconds",
-                              e.target.value === ""
+                              e.target.value === "" || !Number.isFinite(Number(e.target.value))
                                 ? undefined
                                 : Math.max(0, Number(e.target.value)),
                             )
@@ -523,7 +523,7 @@ const ResultsDatabaseDetail = () => {
                               raceIdx,
                               slot.driver,
                               "pointsPenalty",
-                              e.target.value === ""
+                              e.target.value === "" || !Number.isFinite(Number(e.target.value))
                                 ? undefined
                                 : Math.max(0, Number(e.target.value)),
                             )
