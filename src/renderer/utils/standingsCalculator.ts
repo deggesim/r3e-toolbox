@@ -306,56 +306,6 @@ export const getBestQualifyingTimes = (
   }));
 };
 
-/**
- * Calculate championship standings from race results.
- * Returns sorted standings with points and positions for each driver.
- *
- * This function uses getSortedRaceSlots for consistent position calculation
- * across all race results, applying the same tiebreaker logic (countback).
- *
- * @param races - Array of ParsedRace objects
- * @param pointsSystem - Points awarded per position (defaults to F1 system)
- * @returns Array of standings sorted by championship position
- *
- * @example
- * const standings = calculateChampionshipStandings(races);
- * const winner = standings[0]; // Championship winner
- */
-export const calculateChampionshipStandings = (
-  races: ParsedRace[],
-  pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
-): ChampionshipStanding[] => {
-  const driverPoints = new Map<
-    string,
-    { points: number; positions: number[] }
-  >();
-
-  for (const race of races) {
-    const sortedSlots = getSortedRaceSlots(race.slots || []);
-
-    // Accumulate points for all drivers based on finishing positions
-    sortedSlots.forEach((slot, idx) => {
-      const position = idx + 1;
-      const base =
-        position <= pointsSystem.length ? pointsSystem[position - 1] : 0;
-      const points = base - (slot.pointsPenalty ?? 0);
-
-      if (!driverPoints.has(slot.driver)) {
-        driverPoints.set(slot.driver, { points: 0, positions: [] });
-      }
-      const driverData = driverPoints.get(slot.driver)!;
-      driverData.points += points;
-      driverData.positions.push(position);
-    });
-  }
-
-  const standingsArr = Array.from(driverPoints.entries()).map(
-    ([driver, data]) => ({ driver, ...data }),
-  );
-
-  return sortByPointsAndCountback(standingsArr, pointsSystem.length);
-};
-
 export interface DriverStanding {
   position: number;
   driver: string;
@@ -434,6 +384,29 @@ export const buildDriverStandings = (
   sorted.forEach((s, i) => (s.position = i + 1));
   return sorted.map(({ positions: _omit, ...rest }) => rest);
 };
+
+/**
+ * Calculate championship standings from race results.
+ * Returns sorted standings with points and positions for each driver.
+ * Delegates to buildDriverStandings for consistent position/points calculation.
+ *
+ * @param races - Array of ParsedRace objects
+ * @param pointsSystem - Points awarded per position (defaults to F1 system)
+ * @returns Array of standings sorted by championship position
+ *
+ * @example
+ * const standings = calculateChampionshipStandings(races);
+ * const winner = standings[0]; // Championship winner
+ */
+export const calculateChampionshipStandings = (
+  races: ParsedRace[],
+  pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
+): ChampionshipStanding[] =>
+  buildDriverStandings(races, pointsSystem).map((s) => ({
+    driver: s.driver,
+    points: s.points,
+    positions: s.raceResults.filter((p): p is number => p !== null),
+  }));
 
 export interface TeamStanding {
   position: number;

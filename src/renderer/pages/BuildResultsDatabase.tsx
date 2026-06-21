@@ -464,6 +464,7 @@ const BuildResultsDatabase = () => {
         carName: carName || existing?.carName,
         carIcon: carIcon || existing?.carIcon,
         raceData: mergedRaces,
+        pointsSystem: existing?.pointsSystem,
       });
 
       addLog(
