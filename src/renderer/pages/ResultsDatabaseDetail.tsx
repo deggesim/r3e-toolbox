@@ -17,7 +17,10 @@ import { generateStandingsHTML } from "../utils/htmlGenerator";
 import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
 import type { ParsedRace } from "../types/raceResults";
-import { DEFAULT_POINTS_SYSTEM, resolvePointsSystem } from "../types/raceResults";
+import {
+  DEFAULT_POINTS_SYSTEM,
+  resolvePointsSystem,
+} from "../types/raceResults";
 import {
   buildDriverStandings,
   buildTeamStandings,
@@ -505,7 +508,8 @@ const ResultsDatabaseDetail = () => {
                               raceIdx,
                               slot.driver,
                               "timePenaltySeconds",
-                              e.target.value === "" || !Number.isFinite(Number(e.target.value))
+                              e.target.value === "" ||
+                                !Number.isFinite(Number(e.target.value))
                                 ? undefined
                                 : Math.max(0, Number(e.target.value)),
                             )
@@ -523,7 +527,8 @@ const ResultsDatabaseDetail = () => {
                               raceIdx,
                               slot.driver,
                               "pointsPenalty",
-                              e.target.value === "" || !Number.isFinite(Number(e.target.value))
+                              e.target.value === "" ||
+                                !Number.isFinite(Number(e.target.value))
                                 ? undefined
                                 : Math.max(0, Number(e.target.value)),
                             )
@@ -617,7 +622,11 @@ const ResultsDatabaseDetail = () => {
                       <Fragment key={`race-${standing.driver}-${idx}`}>
                         <td
                           className={`points-cell${penalty > 0 ? " penalized" : ""}`}
-                          title={penalty > 0 ? `Points penalty: -${penalty}` : undefined}
+                          title={
+                            penalty > 0
+                              ? `Points penalty: -${penalty}`
+                              : undefined
+                          }
                         >
                           {pts ?? "-"}
                         </td>
@@ -728,6 +737,93 @@ const ResultsDatabaseDetail = () => {
                 </tr>
               );
             })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Race Results */}
+      <div className="results-table-wrapper">
+        <table className="results-table">
+          <caption>Race Results</caption>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              {raceHeaders.map((header) => (
+                <th
+                  key={`race-result-${header.name}-${header.time}`}
+                  className="race-header"
+                >
+                  {header.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(
+              {
+                length: Math.max(
+                  ...(championship.raceData?.map(
+                    (race) => race.slots.length,
+                  ) || [0]),
+                ),
+              },
+              (_, posIdx) => (
+                <tr key={`race-result-pos-${posIdx}`}>
+                  <td>{posIdx + 1}</td>
+                  {championship.raceData?.map((race, raceIdx) => {
+                    const sortedSlots = getSortedRaceSlots(race.slots);
+                    const slot = sortedSlots[posIdx];
+                    if (!slot?.totalTime) {
+                      return (
+                        <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
+                      );
+                    }
+
+                    const winner = sortedSlots[0];
+                    const totalTimeSeconds = parseTime(slot.totalTime);
+                    const formattedTime =
+                      posIdx === 0
+                        ? Number.isFinite(totalTimeSeconds)
+                          ? makeTime(totalTimeSeconds)
+                          : slot.totalTime
+                        : calculateGapFromWinner(winner, slot);
+                    const vehicleIcon = getVehicleIcon(slot.vehicleId);
+                    const vehicleName = getVehicleName(
+                      slot.vehicleId,
+                      slot.vehicle,
+                    );
+                    const isHuman =
+                      race.slots &&
+                      race.slots.length > 0 &&
+                      race.slots[0].driver === slot.driver;
+
+                    return (
+                      <td
+                        key={`race-result-${raceIdx}-${posIdx}`}
+                        className="race-result-cell"
+                      >
+                        <div
+                          className={`race-result-entry${isHuman ? " human-driver" : ""}`}
+                        >
+                          <div className="result-driver">{slot.driver}</div>
+                          <div className="result-vehicle">
+                            {vehicleIcon && (
+                              <img
+                                src={vehicleIcon}
+                                className="vehicle-icon"
+                                alt={vehicleName}
+                              />
+                            )}
+                            <span>{vehicleName}</span>
+                          </div>
+                          <div className="result-time">{formattedTime}</div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>
@@ -901,93 +997,6 @@ const ResultsDatabaseDetail = () => {
           </table>
         </div>
       )}
-
-      {/* Race Results */}
-      <div className="results-table-wrapper">
-        <table className="results-table">
-          <caption>Race Results</caption>
-          <thead>
-            <tr>
-              <th>Pos</th>
-              {raceHeaders.map((header) => (
-                <th
-                  key={`race-result-${header.name}-${header.time}`}
-                  className="race-header"
-                >
-                  {header.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from(
-              {
-                length: Math.max(
-                  ...(championship.raceData?.map(
-                    (race) => race.slots.length,
-                  ) || [0]),
-                ),
-              },
-              (_, posIdx) => (
-                <tr key={`race-result-pos-${posIdx}`}>
-                  <td>{posIdx + 1}</td>
-                  {championship.raceData?.map((race, raceIdx) => {
-                    const sortedSlots = getSortedRaceSlots(race.slots);
-                    const slot = sortedSlots[posIdx];
-                    if (!slot?.totalTime) {
-                      return (
-                        <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
-                      );
-                    }
-
-                    const winner = sortedSlots[0];
-                    const totalTimeSeconds = parseTime(slot.totalTime);
-                    const formattedTime =
-                      posIdx === 0
-                        ? Number.isFinite(totalTimeSeconds)
-                          ? makeTime(totalTimeSeconds)
-                          : slot.totalTime
-                        : calculateGapFromWinner(winner, slot);
-                    const vehicleIcon = getVehicleIcon(slot.vehicleId);
-                    const vehicleName = getVehicleName(
-                      slot.vehicleId,
-                      slot.vehicle,
-                    );
-                    const isHuman =
-                      race.slots &&
-                      race.slots.length > 0 &&
-                      race.slots[0].driver === slot.driver;
-
-                    return (
-                      <td
-                        key={`race-result-${raceIdx}-${posIdx}`}
-                        className="race-result-cell"
-                      >
-                        <div
-                          className={`race-result-entry${isHuman ? " human-driver" : ""}`}
-                        >
-                          <div className="result-driver">{slot.driver}</div>
-                          <div className="result-vehicle">
-                            {vehicleIcon && (
-                              <img
-                                src={vehicleIcon}
-                                className="vehicle-icon"
-                                alt={vehicleName}
-                              />
-                            )}
-                            <span>{vehicleName}</span>
-                          </div>
-                          <div className="result-time">{formattedTime}</div>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
-      </div>
     </Container>
   );
 };
