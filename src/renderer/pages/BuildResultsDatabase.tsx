@@ -3,12 +3,7 @@ import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Alert,
   Badge,
@@ -245,31 +240,34 @@ const BuildResultsDatabase = () => {
   };
 
   const onFilesSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files ? Array.from(event.target.files) : [];
-      setResultFiles(files);
-      setChampionshipAlias(""); // Reset alias when files are selected
-      setServerEventFiles([]);
-      if (serverEventInputRef.current) {
-        serverEventInputRef.current.value = "";
-      }
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    setResultFiles(files);
+    setChampionshipAlias(""); // Reset alias when files are selected
+    setServerEventFiles([]);
+    if (serverEventInputRef.current) {
+      serverEventInputRef.current.value = "";
+    }
 
-      // Parse races immediately when files are selected
-      if (files.length > 0 && gameData) {
-        setIsParsingRaces(true);
-        try {
-          const races = await parseResultFiles(files, gameData, "default");
-          setParsedRaces(races);
-        } catch (error) {
-          console.error("Error parsing races:", error);
-        } finally {
-          setIsParsingRaces(false);
-        }
-      } else {
-        setParsedRaces([]);
+    // Parse races immediately when files are selected
+    if (files.length > 0 && gameData) {
+      setIsParsingRaces(true);
+      try {
+        const races = await parseResultFiles(files, gameData, "default");
+        setParsedRaces(races);
+      } catch (error) {
+        console.error("Error parsing races:", error);
+        addLog("error", `$Error parsing races ${error}`);
+      } finally {
+        setIsParsingRaces(false);
       }
+    } else {
+      setParsedRaces([]);
+    }
   };
 
-  const onServerEventFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+  const onServerEventFileSelected = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
     setServerEventFiles(files);
 
@@ -289,7 +287,11 @@ const BuildResultsDatabase = () => {
         try {
           const json: unknown = JSON.parse(await file.text());
           if (!isServerEventFormat(json)) {
-            addLog("warning", `File is not a valid server event format: ${file.name}`, faXmark);
+            addLog(
+              "warning",
+              `File is not a valid server event format: ${file.name}`,
+              faXmark,
+            );
             continue;
           }
           if (!aliasSet) {
@@ -303,7 +305,11 @@ const BuildResultsDatabase = () => {
           }
           all.push(...races);
         } catch {
-          addLog("error", `Failed to parse server event file: ${file.name}`, faXmark);
+          addLog(
+            "error",
+            `Failed to parse server event file: ${file.name}`,
+            faXmark,
+          );
         }
       }
       setParsedRaces(all);
@@ -335,41 +341,43 @@ const BuildResultsDatabase = () => {
     };
   };
 
-  const handleRestoreDatabase = async (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const handleRestoreDatabase = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      try {
-        const content = await file.text();
-        const importedChampionships: ChampionshipEntry[] = JSON.parse(content);
+    try {
+      const content = await file.text();
+      const importedChampionships: ChampionshipEntry[] = JSON.parse(content);
 
-        // Validate structure
-        if (
-          !Array.isArray(importedChampionships) ||
-          importedChampionships.length === 0
-        ) {
-          throw new Error(
-            "Invalid database file: must contain an array of championships",
-          );
-        }
-
-        // Basic validation of first item
-        const first = importedChampionships[0];
-        if (!first.alias || !first.races || typeof first.races !== "number") {
-          throw new Error(
-            "Invalid database format: missing required championship properties",
-          );
-        }
-
-        setPendingRestoreFile(importedChampionships);
-        setShowRestoreModal(true);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        addLog("error", `Error reading database file: ${message}`, faXmark);
-        if (databaseInputRef.current) {
-          databaseInputRef.current.value = "";
-        }
+      // Validate structure
+      if (
+        !Array.isArray(importedChampionships) ||
+        importedChampionships.length === 0
+      ) {
+        throw new Error(
+          "Invalid database file: must contain an array of championships",
+        );
       }
+
+      // Basic validation of first item
+      const first = importedChampionships[0];
+      if (!first.alias || !first.races || typeof first.races !== "number") {
+        throw new Error(
+          "Invalid database format: missing required championship properties",
+        );
+      }
+
+      setPendingRestoreFile(importedChampionships);
+      setShowRestoreModal(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      addLog("error", `Error reading database file: ${message}`, faXmark);
+      if (databaseInputRef.current) {
+        databaseInputRef.current.value = "";
+      }
+    }
   };
 
   const confirmRestoreDatabase = () => {
@@ -663,7 +671,8 @@ const BuildResultsDatabase = () => {
                   onChange={onServerEventFileSelected}
                 />
                 <Form.Text className="text-white-50">
-                  Select one or more RaceRoom dedicated server event files. Imports Race result and Qualify times automatically.
+                  Select one or more RaceRoom dedicated server event files.
+                  Imports Race result and Qualify times automatically.
                 </Form.Text>
               </Form.Group>
               {serverEventFiles.length > 0 && (
@@ -673,10 +682,15 @@ const BuildResultsDatabase = () => {
                   {parsedRaces.length > 0 && (
                     <div className="mt-2">
                       <Badge bg="success" className="me-2">
-                        {parsedRaces.length} race{parsedRaces.length > 1 ? "s" : ""} parsed
+                        {parsedRaces.length} race
+                        {parsedRaces.length > 1 ? "s" : ""} parsed
                       </Badge>
                       {isParsingRaces && (
-                        <Spinner animation="border" size="sm" className="ms-2" />
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="ms-2"
+                        />
                       )}
                     </div>
                   )}
