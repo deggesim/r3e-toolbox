@@ -280,16 +280,6 @@
 .points-edit-actions {
   margin-top: 1.9rem;
 }
-.results-header .form-control {
-  background: var(--bg-dark, #1a1a1a);
-  color: var(--text-light, #e0e0e0);
-  border-color: var(--border-color, #3a3a3a);
-}
-.results-header .form-control:focus {
-  background: var(--bg-dark, #1a1a1a);
-  color: var(--text-light, #e0e0e0);
-}
-
 /* Manage penalties modal — dark theme overrides */
 .penalty-modal {
   background: var(--bg-card);
@@ -307,23 +297,6 @@
   filter: invert(1) grayscale(100%) brightness(200%);
 }
 .penalty-modal .form-label {
-  color: var(--text-light);
-}
-.penalty-modal .form-control,
-.penalty-modal .form-select {
-  background: var(--bg-dark);
-  color: var(--text-light);
-  border-color: var(--border-color);
-}
-.penalty-modal .form-control:focus,
-.penalty-modal .form-select:focus {
-  background: var(--bg-dark);
-  color: var(--text-light);
-  border-color: var(--bg-header);
-  box-shadow: none;
-}
-.penalty-modal .form-select option {
-  background: var(--bg-card);
   color: var(--text-light);
 }
 
