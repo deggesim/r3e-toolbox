@@ -130,8 +130,6 @@ export interface RaceSlot {
   totalLaps?: number;
   /** Time penalty in seconds added to the driver's race time for sorting/positions. */
   timePenaltySeconds?: number;
-  /** Championship points deducted for this driver in this race. */
-  pointsPenalty?: number;
 }
 
 /**
@@ -188,6 +186,8 @@ export interface ChampionshipEntry {
   raceData?: ParsedRace[];
   /** Custom championship points system; when absent the default F1 system is used. */
   pointsSystem?: number[];
+  /** Championship points deducted per driver (driver name → total points penalty). */
+  pointsPenalties?: Record<string, number>;
 }
 
 /**

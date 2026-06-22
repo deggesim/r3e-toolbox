@@ -56,6 +56,7 @@ const generateChampionshipHTML = (
     gameData,
     assetMap,
     championship.pointsSystem,
+    championship.pointsPenalties,
   );
 };
 

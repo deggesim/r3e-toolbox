@@ -84,11 +84,12 @@
   font-weight: bold;
 }
 
-.results-table td.points-cell.penalized {
+/* Championship points penalty badge next to the driver name */
+.points-penalty-badge {
+  margin-left: 6px;
   color: #e74c3c;
-}
-.results-table td.points-cell.penalized::after {
-  content: " *";
+  font-weight: 700;
+  font-size: 0.85em;
 }
 
 .results-table .pos1 {
@@ -246,21 +247,84 @@
   margin-top: 2px;
 }
 
+/* Time penalty badge next to the driver name in race results */
+.result-time-penalty {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
 .result-position {
   font-weight: 700;
   font-size: 0.95em;
   color: #fff;
 }
 
-/* Dark-theme overrides for editor form controls */
-.results-table-wrapper .form-control {
-  background: var(--bg2, #141a33);
-  color: var(--text, #f7f8ff);
-  border-color: var(--border, #1f2747);
+/* Points system summary + inline editor (header) */
+.points-system-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
-.results-table-wrapper .form-control:focus {
-  background: var(--bg2, #141a33);
-  color: var(--text, #f7f8ff);
+.points-system-value {
+  color: #fff;
+  font-weight: 600;
+}
+.points-edit-btn {
+  color: var(--text-light);
+  text-decoration: none;
+}
+.points-edit-btn:hover {
+  color: #fff;
+}
+.points-edit-actions {
+  margin-top: 1.9rem;
+}
+.results-header .form-control {
+  background: var(--bg-dark, #1a1a1a);
+  color: var(--text-light, #e0e0e0);
+  border-color: var(--border-color, #3a3a3a);
+}
+.results-header .form-control:focus {
+  background: var(--bg-dark, #1a1a1a);
+  color: var(--text-light, #e0e0e0);
+}
+
+/* Manage penalties modal — dark theme overrides */
+.penalty-modal {
+  background: var(--bg-card);
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+}
+.penalty-modal .modal-header,
+.penalty-modal .modal-footer {
+  border-color: var(--border-color);
+}
+.penalty-modal .modal-title {
+  color: #fff;
+}
+.penalty-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+.penalty-modal .form-label {
+  color: var(--text-light);
+}
+.penalty-modal .form-control,
+.penalty-modal .form-select {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  border-color: var(--border-color);
+}
+.penalty-modal .form-control:focus,
+.penalty-modal .form-select:focus {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  border-color: var(--bg-header);
+  box-shadow: none;
+}
+.penalty-modal .form-select option {
+  background: var(--bg-card);
+  color: var(--text-light);
 }
 
 /* Mobile responsive styles */

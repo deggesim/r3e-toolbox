@@ -235,15 +235,15 @@ Shows three standings tables:
 - **Team Standings**: Aggregate team performance
 - **Vehicle Standings**: Performance by car class
 
-#### Edit Mode
+#### Editing points and penalties
 
-Click **Edit** on the championship detail page to unlock:
+The championship detail page lets you tune three things:
 
-- **Custom Points System**: Replace the default points with any comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (28-25-22-19-16-13-10-8-6-4-3-2-1) — or type your own. The points system is saved with the championship and applied to every calculation.
-- **Time Penalties** (per driver, per race): Enter a penalty in seconds. Finishing positions are re-sorted after applying the time penalty, so a driver who benefited from it may lose a position.
-- **Points Penalties** (per driver, per race): Enter a penalty in championship points. Points are deducted from the driver's race score before the standing is computed.
+- **Custom Points System**: Next to the **Points system** summary, click the pencil to edit the comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (28-25-22-19-16-13-10-8-6-4-3-2-1) — or type your own. The points system is saved with the championship and applied to every calculation.
+- **Manage points penalties** (per driver, per championship): Pick a driver and enter a points penalty. The points are deducted from the driver's **season total** and shown in red next to the name (e.g., `-5p`); the deduction can change the final ranking.
+- **Manage seconds penalties** (per driver, per race): Pick a race and a driver, then enter a penalty in seconds. The penalty is added to that driver's race time, so finishing positions re-sort and the extra seconds are shown in red in the race results (e.g., `+20s`).
 
-All edits apply consistently to the **on-screen standings tables** and to any **exported HTML** file. Save changes with the **Save** button; discard with **Cancel**.
+All edits apply consistently to the **on-screen standings tables** and to any **exported HTML** file. Each modal saves with **Save** and discards with **Cancel**.
 
 ### Managing Championships
 

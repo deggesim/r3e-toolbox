@@ -141,6 +141,7 @@ const ResultsDatabaseViewer = () => {
         const standings = calculateChampionshipStandings(
           races,
           resolvePointsSystem(championship),
+          championship.pointsPenalties,
         );
         if (standings.length > 0 && standings[0].driver === humanDriverName) {
           championshipsWon += 1;
@@ -223,6 +224,7 @@ const ResultsDatabaseViewer = () => {
       gameData,
       undefined,
       resolvePointsSystem(championship),
+      championship.pointsPenalties,
     );
 
     const saved = await saveTextFile({

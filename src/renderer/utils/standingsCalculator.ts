@@ -9,7 +9,6 @@ import {
   DEFAULT_POINTS_SYSTEM,
   type ParsedRace,
   type RaceDatabase,
-  type RaceSlot,
 } from "../types/raceResults";
 import { getHumanDriverName, getSortedRaceSlots } from "./humanPlayerUtils";
 
@@ -22,9 +21,8 @@ const racePositionOf = (race: ParsedRace, driver: string): number | null => {
     : null;
 };
 
-/** Net points for a slot in a race: position points minus this slot's points penalty. */
-const netRacePoints = (
-  slot: RaceSlot | undefined,
+/** Position points for a race, or null when the driver scored nothing (DNF/out of points). */
+const racePoints = (
   position: number | null,
   pointsSystem: number[],
 ): number | null => {
@@ -32,9 +30,7 @@ const netRacePoints = (
     position !== null && position <= pointsSystem.length
       ? pointsSystem[position - 1]
       : 0;
-  const penalty = slot?.pointsPenalty ?? 0;
-  if (base === 0 && penalty === 0) return null;
-  return base - penalty;
+  return base === 0 ? null : base;
 };
 
 const numericPositions = (raceResults: (number | null)[]): number[] =>
@@ -314,6 +310,8 @@ export interface DriverStanding {
   isHuman: boolean;
   team: string;
   points: number;
+  /** Championship points penalty applied to this driver's total (0 when none). */
+  pointsPenalty: number;
   raceResults: (number | null)[];
   racePoints: (number | null)[];
 }
@@ -321,6 +319,7 @@ export interface DriverStanding {
 export const buildDriverStandings = (
   races: ParsedRace[],
   pointsSystem: number[],
+  pointsPenalties: Record<string, number> = {},
 ): DriverStanding[] => {
   const humanNames = new Set<string>();
   for (const race of races) {
@@ -355,15 +354,16 @@ export const buildDriverStandings = (
 
   races.forEach((race, raceIdx) => {
     info.forEach((data, driver) => {
-      const slot = race.slots.find((s) => s.driver === driver);
       const position = racePositionOf(race, driver);
       data.raceResults[raceIdx] = position;
-      data.racePoints[raceIdx] = netRacePoints(slot, position, pointsSystem);
+      data.racePoints[raceIdx] = racePoints(position, pointsSystem);
     });
   });
 
   const standings: DriverStanding[] = [];
   info.forEach((data, driver) => {
+    const penalty = pointsPenalties[driver] ?? 0;
+    const earned = data.racePoints.reduce<number>((sum, p) => sum + (p || 0), 0);
     standings.push({
       position: 0,
       driver,
@@ -371,7 +371,9 @@ export const buildDriverStandings = (
       vehicleId: data.vehicleId,
       team: data.team,
       isHuman: humanNames.has(driver),
-      points: data.racePoints.reduce<number>((sum, p) => sum + (p || 0), 0),
+      // Championship points penalty is deducted from the season total, not a single race.
+      points: earned - penalty,
+      pointsPenalty: penalty,
       raceResults: data.raceResults,
       racePoints: data.racePoints,
     });
@@ -401,8 +403,9 @@ export const buildDriverStandings = (
 export const calculateChampionshipStandings = (
   races: ParsedRace[],
   pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
+  pointsPenalties: Record<string, number> = {},
 ): ChampionshipStanding[] =>
-  buildDriverStandings(races, pointsSystem).map((s) => ({
+  buildDriverStandings(races, pointsSystem, pointsPenalties).map((s) => ({
     driver: s.driver,
     points: s.points,
     positions: s.raceResults.filter((p): p is number => p !== null),
@@ -433,7 +436,7 @@ export const buildTeamStandings = (
       map.get(team)!.entries.add(slot.driver);
 
       const position = racePositionOf(race, slot.driver);
-      const net = netRacePoints(slot, position, pointsSystem);
+      const net = racePoints(position, pointsSystem);
       if (net !== null) perTeam.set(team, (perTeam.get(team) || 0) + net);
     }
     map.forEach((data, team) => {
@@ -489,7 +492,7 @@ export const buildVehicleStandings = (
       map.get(vehicle)!.entries.add(slot.driver);
 
       const position = racePositionOf(race, slot.driver);
-      const net = netRacePoints(slot, position, pointsSystem);
+      const net = racePoints(position, pointsSystem);
       if (net !== null) perVehicle.set(vehicle, (perVehicle.get(vehicle) || 0) + net);
     }
     map.forEach((data, vehicle) => {

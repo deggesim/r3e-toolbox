@@ -124,6 +124,7 @@ export const generateStandingsHTML = (
   gameData?: RaceRoomData | null,
   assetMap?: Map<string, string>,
   pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
+  pointsPenalties: Record<string, number> = {},
 ): string => {
   // Helper function to get embedded URL or fallback to original
   const getEmbeddedUrl = (url: string): string => {
@@ -146,7 +147,7 @@ export const generateStandingsHTML = (
     return car?.Name || vehicleName || vehicleIdStr;
   };
 
-  const driverStandings = buildDriverStandings(races, pointsSystem);
+  const driverStandings = buildDriverStandings(races, pointsSystem, pointsPenalties);
   const teamStandings = buildTeamStandings(races, pointsSystem);
   const vehicleStandings = buildVehicleStandings(races, pointsSystem);
   const bestLapTimes = getBestLapTimes(races);
@@ -309,6 +310,14 @@ body {
 .driver-name-cell {
   text-align: left !important;
   font-weight: 600;
+}
+
+/* Championship points penalty badge next to the driver name */
+.points-penalty-badge {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 0.85em;
 }
 
 .vehicle-icon {
@@ -476,9 +485,14 @@ body {
               })
               .join("");
 
+            const penaltyBadge =
+              standing.pointsPenalty > 0
+                ? `<span class="points-penalty-badge">-${standing.pointsPenalty}p</span>`
+                : "";
+
             return `<tr class="${standing.isHuman ? "human-driver" : ""}">
               <td>${standing.position}</td>
-              <td class="driver-name-cell">${standing.driver}</td>
+              <td class="driver-name-cell">${standing.driver}${penaltyBadge}</td>
               <td>${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
               <td>${standing.team}</td>
               <td class="points-cell">${standing.points}</td>

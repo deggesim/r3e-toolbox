@@ -1,12 +1,14 @@
 import { Fragment, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Alert, Button, Container, Form } from "react-bootstrap";
+import { Alert, Button, Container, Form, Modal } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons/faPenToSquare";
 import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons/faFloppyDisk";
 import { faRotateLeft } from "@fortawesome/free-solid-svg-icons/faRotateLeft";
+import { faGavel } from "@fortawesome/free-solid-svg-icons/faGavel";
+import { faStopwatch } from "@fortawesome/free-solid-svg-icons/faStopwatch";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
@@ -36,6 +38,13 @@ interface BestTime {
   timeMs: number;
 }
 
+// Chronological order (oldest first); keeps original order when timestrings can't be parsed.
+const byTimestring = (a: ParsedRace, b: ParsedRace): number => {
+  const ta = parseTimestring(a.timestring);
+  const tb = parseTimestring(b.timestring);
+  return !Number.isNaN(ta) && !Number.isNaN(tb) ? ta - tb : 0;
+};
+
 const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
   const parts = timeStr.split(":");
@@ -58,8 +67,8 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
 };
 
 const calculateGapFromWinner = (
-  winner: { totalTime?: string; totalLaps?: number },
-  driver: { totalTime?: string; totalLaps?: number },
+  winner: { totalTime?: string; totalLaps?: number; timePenaltySeconds?: number },
+  driver: { totalTime?: string; totalLaps?: number; timePenaltySeconds?: number },
 ): string => {
   if (!winner?.totalTime || !driver?.totalTime) return "-";
 
@@ -67,8 +76,11 @@ const calculateGapFromWinner = (
   const driverLaps = driver.totalLaps ?? 0;
   const lapDiff = winnerLaps - driverLaps;
 
-  const winnerTime = parseTime(winner.totalTime);
-  const driverTime = parseTime(driver.totalTime);
+  // Effective race time includes any time penalty (in seconds).
+  const winnerTime =
+    parseTime(winner.totalTime) + (winner.timePenaltySeconds ?? 0);
+  const driverTime =
+    parseTime(driver.totalTime) + (driver.timePenaltySeconds ?? 0);
   const timeDiff = driverTime - winnerTime;
 
   if (lapDiff > 0) {
@@ -139,6 +151,23 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
   });
 };
 
+// Parse a penalty input string; empty/zero/invalid clears the penalty (returns undefined).
+const parsePenaltyValue = (value: string): number | undefined => {
+  if (value.trim() === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+};
+
+const parsePointsInput = (input: string): number[] | null => {
+  const parts = input
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return null;
+  const nums = parts.map(Number);
+  return nums.some((n) => !Number.isFinite(n) || n < 0) ? null : nums;
+};
+
 const ResultsDatabaseDetail = () => {
   const electronAPI = useElectronAPI();
   const { isElectron } = electronAPI;
@@ -148,79 +177,45 @@ const ResultsDatabaseDetail = () => {
   const addOrUpdate = useChampionshipStore((state) => state.addOrUpdate);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
 
-  const [isEditing, setIsEditing] = useState(false);
-  // Draft of the chronologically-sorted races + points input string.
-  const [draftRaces, setDraftRaces] = useState<ParsedRace[] | null>(null);
+  // Points-system inline editor (pencil toggle next to the summary).
+  const [editingPoints, setEditingPoints] = useState(false);
   const [pointsInput, setPointsInput] = useState("");
 
-  const parsePointsInput = (input: string): number[] | null => {
-    const parts = input
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (parts.length === 0) return null;
-    const nums = parts.map(Number);
-    return nums.some((n) => !Number.isFinite(n) || n < 0) ? null : nums;
-  };
+  // Penalty modals: "seconds" = per-race time penalty, "points" = season points penalty.
+  const [penaltyModal, setPenaltyModal] = useState<null | "seconds" | "points">(
+    null,
+  );
+  // Seconds (per-race) modal state.
+  const [penRaceIdx, setPenRaceIdx] = useState(0);
+  const [penDriver, setPenDriver] = useState("");
+  const [penTime, setPenTime] = useState("");
+  // Points (championship) modal state.
+  const [penPointsDriver, setPenPointsDriver] = useState("");
+  const [penPointsValue, setPenPointsValue] = useState("");
 
   const championship = championships.find((c) => c.alias === alias);
 
-  const {
-    driverStandings,
-    teamStandings,
-    vehicleStandings,
-    bestLapTimes,
-    bestQualTimes,
-    raceHeaders,
+  // Chronologically-sorted races (single source for every table).
+  const races: ParsedRace[] = championship?.raceData
+    ? [...championship.raceData].sort(byTimestring)
+    : [];
+  const pointsSystem = championship
+    ? resolvePointsSystem(championship)
+    : DEFAULT_POINTS_SYSTEM.default;
+
+  const driverStandings = buildDriverStandings(
     races,
-  } = (() => {
-    if (!championship?.raceData || championship.raceData.length === 0) {
-      return {
-        driverStandings: [],
-        teamStandings: [],
-        vehicleStandings: [],
-        bestLapTimes: [],
-        bestQualTimes: [],
-        raceHeaders: [],
-        races: [] as ParsedRace[],
-      };
-    }
-
-    // Sort races chronologically by timestring (oldest first)
-    const sortedSource = [...championship.raceData].sort((a, b) => {
-      const timeA = parseTimestring(a.timestring);
-      const timeB = parseTimestring(b.timestring);
-
-      if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
-        return timeA - timeB;
-      }
-
-      // Fallback: keep original order if parsing fails
-      return 0;
-    });
-
-    // While editing, use the draft (live preview); otherwise use the sorted source.
-    const races = isEditing && draftRaces ? draftRaces : sortedSource;
-
-    // Resolve the points system from the draft input while editing.
-    const pointsSystem =
-      isEditing && parsePointsInput(pointsInput)
-        ? parsePointsInput(pointsInput)!
-        : resolvePointsSystem(championship);
-
-    return {
-      driverStandings: buildDriverStandings(races, pointsSystem),
-      teamStandings: buildTeamStandings(races, pointsSystem),
-      vehicleStandings: buildVehicleStandings(races, pointsSystem),
-      bestLapTimes: getBestLapTimesPerRace(races),
-      bestQualTimes: getBestQualifyingTimesPerRace(races),
-      raceHeaders: races.map((r) => ({
-        name: r.trackname || "Unknown Track",
-        time: r.timestring || "",
-      })),
-      races,
-    };
-  })();
+    pointsSystem,
+    championship?.pointsPenalties,
+  );
+  const teamStandings = buildTeamStandings(races, pointsSystem);
+  const vehicleStandings = buildVehicleStandings(races, pointsSystem);
+  const bestLapTimes = getBestLapTimesPerRace(races);
+  const bestQualTimes = getBestQualifyingTimesPerRace(races);
+  const raceHeaders = races.map((r) => ({
+    name: r.trackname || "Unknown Track",
+    time: r.timestring || "",
+  }));
 
   const getVehicleIcon = (vehicleId?: number) => {
     if (vehicleId === undefined || !leaderboardAssets) return null;
@@ -256,49 +251,93 @@ const ResultsDatabaseDetail = () => {
     return vehicleName || vehicleIdStr || "";
   };
 
-  const startEditing = () => {
-    if (!championship?.raceData) return;
-    const sorted = [...championship.raceData].sort((a, b) => {
-      const ta = parseTimestring(a.timestring);
-      const tb = parseTimestring(b.timestring);
-      return !Number.isNaN(ta) && !Number.isNaN(tb) ? ta - tb : 0;
-    });
-    setDraftRaces(structuredClone(sorted));
-    setPointsInput(resolvePointsSystem(championship).join(", "));
-    setIsEditing(true);
+  // --- Points-system editor -------------------------------------------------
+
+  const startEditPoints = () => {
+    setPointsInput(pointsSystem.join(", "));
+    setEditingPoints(true);
   };
 
-  const cancelEditing = () => {
-    setIsEditing(false);
-    setDraftRaces(null);
-  };
-
-  const saveEditing = () => {
-    if (!draftRaces || !championship) return;
+  const savePoints = () => {
+    if (!championship) return;
     const parsed = parsePointsInput(pointsInput);
+    if (!parsed) return;
+    addOrUpdate({ ...championship, pointsSystem: parsed });
+    setEditingPoints(false);
+  };
+
+  // --- Seconds penalty modal (per race) ------------------------------------
+
+  const loadSecondsField = (raceIdx: number, driver: string) => {
+    const slot = races[raceIdx]?.slots.find((s) => s.driver === driver);
+    setPenTime(
+      slot?.timePenaltySeconds != null ? String(slot.timePenaltySeconds) : "",
+    );
+  };
+
+  const openSeconds = () => {
+    const firstDriver =
+      getSortedRaceSlots(races[0]?.slots ?? [])[0]?.driver ?? "";
+    setPenRaceIdx(0);
+    setPenDriver(firstDriver);
+    loadSecondsField(0, firstDriver);
+    setPenaltyModal("seconds");
+  };
+
+  const selectPenRace = (idx: number) => {
+    const firstDriver =
+      getSortedRaceSlots(races[idx]?.slots ?? [])[0]?.driver ?? "";
+    setPenRaceIdx(idx);
+    setPenDriver(firstDriver);
+    loadSecondsField(idx, firstDriver);
+  };
+
+  const selectPenDriver = (driver: string) => {
+    setPenDriver(driver);
+    loadSecondsField(penRaceIdx, driver);
+  };
+
+  const saveSeconds = () => {
+    if (!championship?.raceData) return;
+    // Clone, sort identically to the UI, then mutate the selected slot in place.
+    const cloned = structuredClone(championship.raceData);
+    const sorted = [...cloned].sort(byTimestring);
+    const slot = sorted[penRaceIdx]?.slots.find((s) => s.driver === penDriver);
+    if (slot) slot.timePenaltySeconds = parsePenaltyValue(penTime);
+    addOrUpdate({ ...championship, raceData: cloned });
+    setPenaltyModal(null);
+  };
+
+  // --- Points penalty modal (whole championship) ---------------------------
+
+  const loadPointsField = (driver: string) => {
+    const value = championship?.pointsPenalties?.[driver];
+    setPenPointsValue(value != null ? String(value) : "");
+  };
+
+  const openPoints = () => {
+    const firstDriver = driverStandings[0]?.driver ?? "";
+    setPenPointsDriver(firstDriver);
+    loadPointsField(firstDriver);
+    setPenaltyModal("points");
+  };
+
+  const selectPenPointsDriver = (driver: string) => {
+    setPenPointsDriver(driver);
+    loadPointsField(driver);
+  };
+
+  const savePointsPenalty = () => {
+    if (!championship) return;
+    const value = parsePenaltyValue(penPointsValue);
+    const next: Record<string, number> = { ...championship.pointsPenalties };
+    if (value === undefined) delete next[penPointsDriver];
+    else next[penPointsDriver] = value;
     addOrUpdate({
       ...championship,
-      raceData: draftRaces,
-      races: draftRaces.length,
-      pointsSystem: parsed ?? undefined,
+      pointsPenalties: Object.keys(next).length > 0 ? next : undefined,
     });
-    setIsEditing(false);
-    setDraftRaces(null);
-  };
-
-  const updateSlotPenalty = (
-    raceIdx: number,
-    driver: string,
-    field: "timePenaltySeconds" | "pointsPenalty",
-    value: number | undefined,
-  ) => {
-    setDraftRaces((prev) => {
-      if (!prev) return prev;
-      const next = structuredClone(prev);
-      const slot = next[raceIdx].slots.find((s) => s.driver === driver);
-      if (slot) slot[field] = value;
-      return next;
-    });
+    setPenaltyModal(null);
   };
 
   if (!championship) {
@@ -376,6 +415,7 @@ const ResultsDatabaseDetail = () => {
       undefined,
       undefined,
       resolvePointsSystem(championship),
+      championship.pointsPenalties,
     );
     await saveTextFile({
       electronAPI,
@@ -388,6 +428,8 @@ const ResultsDatabaseDetail = () => {
       ],
     });
   };
+
+  const pointsInvalid = parsePointsInput(pointsInput) === null;
 
   return (
     <Container fluid className="py-4">
@@ -417,132 +459,101 @@ const ResultsDatabaseDetail = () => {
         <p className="results-subtitle mb-0">
           Generated from R3E Toolbox • {formattedDate}
         </p>
+
         <div className="mt-3 d-flex flex-wrap gap-2 align-items-center">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
             {getDownloadLabel(isElectron)} as HTML
           </Button>
-          {!isEditing ? (
-            <Button variant="outline-light" size="sm" onClick={startEditing}>
-              <FontAwesomeIcon icon={faPenToSquare} className="me-2" />
-              Edit
-            </Button>
-          ) : (
-            <>
-              <Button variant="success" size="sm" onClick={saveEditing}>
-                <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
-                Save
-              </Button>
+          <Button variant="outline-light" size="sm" onClick={openPoints}>
+            <FontAwesomeIcon icon={faGavel} className="me-2" />
+            Manage points penalties
+          </Button>
+          <Button variant="outline-light" size="sm" onClick={openSeconds}>
+            <FontAwesomeIcon icon={faStopwatch} className="me-2" />
+            Manage seconds penalties
+          </Button>
+        </div>
+
+        {/* Points system summary with pencil-toggle editor */}
+        <div className="points-system mt-3">
+          {!editingPoints ? (
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <span className="points-system-label">Points system:</span>
+              <span className="points-system-value">
+                {pointsSystem.join(", ")}
+              </span>
               <Button
-                variant="outline-secondary"
+                variant="link"
                 size="sm"
-                onClick={cancelEditing}
+                className="points-edit-btn p-0"
+                aria-label="Edit points system"
+                onClick={startEditPoints}
               >
-                <FontAwesomeIcon icon={faRotateLeft} className="me-2" />
-                Cancel
+                <FontAwesomeIcon icon={faPenToSquare} />
               </Button>
-            </>
+            </div>
+          ) : (
+            <div className="d-flex align-items-start gap-2 flex-wrap">
+              <Form.Group
+                controlId="pointsSystemInput"
+                className="flex-fill"
+                style={{ minWidth: 240 }}
+              >
+                <Form.Label className="points-system-label">
+                  Points system
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  value={pointsInput}
+                  isInvalid={pointsInvalid}
+                  onChange={(e) => setPointsInput(e.target.value)}
+                  placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
+                />
+                <div className="mt-2 d-flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline-light"
+                    onClick={() =>
+                      setPointsInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
+                    }
+                  >
+                    F1
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-light"
+                    onClick={() =>
+                      setPointsInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
+                    }
+                  >
+                    DTM
+                  </Button>
+                </div>
+              </Form.Group>
+              <div className="d-flex gap-2 points-edit-actions">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={savePoints}
+                  disabled={pointsInvalid}
+                  aria-label="Save points system"
+                >
+                  <FontAwesomeIcon icon={faFloppyDisk} />
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setEditingPoints(false)}
+                  aria-label="Cancel"
+                >
+                  <FontAwesomeIcon icon={faRotateLeft} />
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Editor panel — shown only when editing */}
-      {isEditing && draftRaces && (
-        <div className="results-table-wrapper p-3">
-          <Form.Group className="mb-3" controlId="pointsSystemInput">
-            <Form.Label className="text-white">
-              Championship points system
-            </Form.Label>
-            <Form.Control
-              type="text"
-              value={pointsInput}
-              isInvalid={parsePointsInput(pointsInput) === null}
-              onChange={(e) => setPointsInput(e.target.value)}
-              placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
-            />
-            <div className="mt-2 d-flex gap-2 flex-wrap">
-              <Button
-                size="sm"
-                variant="outline-light"
-                onClick={() =>
-                  setPointsInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
-                }
-              >
-                F1
-              </Button>
-              <Button
-                size="sm"
-                variant="outline-light"
-                onClick={() =>
-                  setPointsInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
-                }
-              >
-                DTM
-              </Button>
-            </div>
-          </Form.Group>
-
-          {draftRaces.map((race, raceIdx) => (
-            <div key={`edit-race-${raceIdx}`} className="mb-3">
-              <h6 className="text-white">{race.trackname}</h6>
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th>Driver</th>
-                    <th>Time penalty (s)</th>
-                    <th>Points penalty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getSortedRaceSlots(race.slots).map((slot) => (
-                    <tr key={`edit-${raceIdx}-${slot.driver}`}>
-                      <td className="driver-name-cell">{slot.driver}</td>
-                      <td>
-                        <Form.Control
-                          type="number"
-                          min={0}
-                          size="sm"
-                          value={slot.timePenaltySeconds ?? ""}
-                          onChange={(e) =>
-                            updateSlotPenalty(
-                              raceIdx,
-                              slot.driver,
-                              "timePenaltySeconds",
-                              e.target.value === "" ||
-                                !Number.isFinite(Number(e.target.value))
-                                ? undefined
-                                : Math.max(0, Number(e.target.value)),
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <Form.Control
-                          type="number"
-                          min={0}
-                          size="sm"
-                          value={slot.pointsPenalty ?? ""}
-                          onChange={(e) =>
-                            updateSlotPenalty(
-                              raceIdx,
-                              slot.driver,
-                              "pointsPenalty",
-                              e.target.value === "" ||
-                                !Number.isFinite(Number(e.target.value))
-                                ? undefined
-                                : Math.max(0, Number(e.target.value)),
-                            )
-                          }
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Driver Standings */}
       <div className="results-table-wrapper">
@@ -594,7 +605,14 @@ const ResultsDatabaseDetail = () => {
                   className={standing.isHuman ? "human-driver" : ""}
                 >
                   <td>{standing.position}</td>
-                  <td className="driver-name-cell">{standing.driver}</td>
+                  <td className="driver-name-cell">
+                    {standing.driver}
+                    {standing.pointsPenalty > 0 && (
+                      <span className="points-penalty-badge">
+                        -{standing.pointsPenalty}p
+                      </span>
+                    )}
+                  </td>
                   <td>
                     {vehicleIcon && (
                       <img
@@ -610,26 +628,13 @@ const ResultsDatabaseDetail = () => {
                   {raceHeaders.map((_, idx) => {
                     const pts = standing.racePoints[idx];
                     const result = standing.raceResults[idx];
-                    const penalty =
-                      races[idx]?.slots?.find(
-                        (s) => s.driver === standing.driver,
-                      )?.pointsPenalty ?? 0;
                     const posClass =
                       result !== null && result <= 3
                         ? getPositionClass(result)
                         : "";
                     return (
                       <Fragment key={`race-${standing.driver}-${idx}`}>
-                        <td
-                          className={`points-cell${penalty > 0 ? " penalized" : ""}`}
-                          title={
-                            penalty > 0
-                              ? `Points penalty: -${penalty}`
-                              : undefined
-                          }
-                        >
-                          {pts ?? "-"}
-                        </td>
+                        <td className="points-cell">{pts ?? "-"}</td>
                         <td className={posClass}>{result ?? "-"}</td>
                       </Fragment>
                     );
@@ -762,15 +767,14 @@ const ResultsDatabaseDetail = () => {
             {Array.from(
               {
                 length: Math.max(
-                  ...(championship.raceData?.map(
-                    (race) => race.slots.length,
-                  ) || [0]),
+                  ...races.map((race) => race.slots.length),
+                  0,
                 ),
               },
               (_, posIdx) => (
                 <tr key={`race-result-pos-${posIdx}`}>
                   <td>{posIdx + 1}</td>
-                  {championship.raceData?.map((race, raceIdx) => {
+                  {races.map((race, raceIdx) => {
                     const sortedSlots = getSortedRaceSlots(race.slots);
                     const slot = sortedSlots[posIdx];
                     if (!slot?.totalTime) {
@@ -780,7 +784,9 @@ const ResultsDatabaseDetail = () => {
                     }
 
                     const winner = sortedSlots[0];
-                    const totalTimeSeconds = parseTime(slot.totalTime);
+                    const penaltySeconds = slot.timePenaltySeconds ?? 0;
+                    const totalTimeSeconds =
+                      parseTime(slot.totalTime) + penaltySeconds;
                     const formattedTime =
                       posIdx === 0
                         ? Number.isFinite(totalTimeSeconds)
@@ -805,7 +811,14 @@ const ResultsDatabaseDetail = () => {
                         <div
                           className={`race-result-entry${isHuman ? " human-driver" : ""}`}
                         >
-                          <div className="result-driver">{slot.driver}</div>
+                          <div className="result-driver">
+                            {slot.driver}
+                            {penaltySeconds > 0 && (
+                              <span className="result-time-penalty">
+                                +{penaltySeconds}s
+                              </span>
+                            )}
+                          </div>
                           <div className="result-vehicle">
                             {vehicleIcon && (
                               <img
@@ -997,6 +1010,120 @@ const ResultsDatabaseDetail = () => {
           </table>
         </div>
       )}
+
+      {/* Manage points penalties modal (whole championship) */}
+      <Modal
+        show={penaltyModal === "points"}
+        onHide={() => setPenaltyModal(null)}
+        centered
+        contentClassName="penalty-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Manage points penalties</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3" controlId="pointsPenaltyDriver">
+            <Form.Label>Driver</Form.Label>
+            <Form.Select
+              value={penPointsDriver}
+              onChange={(e) => selectPenPointsDriver(e.target.value)}
+            >
+              {driverStandings.map((standing) => (
+                <option
+                  key={`pp-driver-${standing.driver}`}
+                  value={standing.driver}
+                >
+                  {standing.driver}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group controlId="pointsPenaltyValue">
+            <Form.Label>Points penalty</Form.Label>
+            <Form.Control
+              type="number"
+              min={0}
+              value={penPointsValue}
+              onChange={(e) => setPenPointsValue(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setPenaltyModal(null)}>
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            onClick={savePointsPenalty}
+            disabled={!penPointsDriver}
+          >
+            <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+            Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Manage seconds penalties modal (per race) */}
+      <Modal
+        show={penaltyModal === "seconds"}
+        onHide={() => setPenaltyModal(null)}
+        centered
+        contentClassName="penalty-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Manage seconds penalties</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group className="mb-3" controlId="penaltyRace">
+            <Form.Label>Race</Form.Label>
+            <Form.Select
+              value={penRaceIdx}
+              onChange={(e) => selectPenRace(Number(e.target.value))}
+            >
+              {races.map((race, idx) => (
+                <option key={`pen-race-${idx}`} value={idx}>
+                  {race.trackname || "Unknown Track"}
+                  {race.timestring ? ` — ${race.timestring}` : ""}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="penaltyDriver">
+            <Form.Label>Driver</Form.Label>
+            <Form.Select
+              value={penDriver}
+              onChange={(e) => selectPenDriver(e.target.value)}
+            >
+              {getSortedRaceSlots(races[penRaceIdx]?.slots ?? []).map((slot) => (
+                <option key={`pen-driver-${slot.driver}`} value={slot.driver}>
+                  {slot.driver}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group controlId="penaltyTime">
+            <Form.Label>Time penalty (s)</Form.Label>
+            <Form.Control
+              type="number"
+              min={0}
+              value={penTime}
+              onChange={(e) => setPenTime(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setPenaltyModal(null)}>
+            Cancel
+          </Button>
+          <Button variant="success" onClick={saveSeconds} disabled={!penDriver}>
+            <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+            Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
