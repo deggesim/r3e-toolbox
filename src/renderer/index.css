@@ -163,6 +163,41 @@ a {
   color: #AB1818;
 }
 
+/* Dark inputs globally — dark bg, light text, light select arrow */
+.form-control,
+.form-select {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  border-color: var(--border-color);
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  border-color: var(--bg-header);
+  box-shadow: none;
+}
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+.form-control:disabled,
+.form-select:disabled {
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+}
+.form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e0e0e0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.form-select option {
+  background-color: var(--bg-card);
+  color: var(--text-light);
+}
+/* Lighten native date/number picker indicators on dark bg */
+.form-control::-webkit-calendar-picker-indicator,
+.form-control::-webkit-inner-spin-button {
+  filter: invert(1) brightness(1.4);
+}
+
 #root {
   background-color: #212529;
 }
