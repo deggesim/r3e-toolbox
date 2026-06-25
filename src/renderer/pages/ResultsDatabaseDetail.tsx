@@ -9,6 +9,7 @@ import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons/faFloppyDisk";
 import { faRotateLeft } from "@fortawesome/free-solid-svg-icons/faRotateLeft";
 import { faGavel } from "@fortawesome/free-solid-svg-icons/faGavel";
 import { faStopwatch } from "@fortawesome/free-solid-svg-icons/faStopwatch";
+import { faEraser } from "@fortawesome/free-solid-svg-icons/faEraser";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
@@ -192,6 +193,8 @@ const ResultsDatabaseDetail = () => {
   // Points (championship) modal state.
   const [penPointsDriver, setPenPointsDriver] = useState("");
   const [penPointsValue, setPenPointsValue] = useState("");
+  // Confirmation modal for clearing every penalty (points + seconds).
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const championship = championships.find((c) => c.alias === alias);
 
@@ -340,6 +343,22 @@ const ResultsDatabaseDetail = () => {
     setPenaltyModal(null);
   };
 
+  // --- Reset all penalties (points + seconds) ------------------------------
+
+  const hasAnyPenalty =
+    Object.keys(championship?.pointsPenalties ?? {}).length > 0 ||
+    races.some((r) => r.slots.some((s) => s.timePenaltySeconds != null));
+
+  const resetAllPenalties = () => {
+    if (!championship) return;
+    const cloned = structuredClone(championship.raceData ?? []);
+    cloned.forEach((race) =>
+      race.slots.forEach((slot) => delete slot.timePenaltySeconds),
+    );
+    addOrUpdate({ ...championship, raceData: cloned, pointsPenalties: undefined });
+    setShowResetConfirm(false);
+  };
+
   if (!championship) {
     return (
       <Container fluid className="py-4">
@@ -472,6 +491,15 @@ const ResultsDatabaseDetail = () => {
           <Button variant="outline-light" size="sm" onClick={openSeconds}>
             <FontAwesomeIcon icon={faStopwatch} className="me-2" />
             Manage seconds penalties
+          </Button>
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={() => setShowResetConfirm(true)}
+            disabled={!hasAnyPenalty}
+          >
+            <FontAwesomeIcon icon={faEraser} className="me-2" />
+            Reset all penalties
           </Button>
         </div>
 
@@ -1121,6 +1149,37 @@ const ResultsDatabaseDetail = () => {
           <Button variant="success" onClick={saveSeconds} disabled={!penDriver}>
             <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
             Save
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Reset all penalties confirmation modal */}
+      <Modal
+        show={showResetConfirm}
+        onHide={() => setShowResetConfirm(false)}
+        centered
+        contentClassName="penalty-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Reset all penalties</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            This clears <strong>all</strong> penalties for this championship —
+            both championship points penalties and per-race time penalties.
+          </p>
+          <p className="mb-0">This action cannot be undone. Continue?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowResetConfirm(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={resetAllPenalties}>
+            <FontAwesomeIcon icon={faEraser} className="me-2" />
+            Reset all penalties
           </Button>
         </Modal.Footer>
       </Modal>
