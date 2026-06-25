@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/deggesim/r3e-toolbox/compare/v1.7.0...v1.8.0) (2026-06-25)
+
+
+### Features
+
+* **results:** batch import, custom points & penalties for Results Database ([#24](https://github.com/deggesim/r3e-toolbox/issues/24)) ([a231adb](https://github.com/deggesim/r3e-toolbox/commit/a231adb346715fc829ba87c55277ede5431799fd))
+
 # [1.7.0](https://github.com/deggesim/r3e-toolbox/compare/v1.6.4...v1.7.0) (2026-05-25)
 
 
