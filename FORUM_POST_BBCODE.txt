@@ -41,7 +41,7 @@ RaceRoom sometimes saves race results with missing qualification times. This too
 Inspired by [url=https://github.com/pixeljetstream/r3e-open-championship]pixeljetstream's r3e-open-championship[/url], this feature:
 
 • Analyzes multiple race result files from a folder
-• Supports both standard race result files and dedicated server event files (JSON exported by RaceRoom servers)
+• Supports both standard race result files and dedicated server event files (JSON exported by RaceRoom servers) — import several at once in a single pick
 • Calculates championship standings with points, wins, podiums
 • Generates beautiful HTML reports with official RaceRoom car and track icons
 • Caches assets for offline use
@@ -52,6 +52,7 @@ Inspired by [url=https://github.com/pixeljetstream/r3e-open-championship]pixelje
 • Browse all your saved championships
 • Search and filter by car, track, or championship name
 • View detailed driver, team, and vehicle standings
+• Set a custom points system (F1/DTM presets) and apply time or points penalties per driver
 • Export HTML reports or JSON data
 
 [b]5. Settings & Configuration ⚙️[/b]
@@ -114,8 +115,9 @@ If this tool saves you time and enhances your RaceRoom experience, consider supp
 
 [b][size=4]Version History[/size][/b]
 
-Currently at [b]v1.7.0[/b]. Key milestones since the initial release:
+Currently at [b]v1.8.0[/b]. Key milestones since the initial release:
 
+[b]v1.8.0[/b] — Results Database: import several dedicated-server event files at once, set a custom championship points system (F1/DTM presets), and apply time or points penalties per driver
 [b]v1.7.0[/b] — Server event file import in Results Database (supports JSON files exported by RaceRoom dedicated servers)
 [b]v1.6.2[/b] — Internal migration to electron-vite with full TypeScript and shared IPC contracts for improved stability
 [b]v1.6.1[/b] — Built-in user guide (Help section integrated directly in the app)

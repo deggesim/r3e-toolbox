@@ -76,6 +76,13 @@ aiadaptation.xml → xmlParser.ts → Database → databaseProcessor.ts → gene
 - AI times must decrease monotonically with skill level. `databaseProcessor.ts` rejects non-monotonic fits and deviations >10%.
 - `numberOfSampledRaces = 0` marks synthetically fitted entries; `> 0` marks real race data.
 
+### Results Database Standings
+
+[src/renderer/utils/standingsCalculator.ts](src/renderer/utils/standingsCalculator.ts) is the **single source of truth** for penalty-aware standings — its `buildDriverStandings` / `buildTeamStandings` / `buildVehicleStandings` (and `calculateChampionshipStandings` for the "Championships Won" stat) are consumed by both the detail page **and** the HTML generator. Don't recompute standings elsewhere.
+
+- **Single sort chokepoint**: all finishing positions flow through `getSortedRaceSlots()` ([src/renderer/utils/humanPlayerUtils.ts](src/renderer/utils/humanPlayerUtils.ts)), which applies `RaceSlot.timePenaltySeconds`. Never sort race slots ad hoc — add penalty there so positions/points stay consistent.
+- **Optional penalty model fields**: `ChampionshipEntry.pointsSystem`, `RaceSlot.timePenaltySeconds`, `RaceSlot.pointsPenalty` are all optional — old persisted/backup championships must still load. Points penalties deduct from the season total (not per-race).
+
 ### Configuration
 
 All fitting parameters in [src/renderer/config.ts](src/renderer/config.ts) — modify without restarting dev server. User-overridable at runtime via the Settings page (stored in `configStore`).
