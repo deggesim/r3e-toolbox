@@ -84,6 +84,14 @@
   font-weight: bold;
 }
 
+/* Championship points penalty badge next to the driver name */
+.points-penalty-badge {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
 .results-table .pos1 {
   background-color: #d4af37 !important;
   color: #000 !important;
@@ -239,10 +247,57 @@
   margin-top: 2px;
 }
 
+/* Time penalty badge next to the driver name in race results */
+.result-time-penalty {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
 .result-position {
   font-weight: 700;
   font-size: 0.95em;
   color: #fff;
+}
+
+/* Points system summary + inline editor (header) */
+.points-system-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.points-system-value {
+  color: #fff;
+  font-weight: 600;
+}
+.points-edit-btn {
+  color: var(--text-light);
+  text-decoration: none;
+}
+.points-edit-btn:hover {
+  color: #fff;
+}
+.points-edit-actions {
+  margin-top: 1.9rem;
+}
+/* Manage penalties modal — dark theme overrides */
+.penalty-modal {
+  background: var(--bg-card);
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+}
+.penalty-modal .modal-header,
+.penalty-modal .modal-footer {
+  border-color: var(--border-color);
+}
+.penalty-modal .modal-title {
+  color: #fff;
+}
+.penalty-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+.penalty-modal .form-label {
+  color: var(--text-light);
 }
 
 /* Mobile responsive styles */

@@ -11,35 +11,13 @@ import type {
   ParsedRace,
   RaceSlot,
 } from "../types/raceResults";
-
-interface DriverStanding {
-  position: number;
-  driver: string;
-  vehicle: string;
-  vehicleId?: number;
-  isHuman: boolean;
-  team: string;
-  points: number;
-  raceResults: (number | null)[];
-  racePoints: (number | null)[];
-}
-
-interface TeamStanding {
-  position: number;
-  team: string;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
-
-interface VehicleStanding {
-  position: number;
-  vehicle: string;
-  vehicleId?: number;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
+import { DEFAULT_POINTS_SYSTEM } from "../types/raceResults";
+import {
+  buildDriverStandings,
+  buildTeamStandings,
+  buildVehicleStandings,
+} from "./standingsCalculator";
+import { getSortedRaceSlots } from "./humanPlayerUtils";
 
 interface BestTime {
   driver: string;
@@ -49,8 +27,6 @@ interface BestTime {
   time: string;
   timeMs: number;
 }
-
-const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
@@ -93,225 +69,6 @@ const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
     const sign = timeDiff >= 0 ? "+" : "-";
     return `${sign}${Math.abs(timeDiff).toFixed(3)}`;
   }
-};
-
-const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
-  const driverMap = new Map<
-    string,
-    {
-      vehicle: string;
-      vehicleId?: number;
-      isHuman: boolean;
-      team: string;
-      raceResults: (number | null)[];
-      racePoints: (number | null)[];
-    }
-  >();
-
-  for (const race of races) {
-    for (const slot of race.slots) {
-      if (driverMap.has(slot.driver)) {
-        const entry = driverMap.get(slot.driver)!;
-        if (
-          !entry.isHuman &&
-          typeof slot.userId === "number" &&
-          slot.userId > 0
-        ) {
-          entry.isHuman = true;
-        }
-      } else {
-        driverMap.set(slot.driver, {
-          vehicle: slot.vehicle,
-          vehicleId: slot.vehicleId,
-          isHuman: !!(typeof slot.userId === "number" && slot.userId > 0),
-          team: slot.team,
-          raceResults: [],
-          racePoints: [],
-        });
-      }
-    }
-  }
-
-  races.forEach((race, raceIdx) => {
-    // Sort once per race and reuse across all drivers
-    const sortedSlots = [...race.slots].sort((a, b) => {
-      const aFinished = a.finishStatus === "Finished" || !!a.totalTime;
-      const bFinished = b.finishStatus === "Finished" || !!b.totalTime;
-      if (aFinished !== bFinished) return bFinished ? 1 : -1;
-      return parseTime(a.totalTime) - parseTime(b.totalTime);
-    });
-
-    driverMap.forEach((data, driver) => {
-      const index = sortedSlots.findIndex((s) => s.driver === driver);
-      const position =
-        index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
-      data.raceResults[raceIdx] = position;
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        data.racePoints[raceIdx] = DEFAULT_POINTS_SYSTEM[position - 1];
-      } else {
-        data.racePoints[raceIdx] = null;
-      }
-    });
-  });
-
-  const standings: DriverStanding[] = [];
-  driverMap.forEach((data, driver) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      driver,
-      vehicle: data.vehicle,
-      vehicleId: data.vehicleId,
-      team: data.team,
-      points,
-      raceResults: data.raceResults,
-      racePoints: data.racePoints,
-      isHuman: data.isHuman,
-    });
-  });
-
-  // Sort by points (descending), then by countback (best finishing positions)
-  standings.sort((a, b) => {
-    // Primary: sort by total points
-    if (b.points !== a.points) return b.points - a.points;
-
-    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-    for (
-      let position = 1;
-      position <= DEFAULT_POINTS_SYSTEM.length;
-      position++
-    ) {
-      const aCount = a.raceResults.filter((pos) => pos === position).length;
-      const bCount = b.raceResults.filter((pos) => pos === position).length;
-      if (bCount !== aCount) return bCount - aCount;
-    }
-
-    return 0;
-  });
-
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateTeamStandings = (races: ParsedRace[]): TeamStanding[] => {
-  const teamMap = new Map<
-    string,
-    { entries: Set<string>; racePoints: (number | null)[] }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    race.slots.forEach((slot) => {
-      if (!teamMap.has(slot.team)) {
-        teamMap.set(slot.team, {
-          entries: new Set(),
-          racePoints: new Array(races.length).fill(null),
-        });
-      }
-      teamMap.get(slot.team)!.entries.add(slot.driver);
-    });
-
-    const sortedSlots = [...race.slots].sort((a, b) => {
-      const aTime = parseTime(a.totalTime);
-      const bTime = parseTime(b.totalTime);
-      return aTime - bTime;
-    });
-
-    const teamRacePoints = new Map<string, number>();
-    sortedSlots.forEach((slot, idx) => {
-      if (idx < DEFAULT_POINTS_SYSTEM.length && slot.totalTime) {
-        const pts = teamRacePoints.get(slot.team) || 0;
-        teamRacePoints.set(slot.team, pts + DEFAULT_POINTS_SYSTEM[idx]);
-      }
-    });
-
-    teamRacePoints.forEach((pts, team) => {
-      teamMap.get(team)!.racePoints[raceIdx] = pts;
-    });
-  });
-
-  const standings: TeamStanding[] = [];
-  teamMap.forEach((data, team) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      team,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateVehicleStandings = (races: ParsedRace[]): VehicleStanding[] => {
-  const vehicleMap = new Map<
-    string,
-    { vehicleId?: number; entries: Set<string>; racePoints: (number | null)[] }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    race.slots.forEach((slot) => {
-      if (!vehicleMap.has(slot.vehicle)) {
-        vehicleMap.set(slot.vehicle, {
-          vehicleId: slot.vehicleId,
-          entries: new Set(),
-          racePoints: new Array(races.length).fill(null),
-        });
-      }
-      vehicleMap.get(slot.vehicle)!.entries.add(slot.driver);
-    });
-
-    const sortedSlots = [...race.slots].sort((a, b) => {
-      const aTime = parseTime(a.totalTime);
-      const bTime = parseTime(b.totalTime);
-      return aTime - bTime;
-    });
-
-    const vehicleRacePoints = new Map<string, number>();
-    sortedSlots.forEach((slot, idx) => {
-      if (idx < DEFAULT_POINTS_SYSTEM.length && slot.totalTime) {
-        const pts = vehicleRacePoints.get(slot.vehicle) || 0;
-        vehicleRacePoints.set(slot.vehicle, pts + DEFAULT_POINTS_SYSTEM[idx]);
-      }
-    });
-
-    vehicleRacePoints.forEach((pts, vehicle) => {
-      vehicleMap.get(vehicle)!.racePoints[raceIdx] = pts;
-    });
-  });
-
-  const standings: VehicleStanding[] = [];
-  vehicleMap.forEach((data, vehicle) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      vehicle,
-      vehicleId: data.vehicleId,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
 };
 
 const getBestLapTimes = (
@@ -366,6 +123,8 @@ export const generateStandingsHTML = (
   },
   gameData?: RaceRoomData | null,
   assetMap?: Map<string, string>,
+  pointsSystem: number[] = DEFAULT_POINTS_SYSTEM.default,
+  pointsPenalties: Record<string, number> = {},
 ): string => {
   // Helper function to get embedded URL or fallback to original
   const getEmbeddedUrl = (url: string): string => {
@@ -388,9 +147,9 @@ export const generateStandingsHTML = (
     return car?.Name || vehicleName || vehicleIdStr;
   };
 
-  const driverStandings = calculateDriverStandings(races);
-  const teamStandings = calculateTeamStandings(races);
-  const vehicleStandings = calculateVehicleStandings(races);
+  const driverStandings = buildDriverStandings(races, pointsSystem, pointsPenalties);
+  const teamStandings = buildTeamStandings(races, pointsSystem);
+  const vehicleStandings = buildVehicleStandings(races, pointsSystem);
   const bestLapTimes = getBestLapTimes(races);
   const bestQualTimes = getBestQualifyingTimes(races);
 
@@ -551,6 +310,14 @@ body {
 .driver-name-cell {
   text-align: left !important;
   font-weight: 600;
+}
+
+/* Championship points penalty badge next to the driver name */
+.points-penalty-badge {
+  margin-left: 6px;
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 0.85em;
 }
 
 .vehicle-icon {
@@ -718,9 +485,14 @@ body {
               })
               .join("");
 
+            const penaltyBadge =
+              standing.pointsPenalty > 0
+                ? `<span class="points-penalty-badge">-${standing.pointsPenalty}p</span>`
+                : "";
+
             return `<tr class="${standing.isHuman ? "human-driver" : ""}">
               <td>${standing.position}</td>
-              <td class="driver-name-cell">${standing.driver}</td>
+              <td class="driver-name-cell">${standing.driver}${penaltyBadge}</td>
               <td>${vehicleIcon ? `<img src="${getEmbeddedUrl(vehicleIcon)}" class="vehicle-icon" alt="${displayVehicleName}" />` : ""}${displayVehicleName}</td>
               <td>${standing.team}</td>
               <td class="points-cell">${standing.points}</td>
@@ -936,15 +708,8 @@ body {
     </div>`
     : "";
 
-  // Pre-sort race slots once per race for the results table
-  const sortedRaceSlots = races.map((race) =>
-    [...race.slots].sort((a, b) => {
-      const aFinished = a.finishStatus === "Finished" || !!a.totalTime;
-      const bFinished = b.finishStatus === "Finished" || !!b.totalTime;
-      if (aFinished !== bFinished) return bFinished ? 1 : -1;
-      return parseTime(a.totalTime) - parseTime(b.totalTime);
-    }),
-  );
+  // Pre-sort race slots once per race for the results table (penalty-aware).
+  const sortedRaceSlots = races.map((race) => getSortedRaceSlots(race.slots));
 
   const raceResultsTable = maxRaceRows
     ? `

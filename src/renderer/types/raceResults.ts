@@ -128,6 +128,8 @@ export interface RaceSlot {
   finishStatus?: string;
   /** Number of completed laps. */
   totalLaps?: number;
+  /** Time penalty in seconds added to the driver's race time for sorting/positions. */
+  timePenaltySeconds?: number;
 }
 
 /**
@@ -182,6 +184,10 @@ export interface ChampionshipEntry {
   carIcon?: string;
   /** Full race data for later viewing (optional) */
   raceData?: ParsedRace[];
+  /** Custom championship points system; when absent the default F1 system is used. */
+  pointsSystem?: number[];
+  /** Championship points deducted per driver (driver name → total points penalty). */
+  pointsPenalties?: Record<string, number>;
 }
 
 /**
@@ -194,6 +200,15 @@ export const DEFAULT_POINTS_SYSTEM: Record<string, number[]> = {
   /** DTM 2023 points system */
   dtm2023: [28, 25, 22, 19, 16, 13, 10, 8, 6, 4, 3, 2, 1],
 };
+
+/**
+ * Resolves the active points array for a championship,
+ * falling back to the default F1 system when none is configured.
+ */
+export const resolvePointsSystem = (champ: ChampionshipEntry): number[] =>
+  champ.pointsSystem && champ.pointsSystem.length > 0
+    ? champ.pointsSystem
+    : DEFAULT_POINTS_SYSTEM.default;
 
 // ============================================================================
 // Server Event Format Types (RaceRoom dedicated server multi-player session)

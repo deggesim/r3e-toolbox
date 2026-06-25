@@ -39,6 +39,7 @@ import { useGameDataStore } from "../store/gameDataStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useProcessingLogStore } from "../store/processingLogStore";
 import type { ChampionshipEntry } from "../types/raceResults";
+import { resolvePointsSystem } from "../types/raceResults";
 import { convertAssetsForHTML } from "../utils/assetConverter";
 import {
   generateChampionshipIndexHTML,
@@ -137,7 +138,11 @@ const ResultsDatabaseViewer = () => {
 
       // Determine championship winner using utility function
       if (humanDriverName && races.length > 0) {
-        const standings = calculateChampionshipStandings(races);
+        const standings = calculateChampionshipStandings(
+          races,
+          resolvePointsSystem(championship),
+          championship.pointsPenalties,
+        );
         if (standings.length > 0 && standings[0].driver === humanDriverName) {
           championshipsWon += 1;
         }
@@ -217,6 +222,9 @@ const ResultsDatabaseViewer = () => {
       championship.alias,
       assetsForHTML,
       gameData,
+      undefined,
+      resolvePointsSystem(championship),
+      championship.pointsPenalties,
     );
 
     const saved = await saveTextFile({

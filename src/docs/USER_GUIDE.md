@@ -177,6 +177,14 @@ Generate professional championship standings with car and track icons from offic
 - Warnings appear for unrecognized tracks or vehicle classes
 - **Important**: If you select a championship alias that already exists, the new races will be **added to the existing championship** (merged, not replaced)
 
+#### Importing Dedicated-Server Event Files
+
+You can also import **dedicated-server event files** directly instead of a folder of `.txt` files:
+
+- The file picker accepts **multiple files at once** — select all event files for the championship in a single pick
+- Each selected file is parsed and added as a separate race
+- Combine with the folder workflow: existing races are merged, not replaced
+
 #### Step 3: Enter Championship Name
 
 - Give your championship a memorable alias (e.g., "DTM 2026 Season")
@@ -191,11 +199,11 @@ Generate professional championship standings with car and track icons from offic
 
 ### Understanding the Standings
 
-- **Points System**: Standard motorsport points (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
+- **Points System**: Standard motorsport points (25, 18, 15, 12, 10, 8, 6, 4, 2, 1) — customisable per championship (see below)
 - **Races**: Total number of races competed
 - **Wins**: Number of race victories
 - **Podiums**: Number of top-3 finishes
-- **Points**: Total championship points
+- **Points**: Total championship points (after any points penalties)
 
 ### Tips
 
@@ -227,9 +235,19 @@ Shows three standings tables:
 - **Team Standings**: Aggregate team performance
 - **Vehicle Standings**: Performance by car class
 
+#### Editing points and penalties
+
+The championship detail page lets you tune three things:
+
+- **Custom Points System**: Next to the **Points system** summary, click the pencil to edit the comma-separated list (e.g., `10,8,6,5,4,3,2,1`). Two presets are available — **F1** (25-18-15-12-10-8-6-4-2-1) and **DTM** (28-25-22-19-16-13-10-8-6-4-3-2-1) — or type your own. The points system is saved with the championship and applied to every calculation.
+- **Manage points penalties** (per driver, per championship): Pick a driver and enter a points penalty. The points are deducted from the driver's **season total** and shown in red next to the name (e.g., `-5p`); the deduction can change the final ranking.
+- **Manage seconds penalties** (per driver, per race): Pick a race and a driver, then enter a penalty in seconds. The penalty is added to that driver's race time, so finishing positions re-sort and the extra seconds are shown in red in the race results (e.g., `+20s`).
+
+All edits apply consistently to the **on-screen standings tables** and to any **exported HTML** file. Each modal saves with **Save** and discards with **Cancel**.
+
 ### Managing Championships
 
-- All championships are stored locally
+- All championships are stored locally, including any custom points system and penalties you have set
 - Use "Clear cache" in Settings to remove stored data
 - Each championship can be re-exported or deleted individually
 

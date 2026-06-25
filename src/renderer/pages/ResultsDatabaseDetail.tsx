@@ -1,51 +1,34 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Alert, Button, Container } from "react-bootstrap";
+import { Alert, Button, Container, Form, Modal } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons/faArrowLeft";
+import { faPenToSquare } from "@fortawesome/free-solid-svg-icons/faPenToSquare";
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons/faFloppyDisk";
+import { faRotateLeft } from "@fortawesome/free-solid-svg-icons/faRotateLeft";
+import { faGavel } from "@fortawesome/free-solid-svg-icons/faGavel";
+import { faStopwatch } from "@fortawesome/free-solid-svg-icons/faStopwatch";
+import { faEraser } from "@fortawesome/free-solid-svg-icons/faEraser";
 import { useChampionshipStore } from "../store/championshipStore";
 import { useLeaderboardAssetsStore } from "../store/leaderboardAssetsStore";
 import { useElectronAPI } from "../hooks/useElectronAPI";
 import { getDownloadLabel } from "../utils/platformLabels";
 import { makeTime, parseTimestring } from "../utils/timeUtils";
-import {
-  getHumanDriverName,
-  getSortedRaceSlots,
-} from "../utils/humanPlayerUtils";
+import { getSortedRaceSlots } from "../utils/humanPlayerUtils";
 import { generateStandingsHTML } from "../utils/htmlGenerator";
 import { saveTextFile } from "../utils/fileSaver";
 import "./ResultsDatabaseDetail.css";
-import type { ParsedRace, RaceSlot } from "../types/raceResults";
-
-interface DriverStanding {
-  position: number;
-  driver: string;
-  vehicle: string;
-  vehicleId?: number;
-  isHuman: boolean;
-  team: string;
-  points: number;
-  raceResults: (number | null)[];
-  racePoints: (number | null)[];
-}
-
-interface TeamStanding {
-  position: number;
-  team: string;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
-
-interface VehicleStanding {
-  position: number;
-  vehicle: string;
-  vehicleId?: number;
-  entries: number;
-  points: number;
-  racePoints: (number | null)[];
-}
+import type { ParsedRace } from "../types/raceResults";
+import {
+  DEFAULT_POINTS_SYSTEM,
+  resolvePointsSystem,
+} from "../types/raceResults";
+import {
+  buildDriverStandings,
+  buildTeamStandings,
+  buildVehicleStandings,
+} from "../utils/standingsCalculator";
 
 interface BestTime {
   driver: string;
@@ -56,7 +39,12 @@ interface BestTime {
   timeMs: number;
 }
 
-const DEFAULT_POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+// Chronological order (oldest first); keeps original order when timestrings can't be parsed.
+const byTimestring = (a: ParsedRace, b: ParsedRace): number => {
+  const ta = parseTimestring(a.timestring);
+  const tb = parseTimestring(b.timestring);
+  return !Number.isNaN(ta) && !Number.isNaN(tb) ? ta - tb : 0;
+};
 
 const parseTime = (timeStr: string | undefined): number => {
   if (!timeStr) return Infinity;
@@ -79,21 +67,21 @@ const formatTimeDiff = (baseMs: number, currentMs: number): string => {
   return `${sign}${absDiff.toFixed(3)}`;
 };
 
-const getRacePosition = (slots: RaceSlot[], driver: string): number | null => {
-  const sortedSlots = getSortedRaceSlots(slots);
-  const index = sortedSlots.findIndex((s) => s.driver === driver);
-  return index >= 0 && sortedSlots[index].totalTime ? index + 1 : null;
-};
-
-const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
+const calculateGapFromWinner = (
+  winner: { totalTime?: string; totalLaps?: number; timePenaltySeconds?: number },
+  driver: { totalTime?: string; totalLaps?: number; timePenaltySeconds?: number },
+): string => {
   if (!winner?.totalTime || !driver?.totalTime) return "-";
 
   const winnerLaps = winner.totalLaps ?? 0;
   const driverLaps = driver.totalLaps ?? 0;
   const lapDiff = winnerLaps - driverLaps;
 
-  const winnerTime = parseTime(winner.totalTime);
-  const driverTime = parseTime(driver.totalTime);
+  // Effective race time includes any time penalty (in seconds).
+  const winnerTime =
+    parseTime(winner.totalTime) + (winner.timePenaltySeconds ?? 0);
+  const driverTime =
+    parseTime(driver.totalTime) + (driver.timePenaltySeconds ?? 0);
   const timeDiff = driverTime - winnerTime;
 
   if (lapDiff > 0) {
@@ -106,222 +94,13 @@ const calculateGapFromWinner = (winner: RaceSlot, driver: RaceSlot): string => {
   }
 };
 
-const calculateDriverStandings = (races: ParsedRace[]): DriverStanding[] => {
-  // Identify human players in each race
-  const humanDriverNames = new Set<string>();
-  for (const race of races) {
-    const humanDriver = getHumanDriverName(race);
-    if (humanDriver) {
-      humanDriverNames.add(humanDriver);
-    }
-  }
-
-  const driverMap = new Map<
-    string,
-    {
-      vehicle: string;
-      vehicleId?: number;
-      isHuman: boolean;
-      team: string;
-      raceResults: (number | null)[];
-      racePoints: (number | null)[];
-    }
-  >();
-
-  for (const race of races) {
-    for (const slot of race.slots) {
-      if (driverMap.has(slot.driver)) {
-        // Driver already exists, no need to update isHuman
-      } else {
-        driverMap.set(slot.driver, {
-          vehicle: slot.vehicle,
-          vehicleId: slot.vehicleId,
-          isHuman: humanDriverNames.has(slot.driver),
-          team: slot.team,
-          raceResults: [],
-          racePoints: [],
-        });
-      }
-    }
-  }
-
-  races.forEach((race, raceIdx) => {
-    driverMap.forEach((data, driver) => {
-      const position = getRacePosition(race.slots, driver);
-      data.raceResults[raceIdx] = position;
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        data.racePoints[raceIdx] = DEFAULT_POINTS_SYSTEM[position - 1];
-      } else {
-        data.racePoints[raceIdx] = null;
-      }
-    });
-  });
-
-  const standings: DriverStanding[] = [];
-  driverMap.forEach((data, driver) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      driver,
-      vehicle: data.vehicle,
-      vehicleId: data.vehicleId,
-      team: data.team,
-      points,
-      raceResults: data.raceResults,
-      racePoints: data.racePoints,
-      isHuman: data.isHuman,
-    });
-  });
-
-  // Sort by points (descending), then by countback (best finishing positions)
-  standings.sort((a, b) => {
-    // Primary: sort by total points
-    if (b.points !== a.points) return b.points - a.points;
-
-    // Tiebreaker: count wins (1st), then 2nd places, then 3rd, etc.
-    for (
-      let position = 1;
-      position <= DEFAULT_POINTS_SYSTEM.length;
-      position++
-    ) {
-      const aCount = a.raceResults.filter((pos) => pos === position).length;
-      const bCount = b.raceResults.filter((pos) => pos === position).length;
-      if (bCount !== aCount) return bCount - aCount;
-    }
-
-    return 0;
-  });
-
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateTeamStandings = (races: ParsedRace[]): TeamStanding[] => {
-  const teamMap = new Map<
-    string,
-    { entries: Set<string>; racePoints: (number | null)[] }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    const teamRacePoints = new Map<string, number>();
-
-    race.slots.forEach((slot: RaceSlot) => {
-      const team = slot.team || "No Team";
-      const position = getRacePosition(race.slots, slot.driver);
-
-      if (!teamMap.has(team)) {
-        teamMap.set(team, { entries: new Set(), racePoints: [] });
-      }
-
-      teamMap.get(team)!.entries.add(slot.driver);
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        const pts = DEFAULT_POINTS_SYSTEM[position - 1];
-        teamRacePoints.set(team, (teamRacePoints.get(team) || 0) + pts);
-      }
-    });
-
-    teamMap.forEach((data, team) => {
-      data.racePoints[raceIdx] = teamRacePoints.get(team) || null;
-    });
-  });
-
-  const standings: TeamStanding[] = [];
-  teamMap.forEach((data, team) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      team,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
-const calculateVehicleStandings = (races: ParsedRace[]): VehicleStanding[] => {
-  const vehicleMap = new Map<
-    string,
-    {
-      vehicleId?: number;
-      entries: Set<string>;
-      racePoints: (number | null)[];
-    }
-  >();
-
-  races.forEach((race, raceIdx) => {
-    const vehicleRacePoints = new Map<string, number>();
-
-    race.slots.forEach((slot: RaceSlot) => {
-      const vehicle = slot.vehicle;
-      const position = getRacePosition(race.slots, slot.driver);
-
-      if (!vehicleMap.has(vehicle)) {
-        vehicleMap.set(vehicle, {
-          vehicleId: slot.vehicleId,
-          entries: new Set(),
-          racePoints: [],
-        });
-      }
-
-      vehicleMap.get(vehicle)!.entries.add(slot.driver);
-
-      if (position !== null && position <= DEFAULT_POINTS_SYSTEM.length) {
-        const pts = DEFAULT_POINTS_SYSTEM[position - 1];
-        vehicleRacePoints.set(
-          vehicle,
-          (vehicleRacePoints.get(vehicle) || 0) + pts,
-        );
-      }
-    });
-
-    vehicleMap.forEach((data, vehicle) => {
-      data.racePoints[raceIdx] = vehicleRacePoints.get(vehicle) || null;
-    });
-  });
-
-  const standings: VehicleStanding[] = [];
-  vehicleMap.forEach((data, vehicle) => {
-    const points = data.racePoints.reduce<number>(
-      (sum, p) => sum + (p || 0),
-      0,
-    );
-    standings.push({
-      position: 0,
-      vehicle,
-      vehicleId: data.vehicleId,
-      entries: data.entries.size,
-      points,
-      racePoints: data.racePoints,
-    });
-  });
-
-  standings.sort((a, b) => b.points - a.points);
-  standings.forEach((s, i) => (s.position = i + 1));
-
-  return standings;
-};
-
 const getBestLapTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
   return races.map((race) => {
     const raceLapTimes: BestTime[] = [];
     const humanDriver =
       race.slots && race.slots.length > 0 ? race.slots[0].driver : null;
 
-    race.slots.forEach((slot: RaceSlot) => {
+    race.slots.forEach((slot) => {
       if (slot.bestLap) {
         const timeMs = parseTime(slot.bestLap) * 1000;
         if (Number.isFinite(timeMs) && timeMs > 0) {
@@ -350,7 +129,7 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
     const humanDriver =
       race.slots && race.slots.length > 0 ? race.slots[0].driver : null;
 
-    race.slots.forEach((slot: RaceSlot) => {
+    race.slots.forEach((slot) => {
       if (slot.qualTime) {
         const timeMs = parseTime(slot.qualTime) * 1000;
         if (Number.isFinite(timeMs) && timeMs > 0) {
@@ -373,60 +152,340 @@ const getBestQualifyingTimesPerRace = (races: ParsedRace[]): BestTime[][] => {
   });
 };
 
+// Parse a penalty input string; empty/zero/invalid clears the penalty (returns undefined).
+const parsePenaltyValue = (value: string): number | undefined => {
+  if (value.trim() === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+};
+
+const parsePointsInput = (input: string): number[] | null => {
+  const parts = input
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return null;
+  const nums = parts.map(Number);
+  return nums.some((n) => !Number.isFinite(n) || n < 0) ? null : nums;
+};
+
+type PointsPenaltyModalProps = {
+  drivers: string[];
+  penalties: Record<string, number>;
+  onSave: (driver: string, value: number | undefined) => void;
+  onHide: () => void;
+};
+
+// Input state lives here (not in the parent) so typing doesn't re-render the heavy detail page.
+const PointsPenaltyModal = ({
+  drivers,
+  penalties,
+  onSave,
+  onHide,
+}: PointsPenaltyModalProps) => {
+  const valueOf = (driver: string) =>
+    penalties[driver] != null ? String(penalties[driver]) : "";
+
+  const [driver, setDriver] = useState(drivers[0] ?? "");
+  const [value, setValue] = useState(() => valueOf(drivers[0] ?? ""));
+
+  const selectDriver = (d: string) => {
+    setDriver(d);
+    setValue(valueOf(d));
+  };
+
+  return (
+    <Modal show onHide={onHide} centered contentClassName="penalty-modal">
+      <Modal.Header closeButton>
+        <Modal.Title>Manage points penalties</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Group className="mb-3" controlId="pointsPenaltyDriver">
+          <Form.Label>Driver</Form.Label>
+          <Form.Select
+            value={driver}
+            onChange={(e) => selectDriver(e.target.value)}
+          >
+            {drivers.map((d) => (
+              <option key={`pp-driver-${d}`} value={d}>
+                {d}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group controlId="pointsPenaltyValue">
+          <Form.Label>Points penalty</Form.Label>
+          <Form.Control
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </Form.Group>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button
+          variant="success"
+          onClick={() => onSave(driver, parsePenaltyValue(value))}
+          disabled={!driver}
+        >
+          <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+type SecondsPenaltyModalProps = {
+  races: ParsedRace[];
+  onSave: (raceIdx: number, driver: string, value: number | undefined) => void;
+  onHide: () => void;
+};
+
+// Input state lives here (not in the parent) so typing doesn't re-render the heavy detail page.
+const SecondsPenaltyModal = ({
+  races,
+  onSave,
+  onHide,
+}: SecondsPenaltyModalProps) => {
+  const firstDriverOf = (idx: number) =>
+    getSortedRaceSlots(races[idx]?.slots ?? [])[0]?.driver ?? "";
+  const valueOf = (idx: number, driver: string) => {
+    const slot = races[idx]?.slots.find((s) => s.driver === driver);
+    return slot?.timePenaltySeconds != null
+      ? String(slot.timePenaltySeconds)
+      : "";
+  };
+
+  const [raceIdx, setRaceIdx] = useState(0);
+  const [driver, setDriver] = useState(() => firstDriverOf(0));
+  const [value, setValue] = useState(() => valueOf(0, firstDriverOf(0)));
+
+  const selectRace = (idx: number) => {
+    const first = firstDriverOf(idx);
+    setRaceIdx(idx);
+    setDriver(first);
+    setValue(valueOf(idx, first));
+  };
+
+  const selectDriver = (d: string) => {
+    setDriver(d);
+    setValue(valueOf(raceIdx, d));
+  };
+
+  return (
+    <Modal show onHide={onHide} centered contentClassName="penalty-modal">
+      <Modal.Header closeButton>
+        <Modal.Title>Manage seconds penalties</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Group className="mb-3" controlId="penaltyRace">
+          <Form.Label>Race</Form.Label>
+          <Form.Select
+            value={raceIdx}
+            onChange={(e) => selectRace(Number(e.target.value))}
+          >
+            {races.map((race, idx) => (
+              <option key={`pen-race-${idx}`} value={idx}>
+                {race.trackname || "Unknown Track"}
+                {race.timestring ? ` — ${race.timestring}` : ""}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="penaltyDriver">
+          <Form.Label>Driver</Form.Label>
+          <Form.Select
+            value={driver}
+            onChange={(e) => selectDriver(e.target.value)}
+          >
+            {getSortedRaceSlots(races[raceIdx]?.slots ?? []).map((slot) => (
+              <option key={`pen-driver-${slot.driver}`} value={slot.driver}>
+                {slot.driver}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group controlId="penaltyTime">
+          <Form.Label>Time penalty (s)</Form.Label>
+          <Form.Control
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </Form.Group>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button
+          variant="success"
+          onClick={() => onSave(raceIdx, driver, parsePenaltyValue(value))}
+          disabled={!driver}
+        >
+          <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+type PointsSystemEditorProps = {
+  pointsSystem: number[];
+  onSave: (parsed: number[]) => void;
+};
+
+// Editor + input state live here so typing doesn't re-render the heavy detail page.
+const PointsSystemEditor = ({
+  pointsSystem,
+  onSave,
+}: PointsSystemEditorProps) => {
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState("");
+
+  const startEdit = () => {
+    setInput(pointsSystem.join(", "));
+    setEditing(true);
+  };
+
+  const save = () => {
+    const parsed = parsePointsInput(input);
+    if (!parsed) return;
+    onSave(parsed);
+    setEditing(false);
+  };
+
+  const invalid = parsePointsInput(input) === null;
+
+  return (
+    <div className="points-system mt-3">
+      {!editing ? (
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <span className="points-system-label">Points system:</span>
+          <span className="points-system-value">{pointsSystem.join(", ")}</span>
+          <Button
+            variant="link"
+            size="sm"
+            className="points-edit-btn p-0"
+            aria-label="Edit points system"
+            onClick={startEdit}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </Button>
+        </div>
+      ) : (
+        <div className="d-flex align-items-start gap-2 flex-wrap">
+          <Form.Group
+            controlId="pointsSystemInput"
+            className="flex-fill"
+            style={{ minWidth: 240 }}
+          >
+            <Form.Label className="points-system-label">
+              Points system
+            </Form.Label>
+            <Form.Control
+              type="text"
+              value={input}
+              isInvalid={invalid}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
+            />
+            <div className="mt-2 d-flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
+                }
+              >
+                F1
+              </Button>
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
+                }
+              >
+                DTM
+              </Button>
+            </div>
+          </Form.Group>
+          <div className="d-flex gap-2 points-edit-actions">
+            <Button
+              variant="success"
+              size="sm"
+              onClick={save}
+              disabled={invalid}
+              aria-label="Save points system"
+            >
+              <FontAwesomeIcon icon={faFloppyDisk} />
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => setEditing(false)}
+              aria-label="Cancel"
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ResultsDatabaseDetail = () => {
   const electronAPI = useElectronAPI();
   const { isElectron } = electronAPI;
   const { alias } = useParams<{ alias: string }>();
   const navigate = useNavigate();
   const championships = useChampionshipStore((state) => state.championships);
+  const addOrUpdate = useChampionshipStore((state) => state.addOrUpdate);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
+
+  // Penalty modals: "seconds" = per-race time penalty, "points" = season points penalty.
+  // Each modal owns its input state (separate component) so typing doesn't re-render this page.
+  const [penaltyModal, setPenaltyModal] = useState<null | "seconds" | "points">(
+    null,
+  );
+  // Confirmation modal for clearing every penalty (points + seconds).
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const championship = championships.find((c) => c.alias === alias);
 
-  const {
-    driverStandings,
-    teamStandings,
-    vehicleStandings,
-    bestLapTimes,
-    bestQualTimes,
-    raceHeaders,
-  } = (() => {
-    if (!championship?.raceData || championship.raceData.length === 0) {
-      return {
-        driverStandings: [],
-        teamStandings: [],
-        vehicleStandings: [],
-        bestLapTimes: [],
-        bestQualTimes: [],
-        raceHeaders: [],
-      };
-    }
+  // Chronologically-sorted races (single source for every table).
+  const races: ParsedRace[] = championship?.raceData
+    ? [...championship.raceData].sort(byTimestring)
+    : [];
+  const pointsSystem = championship
+    ? resolvePointsSystem(championship)
+    : DEFAULT_POINTS_SYSTEM.default;
 
-    // Sort races chronologically by timestring (oldest first)
-    const races = [...championship.raceData].sort((a, b) => {
-      const timeA = parseTimestring(a.timestring);
-      const timeB = parseTimestring(b.timestring);
-
-      if (!Number.isNaN(timeA) && !Number.isNaN(timeB)) {
-        return timeA - timeB;
-      }
-
-      // Fallback: keep original order if parsing fails
-      return 0;
-    });
-
-    return {
-      driverStandings: calculateDriverStandings(races),
-      teamStandings: calculateTeamStandings(races),
-      vehicleStandings: calculateVehicleStandings(races),
-      bestLapTimes: getBestLapTimesPerRace(races),
-      bestQualTimes: getBestQualifyingTimesPerRace(races),
-      raceHeaders: races.map((r) => ({
-        name: r.trackname || "Unknown Track",
-        time: r.timestring || "",
-      })),
-    };
-  })();
+  const driverStandings = buildDriverStandings(
+    races,
+    pointsSystem,
+    championship?.pointsPenalties,
+  );
+  const teamStandings = buildTeamStandings(races, pointsSystem);
+  const vehicleStandings = buildVehicleStandings(races, pointsSystem);
+  const bestLapTimes = getBestLapTimesPerRace(races);
+  const bestQualTimes = getBestQualifyingTimesPerRace(races);
+  const raceHeaders = races.map((r) => ({
+    name: r.trackname || "Unknown Track",
+    time: r.timestring || "",
+  }));
 
   const getVehicleIcon = (vehicleId?: number) => {
     if (vehicleId === undefined || !leaderboardAssets) return null;
@@ -460,6 +519,51 @@ const ResultsDatabaseDetail = () => {
       }
     }
     return vehicleName || vehicleIdStr || "";
+  };
+
+  // --- Penalty save handlers (input state lives in the modal components) ----
+
+  const saveSeconds = (
+    raceIdx: number,
+    driver: string,
+    value: number | undefined,
+  ) => {
+    if (!championship?.raceData) return;
+    // Clone, sort identically to the UI, then mutate the selected slot in place.
+    const cloned = structuredClone(championship.raceData);
+    const sorted = [...cloned].sort(byTimestring);
+    const slot = sorted[raceIdx]?.slots.find((s) => s.driver === driver);
+    if (slot) slot.timePenaltySeconds = value;
+    addOrUpdate({ ...championship, raceData: cloned });
+    setPenaltyModal(null);
+  };
+
+  const savePointsPenalty = (driver: string, value: number | undefined) => {
+    if (!championship) return;
+    const next: Record<string, number> = { ...championship.pointsPenalties };
+    if (value === undefined) delete next[driver];
+    else next[driver] = value;
+    addOrUpdate({
+      ...championship,
+      pointsPenalties: Object.keys(next).length > 0 ? next : undefined,
+    });
+    setPenaltyModal(null);
+  };
+
+  // --- Reset all penalties (points + seconds) ------------------------------
+
+  const hasAnyPenalty =
+    Object.keys(championship?.pointsPenalties ?? {}).length > 0 ||
+    races.some((r) => r.slots.some((s) => s.timePenaltySeconds != null));
+
+  const resetAllPenalties = () => {
+    if (!championship) return;
+    const cloned = structuredClone(championship.raceData ?? []);
+    cloned.forEach((race) =>
+      race.slots.forEach((slot) => delete slot.timePenaltySeconds),
+    );
+    addOrUpdate({ ...championship, raceData: cloned, pointsPenalties: undefined });
+    setShowResetConfirm(false);
   };
 
   if (!championship) {
@@ -534,6 +638,10 @@ const ResultsDatabaseDetail = () => {
       championship.raceData!,
       championship.alias,
       leaderboardAssetsForExport,
+      undefined,
+      undefined,
+      resolvePointsSystem(championship),
+      championship.pointsPenalties,
     );
     await saveTextFile({
       electronAPI,
@@ -575,12 +683,46 @@ const ResultsDatabaseDetail = () => {
         <p className="results-subtitle mb-0">
           Generated from R3E Toolbox • {formattedDate}
         </p>
-        <div className="mt-3">
+
+        <div className="mt-3 d-flex flex-wrap gap-2 align-items-center">
           <Button variant="primary" size="sm" onClick={handleDownloadHTML}>
             <FontAwesomeIcon icon={faDownload} className="me-2" />
             {getDownloadLabel(isElectron)} as HTML
           </Button>
+          <Button
+            variant="outline-light"
+            size="sm"
+            onClick={() => setPenaltyModal("points")}
+          >
+            <FontAwesomeIcon icon={faGavel} className="me-2" />
+            Manage points penalties
+          </Button>
+          <Button
+            variant="outline-light"
+            size="sm"
+            onClick={() => setPenaltyModal("seconds")}
+          >
+            <FontAwesomeIcon icon={faStopwatch} className="me-2" />
+            Manage seconds penalties
+          </Button>
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={() => setShowResetConfirm(true)}
+            disabled={!hasAnyPenalty}
+          >
+            <FontAwesomeIcon icon={faEraser} className="me-2" />
+            Reset all penalties
+          </Button>
         </div>
+
+        {/* Points system summary with pencil-toggle editor */}
+        <PointsSystemEditor
+          pointsSystem={pointsSystem}
+          onSave={(parsed) =>
+            addOrUpdate({ ...championship, pointsSystem: parsed })
+          }
+        />
       </div>
 
       {/* Driver Standings */}
@@ -633,7 +775,14 @@ const ResultsDatabaseDetail = () => {
                   className={standing.isHuman ? "human-driver" : ""}
                 >
                   <td>{standing.position}</td>
-                  <td className="driver-name-cell">{standing.driver}</td>
+                  <td className="driver-name-cell">
+                    {standing.driver}
+                    {standing.pointsPenalty > 0 && (
+                      <span className="points-penalty-badge">
+                        -{standing.pointsPenalty}p
+                      </span>
+                    )}
+                  </td>
                   <td>
                     {vehicleIcon && (
                       <img
@@ -763,6 +912,101 @@ const ResultsDatabaseDetail = () => {
                 </tr>
               );
             })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Race Results */}
+      <div className="results-table-wrapper">
+        <table className="results-table">
+          <caption>Race Results</caption>
+          <thead>
+            <tr>
+              <th>Pos</th>
+              {raceHeaders.map((header) => (
+                <th
+                  key={`race-result-${header.name}-${header.time}`}
+                  className="race-header"
+                >
+                  {header.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(
+              {
+                length: Math.max(
+                  ...races.map((race) => race.slots.length),
+                  0,
+                ),
+              },
+              (_, posIdx) => (
+                <tr key={`race-result-pos-${posIdx}`}>
+                  <td>{posIdx + 1}</td>
+                  {races.map((race, raceIdx) => {
+                    const sortedSlots = getSortedRaceSlots(race.slots);
+                    const slot = sortedSlots[posIdx];
+                    if (!slot?.totalTime) {
+                      return (
+                        <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
+                      );
+                    }
+
+                    const winner = sortedSlots[0];
+                    const penaltySeconds = slot.timePenaltySeconds ?? 0;
+                    const totalTimeSeconds =
+                      parseTime(slot.totalTime) + penaltySeconds;
+                    const formattedTime =
+                      posIdx === 0
+                        ? Number.isFinite(totalTimeSeconds)
+                          ? makeTime(totalTimeSeconds)
+                          : slot.totalTime
+                        : calculateGapFromWinner(winner, slot);
+                    const vehicleIcon = getVehicleIcon(slot.vehicleId);
+                    const vehicleName = getVehicleName(
+                      slot.vehicleId,
+                      slot.vehicle,
+                    );
+                    const isHuman =
+                      race.slots &&
+                      race.slots.length > 0 &&
+                      race.slots[0].driver === slot.driver;
+
+                    return (
+                      <td
+                        key={`race-result-${raceIdx}-${posIdx}`}
+                        className="race-result-cell"
+                      >
+                        <div
+                          className={`race-result-entry${isHuman ? " human-driver" : ""}`}
+                        >
+                          <div className="result-driver">
+                            {slot.driver}
+                            {penaltySeconds > 0 && (
+                              <span className="result-time-penalty">
+                                +{penaltySeconds}s
+                              </span>
+                            )}
+                          </div>
+                          <div className="result-vehicle">
+                            {vehicleIcon && (
+                              <img
+                                src={vehicleIcon}
+                                className="vehicle-icon"
+                                alt={vehicleName}
+                              />
+                            )}
+                            <span>{vehicleName}</span>
+                          </div>
+                          <div className="result-time">{formattedTime}</div>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>
@@ -937,92 +1181,53 @@ const ResultsDatabaseDetail = () => {
         </div>
       )}
 
-      {/* Race Results */}
-      <div className="results-table-wrapper">
-        <table className="results-table">
-          <caption>Race Results</caption>
-          <thead>
-            <tr>
-              <th>Pos</th>
-              {raceHeaders.map((header) => (
-                <th
-                  key={`race-result-${header.name}-${header.time}`}
-                  className="race-header"
-                >
-                  {header.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from(
-              {
-                length: Math.max(
-                  ...(championship.raceData?.map(
-                    (race) => race.slots.length,
-                  ) || [0]),
-                ),
-              },
-              (_, posIdx) => (
-                <tr key={`race-result-pos-${posIdx}`}>
-                  <td>{posIdx + 1}</td>
-                  {championship.raceData?.map((race, raceIdx) => {
-                    const sortedSlots = getSortedRaceSlots(race.slots);
-                    const slot = sortedSlots[posIdx];
-                    if (!slot?.totalTime) {
-                      return (
-                        <td key={`race-result-${raceIdx}-${posIdx}`}>-</td>
-                      );
-                    }
+      {penaltyModal === "points" && (
+        <PointsPenaltyModal
+          drivers={driverStandings.map((s) => s.driver)}
+          penalties={championship.pointsPenalties ?? {}}
+          onSave={savePointsPenalty}
+          onHide={() => setPenaltyModal(null)}
+        />
+      )}
 
-                    const winner = sortedSlots[0];
-                    const totalTimeSeconds = parseTime(slot.totalTime);
-                    const formattedTime =
-                      posIdx === 0
-                        ? Number.isFinite(totalTimeSeconds)
-                          ? makeTime(totalTimeSeconds)
-                          : slot.totalTime
-                        : calculateGapFromWinner(winner, slot);
-                    const vehicleIcon = getVehicleIcon(slot.vehicleId);
-                    const vehicleName = getVehicleName(
-                      slot.vehicleId,
-                      slot.vehicle,
-                    );
-                    const isHuman =
-                      race.slots &&
-                      race.slots.length > 0 &&
-                      race.slots[0].driver === slot.driver;
+      {penaltyModal === "seconds" && (
+        <SecondsPenaltyModal
+          races={races}
+          onSave={saveSeconds}
+          onHide={() => setPenaltyModal(null)}
+        />
+      )}
 
-                    return (
-                      <td
-                        key={`race-result-${raceIdx}-${posIdx}`}
-                        className="race-result-cell"
-                      >
-                        <div
-                          className={`race-result-entry${isHuman ? " human-driver" : ""}`}
-                        >
-                          <div className="result-driver">{slot.driver}</div>
-                          <div className="result-vehicle">
-                            {vehicleIcon && (
-                              <img
-                                src={vehicleIcon}
-                                className="vehicle-icon"
-                                alt={vehicleName}
-                              />
-                            )}
-                            <span>{vehicleName}</span>
-                          </div>
-                          <div className="result-time">{formattedTime}</div>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Reset all penalties confirmation modal */}
+      <Modal
+        show={showResetConfirm}
+        onHide={() => setShowResetConfirm(false)}
+        centered
+        contentClassName="penalty-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Reset all penalties</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            This clears <strong>all</strong> penalties for this championship —
+            both championship points penalties and per-race time penalties.
+          </p>
+          <p className="mb-0">This action cannot be undone. Continue?</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowResetConfirm(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={resetAllPenalties}>
+            <FontAwesomeIcon icon={faEraser} className="me-2" />
+            Reset all penalties
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

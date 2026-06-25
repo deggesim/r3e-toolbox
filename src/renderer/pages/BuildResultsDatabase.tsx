@@ -3,12 +3,7 @@ import { faDatabase } from "@fortawesome/free-solid-svg-icons/faDatabase";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faXmark } from "@fortawesome/free-solid-svg-icons/faXmark";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Alert,
   Badge,
@@ -171,7 +166,7 @@ const BuildResultsDatabase = () => {
   const databaseInputRef = useRef<HTMLInputElement>(null);
   const resultsInputRef = useRef<HTMLInputElement>(null);
   const serverEventInputRef = useRef<HTMLInputElement>(null);
-  const [serverEventFile, setServerEventFile] = useState<File | null>(null);
+  const [serverEventFiles, setServerEventFiles] = useState<File[]>([]);
   const addLog = useProcessingLogStore((state) => state.addLog);
 
   // Use store to read cached assets
@@ -245,65 +240,79 @@ const BuildResultsDatabase = () => {
   };
 
   const onFilesSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files ? Array.from(event.target.files) : [];
-      setResultFiles(files);
-      setChampionshipAlias(""); // Reset alias when files are selected
-      setServerEventFile(null);
-      if (serverEventInputRef.current) {
-        serverEventInputRef.current.value = "";
-      }
-
-      // Parse races immediately when files are selected
-      if (files.length > 0 && gameData) {
-        setIsParsingRaces(true);
-        try {
-          const races = await parseResultFiles(files, gameData, "default");
-          setParsedRaces(races);
-        } catch (error) {
-          console.error("Error parsing races:", error);
-        } finally {
-          setIsParsingRaces(false);
-        }
-      } else {
-        setParsedRaces([]);
-      }
-  };
-
-  const onServerEventFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    setServerEventFile(file);
-
-    setResultFiles([]);
-    if (resultsInputRef.current) {
-      resultsInputRef.current.value = "";
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    setResultFiles(files);
+    setChampionshipAlias(""); // Reset alias when files are selected
+    setServerEventFiles([]);
+    if (serverEventInputRef.current) {
+      serverEventInputRef.current.value = "";
     }
 
-    if (!file || !gameData) {
+    // Parse races immediately when files are selected
+    if (files.length > 0 && gameData) {
+      setIsParsingRaces(true);
+      try {
+        const races = await parseResultFiles(files, gameData, "default");
+        setParsedRaces(races);
+      } catch (error) {
+        console.error("Error parsing races:", error);
+        addLog("error", `$Error parsing races ${error}`);
+      } finally {
+        setIsParsingRaces(false);
+      }
+    } else {
+      setParsedRaces([]);
+    }
+  };
+
+  const onServerEventFileSelected = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    setServerEventFiles(files);
+
+    setResultFiles([]);
+    if (resultsInputRef.current) resultsInputRef.current.value = "";
+
+    if (files.length === 0 || !gameData) {
       setParsedRaces([]);
       return;
     }
 
     setIsParsingRaces(true);
     try {
-      const text = await file.text();
-      const json: unknown = JSON.parse(text);
-
-      if (!isServerEventFormat(json)) {
-        addLog("warning", `File is not a valid server event format: ${file.name}`, faXmark);
-        setParsedRaces([]);
-        return;
+      const all: ParsedRace[] = [];
+      let aliasSet = false;
+      for (const file of files) {
+        try {
+          const json: unknown = JSON.parse(await file.text());
+          if (!isServerEventFormat(json)) {
+            addLog(
+              "warning",
+              `File is not a valid server event format: ${file.name}`,
+              faXmark,
+            );
+            continue;
+          }
+          if (!aliasSet) {
+            setChampionshipAlias(extractServerEventAlias(json));
+            aliasSet = true;
+          }
+          const races = parseServerEventData(json, gameData);
+          if (!races || races.length === 0) {
+            addLog("warning", `No Race session found in ${file.name}`, faXmark);
+            continue;
+          }
+          all.push(...races);
+        } catch {
+          addLog(
+            "error",
+            `Failed to parse server event file: ${file.name}`,
+            faXmark,
+          );
+        }
       }
-
-      setChampionshipAlias(extractServerEventAlias(json));
-      const races = parseServerEventData(json, gameData);
-      setParsedRaces(races ?? []);
-
-      if (!races || races.length === 0) {
-        addLog("warning", `No Race session found in ${file.name}`, faXmark);
-      }
-    } catch {
-      addLog("error", `Failed to parse server event file: ${file.name}`, faXmark);
-      setParsedRaces([]);
+      setParsedRaces(all);
     } finally {
       setIsParsingRaces(false);
     }
@@ -332,41 +341,43 @@ const BuildResultsDatabase = () => {
     };
   };
 
-  const handleRestoreDatabase = async (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const handleRestoreDatabase = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      try {
-        const content = await file.text();
-        const importedChampionships: ChampionshipEntry[] = JSON.parse(content);
+    try {
+      const content = await file.text();
+      const importedChampionships: ChampionshipEntry[] = JSON.parse(content);
 
-        // Validate structure
-        if (
-          !Array.isArray(importedChampionships) ||
-          importedChampionships.length === 0
-        ) {
-          throw new Error(
-            "Invalid database file: must contain an array of championships",
-          );
-        }
-
-        // Basic validation of first item
-        const first = importedChampionships[0];
-        if (!first.alias || !first.races || typeof first.races !== "number") {
-          throw new Error(
-            "Invalid database format: missing required championship properties",
-          );
-        }
-
-        setPendingRestoreFile(importedChampionships);
-        setShowRestoreModal(true);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        addLog("error", `Error reading database file: ${message}`, faXmark);
-        if (databaseInputRef.current) {
-          databaseInputRef.current.value = "";
-        }
+      // Validate structure
+      if (
+        !Array.isArray(importedChampionships) ||
+        importedChampionships.length === 0
+      ) {
+        throw new Error(
+          "Invalid database file: must contain an array of championships",
+        );
       }
+
+      // Basic validation of first item
+      const first = importedChampionships[0];
+      if (!first.alias || !first.races || typeof first.races !== "number") {
+        throw new Error(
+          "Invalid database format: missing required championship properties",
+        );
+      }
+
+      setPendingRestoreFile(importedChampionships);
+      setShowRestoreModal(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      addLog("error", `Error reading database file: ${message}`, faXmark);
+      if (databaseInputRef.current) {
+        databaseInputRef.current.value = "";
+      }
+    }
   };
 
   const confirmRestoreDatabase = () => {
@@ -461,6 +472,7 @@ const BuildResultsDatabase = () => {
         carName: carName || existing?.carName,
         carIcon: carIcon || existing?.carIcon,
         raceData: mergedRaces,
+        pointsSystem: existing?.pointsSystem,
       });
 
       addLog(
@@ -471,10 +483,14 @@ const BuildResultsDatabase = () => {
 
       // Clear input fields after successful creation/update
       setResultFiles([]);
+      setServerEventFiles([]);
       setChampionshipAlias("");
       setParsedRaces([]);
       if (resultsInputRef.current) {
         resultsInputRef.current.value = "";
+      }
+      if (serverEventInputRef.current) {
+        serverEventInputRef.current.value = "";
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -649,18 +665,20 @@ const BuildResultsDatabase = () => {
                 </Form.Label>
                 <Form.Control
                   type="file"
+                  multiple
                   accept=".txt,.json"
                   ref={serverEventInputRef}
                   onChange={onServerEventFileSelected}
                 />
                 <Form.Text className="text-white-50">
-                  Select a RaceRoom dedicated server event file (e.g. 202604170943.txt).
+                  Select one or more RaceRoom dedicated server event files.
                   Imports Race result and Qualify times automatically.
                 </Form.Text>
               </Form.Group>
-              {serverEventFile && (
+              {serverEventFiles.length > 0 && (
                 <Alert variant="secondary" className="py-2 mb-3">
-                  {serverEventFile.name}
+                  {serverEventFiles.length} server event file
+                  {serverEventFiles.length > 1 ? "s" : ""} selected
                   {parsedRaces.length > 0 && (
                     <div className="mt-2">
                       <Badge bg="success" className="me-2">
@@ -668,7 +686,11 @@ const BuildResultsDatabase = () => {
                         {parsedRaces.length > 1 ? "s" : ""} parsed
                       </Badge>
                       {isParsingRaces && (
-                        <Spinner animation="border" size="sm" className="ms-2" />
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="ms-2"
+                        />
                       )}
                     </div>
                   )}
