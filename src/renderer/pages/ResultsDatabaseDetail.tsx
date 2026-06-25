@@ -169,6 +169,283 @@ const parsePointsInput = (input: string): number[] | null => {
   return nums.some((n) => !Number.isFinite(n) || n < 0) ? null : nums;
 };
 
+type PointsPenaltyModalProps = {
+  drivers: string[];
+  penalties: Record<string, number>;
+  onSave: (driver: string, value: number | undefined) => void;
+  onHide: () => void;
+};
+
+// Input state lives here (not in the parent) so typing doesn't re-render the heavy detail page.
+const PointsPenaltyModal = ({
+  drivers,
+  penalties,
+  onSave,
+  onHide,
+}: PointsPenaltyModalProps) => {
+  const valueOf = (driver: string) =>
+    penalties[driver] != null ? String(penalties[driver]) : "";
+
+  const [driver, setDriver] = useState(drivers[0] ?? "");
+  const [value, setValue] = useState(() => valueOf(drivers[0] ?? ""));
+
+  const selectDriver = (d: string) => {
+    setDriver(d);
+    setValue(valueOf(d));
+  };
+
+  return (
+    <Modal show onHide={onHide} centered contentClassName="penalty-modal">
+      <Modal.Header closeButton>
+        <Modal.Title>Manage points penalties</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Group className="mb-3" controlId="pointsPenaltyDriver">
+          <Form.Label>Driver</Form.Label>
+          <Form.Select
+            value={driver}
+            onChange={(e) => selectDriver(e.target.value)}
+          >
+            {drivers.map((d) => (
+              <option key={`pp-driver-${d}`} value={d}>
+                {d}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group controlId="pointsPenaltyValue">
+          <Form.Label>Points penalty</Form.Label>
+          <Form.Control
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </Form.Group>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button
+          variant="success"
+          onClick={() => onSave(driver, parsePenaltyValue(value))}
+          disabled={!driver}
+        >
+          <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+type SecondsPenaltyModalProps = {
+  races: ParsedRace[];
+  onSave: (raceIdx: number, driver: string, value: number | undefined) => void;
+  onHide: () => void;
+};
+
+// Input state lives here (not in the parent) so typing doesn't re-render the heavy detail page.
+const SecondsPenaltyModal = ({
+  races,
+  onSave,
+  onHide,
+}: SecondsPenaltyModalProps) => {
+  const firstDriverOf = (idx: number) =>
+    getSortedRaceSlots(races[idx]?.slots ?? [])[0]?.driver ?? "";
+  const valueOf = (idx: number, driver: string) => {
+    const slot = races[idx]?.slots.find((s) => s.driver === driver);
+    return slot?.timePenaltySeconds != null
+      ? String(slot.timePenaltySeconds)
+      : "";
+  };
+
+  const [raceIdx, setRaceIdx] = useState(0);
+  const [driver, setDriver] = useState(() => firstDriverOf(0));
+  const [value, setValue] = useState(() => valueOf(0, firstDriverOf(0)));
+
+  const selectRace = (idx: number) => {
+    const first = firstDriverOf(idx);
+    setRaceIdx(idx);
+    setDriver(first);
+    setValue(valueOf(idx, first));
+  };
+
+  const selectDriver = (d: string) => {
+    setDriver(d);
+    setValue(valueOf(raceIdx, d));
+  };
+
+  return (
+    <Modal show onHide={onHide} centered contentClassName="penalty-modal">
+      <Modal.Header closeButton>
+        <Modal.Title>Manage seconds penalties</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form.Group className="mb-3" controlId="penaltyRace">
+          <Form.Label>Race</Form.Label>
+          <Form.Select
+            value={raceIdx}
+            onChange={(e) => selectRace(Number(e.target.value))}
+          >
+            {races.map((race, idx) => (
+              <option key={`pen-race-${idx}`} value={idx}>
+                {race.trackname || "Unknown Track"}
+                {race.timestring ? ` — ${race.timestring}` : ""}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="penaltyDriver">
+          <Form.Label>Driver</Form.Label>
+          <Form.Select
+            value={driver}
+            onChange={(e) => selectDriver(e.target.value)}
+          >
+            {getSortedRaceSlots(races[raceIdx]?.slots ?? []).map((slot) => (
+              <option key={`pen-driver-${slot.driver}`} value={slot.driver}>
+                {slot.driver}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group controlId="penaltyTime">
+          <Form.Label>Time penalty (s)</Form.Label>
+          <Form.Control
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </Form.Group>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button
+          variant="success"
+          onClick={() => onSave(raceIdx, driver, parsePenaltyValue(value))}
+          disabled={!driver}
+        >
+          <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+type PointsSystemEditorProps = {
+  pointsSystem: number[];
+  onSave: (parsed: number[]) => void;
+};
+
+// Editor + input state live here so typing doesn't re-render the heavy detail page.
+const PointsSystemEditor = ({
+  pointsSystem,
+  onSave,
+}: PointsSystemEditorProps) => {
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState("");
+
+  const startEdit = () => {
+    setInput(pointsSystem.join(", "));
+    setEditing(true);
+  };
+
+  const save = () => {
+    const parsed = parsePointsInput(input);
+    if (!parsed) return;
+    onSave(parsed);
+    setEditing(false);
+  };
+
+  const invalid = parsePointsInput(input) === null;
+
+  return (
+    <div className="points-system mt-3">
+      {!editing ? (
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <span className="points-system-label">Points system:</span>
+          <span className="points-system-value">{pointsSystem.join(", ")}</span>
+          <Button
+            variant="link"
+            size="sm"
+            className="points-edit-btn p-0"
+            aria-label="Edit points system"
+            onClick={startEdit}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </Button>
+        </div>
+      ) : (
+        <div className="d-flex align-items-start gap-2 flex-wrap">
+          <Form.Group
+            controlId="pointsSystemInput"
+            className="flex-fill"
+            style={{ minWidth: 240 }}
+          >
+            <Form.Label className="points-system-label">
+              Points system
+            </Form.Label>
+            <Form.Control
+              type="text"
+              value={input}
+              isInvalid={invalid}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
+            />
+            <div className="mt-2 d-flex gap-2 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
+                }
+              >
+                F1
+              </Button>
+              <Button
+                size="sm"
+                variant="outline-light"
+                onClick={() =>
+                  setInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
+                }
+              >
+                DTM
+              </Button>
+            </div>
+          </Form.Group>
+          <div className="d-flex gap-2 points-edit-actions">
+            <Button
+              variant="success"
+              size="sm"
+              onClick={save}
+              disabled={invalid}
+              aria-label="Save points system"
+            >
+              <FontAwesomeIcon icon={faFloppyDisk} />
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => setEditing(false)}
+              aria-label="Cancel"
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ResultsDatabaseDetail = () => {
   const electronAPI = useElectronAPI();
   const { isElectron } = electronAPI;
@@ -178,21 +455,11 @@ const ResultsDatabaseDetail = () => {
   const addOrUpdate = useChampionshipStore((state) => state.addOrUpdate);
   const leaderboardAssets = useLeaderboardAssetsStore((state) => state.assets);
 
-  // Points-system inline editor (pencil toggle next to the summary).
-  const [editingPoints, setEditingPoints] = useState(false);
-  const [pointsInput, setPointsInput] = useState("");
-
   // Penalty modals: "seconds" = per-race time penalty, "points" = season points penalty.
+  // Each modal owns its input state (separate component) so typing doesn't re-render this page.
   const [penaltyModal, setPenaltyModal] = useState<null | "seconds" | "points">(
     null,
   );
-  // Seconds (per-race) modal state.
-  const [penRaceIdx, setPenRaceIdx] = useState(0);
-  const [penDriver, setPenDriver] = useState("");
-  const [penTime, setPenTime] = useState("");
-  // Points (championship) modal state.
-  const [penPointsDriver, setPenPointsDriver] = useState("");
-  const [penPointsValue, setPenPointsValue] = useState("");
   // Confirmation modal for clearing every penalty (points + seconds).
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -254,88 +521,28 @@ const ResultsDatabaseDetail = () => {
     return vehicleName || vehicleIdStr || "";
   };
 
-  // --- Points-system editor -------------------------------------------------
+  // --- Penalty save handlers (input state lives in the modal components) ----
 
-  const startEditPoints = () => {
-    setPointsInput(pointsSystem.join(", "));
-    setEditingPoints(true);
-  };
-
-  const savePoints = () => {
-    if (!championship) return;
-    const parsed = parsePointsInput(pointsInput);
-    if (!parsed) return;
-    addOrUpdate({ ...championship, pointsSystem: parsed });
-    setEditingPoints(false);
-  };
-
-  // --- Seconds penalty modal (per race) ------------------------------------
-
-  const loadSecondsField = (raceIdx: number, driver: string) => {
-    const slot = races[raceIdx]?.slots.find((s) => s.driver === driver);
-    setPenTime(
-      slot?.timePenaltySeconds != null ? String(slot.timePenaltySeconds) : "",
-    );
-  };
-
-  const openSeconds = () => {
-    const firstDriver =
-      getSortedRaceSlots(races[0]?.slots ?? [])[0]?.driver ?? "";
-    setPenRaceIdx(0);
-    setPenDriver(firstDriver);
-    loadSecondsField(0, firstDriver);
-    setPenaltyModal("seconds");
-  };
-
-  const selectPenRace = (idx: number) => {
-    const firstDriver =
-      getSortedRaceSlots(races[idx]?.slots ?? [])[0]?.driver ?? "";
-    setPenRaceIdx(idx);
-    setPenDriver(firstDriver);
-    loadSecondsField(idx, firstDriver);
-  };
-
-  const selectPenDriver = (driver: string) => {
-    setPenDriver(driver);
-    loadSecondsField(penRaceIdx, driver);
-  };
-
-  const saveSeconds = () => {
+  const saveSeconds = (
+    raceIdx: number,
+    driver: string,
+    value: number | undefined,
+  ) => {
     if (!championship?.raceData) return;
     // Clone, sort identically to the UI, then mutate the selected slot in place.
     const cloned = structuredClone(championship.raceData);
     const sorted = [...cloned].sort(byTimestring);
-    const slot = sorted[penRaceIdx]?.slots.find((s) => s.driver === penDriver);
-    if (slot) slot.timePenaltySeconds = parsePenaltyValue(penTime);
+    const slot = sorted[raceIdx]?.slots.find((s) => s.driver === driver);
+    if (slot) slot.timePenaltySeconds = value;
     addOrUpdate({ ...championship, raceData: cloned });
     setPenaltyModal(null);
   };
 
-  // --- Points penalty modal (whole championship) ---------------------------
-
-  const loadPointsField = (driver: string) => {
-    const value = championship?.pointsPenalties?.[driver];
-    setPenPointsValue(value != null ? String(value) : "");
-  };
-
-  const openPoints = () => {
-    const firstDriver = driverStandings[0]?.driver ?? "";
-    setPenPointsDriver(firstDriver);
-    loadPointsField(firstDriver);
-    setPenaltyModal("points");
-  };
-
-  const selectPenPointsDriver = (driver: string) => {
-    setPenPointsDriver(driver);
-    loadPointsField(driver);
-  };
-
-  const savePointsPenalty = () => {
+  const savePointsPenalty = (driver: string, value: number | undefined) => {
     if (!championship) return;
-    const value = parsePenaltyValue(penPointsValue);
     const next: Record<string, number> = { ...championship.pointsPenalties };
-    if (value === undefined) delete next[penPointsDriver];
-    else next[penPointsDriver] = value;
+    if (value === undefined) delete next[driver];
+    else next[driver] = value;
     addOrUpdate({
       ...championship,
       pointsPenalties: Object.keys(next).length > 0 ? next : undefined,
@@ -448,8 +655,6 @@ const ResultsDatabaseDetail = () => {
     });
   };
 
-  const pointsInvalid = parsePointsInput(pointsInput) === null;
-
   return (
     <Container fluid className="py-4">
       <Button
@@ -484,11 +689,19 @@ const ResultsDatabaseDetail = () => {
             <FontAwesomeIcon icon={faDownload} className="me-2" />
             {getDownloadLabel(isElectron)} as HTML
           </Button>
-          <Button variant="outline-light" size="sm" onClick={openPoints}>
+          <Button
+            variant="outline-light"
+            size="sm"
+            onClick={() => setPenaltyModal("points")}
+          >
             <FontAwesomeIcon icon={faGavel} className="me-2" />
             Manage points penalties
           </Button>
-          <Button variant="outline-light" size="sm" onClick={openSeconds}>
+          <Button
+            variant="outline-light"
+            size="sm"
+            onClick={() => setPenaltyModal("seconds")}
+          >
             <FontAwesomeIcon icon={faStopwatch} className="me-2" />
             Manage seconds penalties
           </Button>
@@ -504,83 +717,12 @@ const ResultsDatabaseDetail = () => {
         </div>
 
         {/* Points system summary with pencil-toggle editor */}
-        <div className="points-system mt-3">
-          {!editingPoints ? (
-            <div className="d-flex align-items-center gap-2 flex-wrap">
-              <span className="points-system-label">Points system:</span>
-              <span className="points-system-value">
-                {pointsSystem.join(", ")}
-              </span>
-              <Button
-                variant="link"
-                size="sm"
-                className="points-edit-btn p-0"
-                aria-label="Edit points system"
-                onClick={startEditPoints}
-              >
-                <FontAwesomeIcon icon={faPenToSquare} />
-              </Button>
-            </div>
-          ) : (
-            <div className="d-flex align-items-start gap-2 flex-wrap">
-              <Form.Group
-                controlId="pointsSystemInput"
-                className="flex-fill"
-                style={{ minWidth: 240 }}
-              >
-                <Form.Label className="points-system-label">
-                  Points system
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  value={pointsInput}
-                  isInvalid={pointsInvalid}
-                  onChange={(e) => setPointsInput(e.target.value)}
-                  placeholder="25, 18, 15, 12, 10, 8, 6, 4, 2, 1"
-                />
-                <div className="mt-2 d-flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    variant="outline-light"
-                    onClick={() =>
-                      setPointsInput(DEFAULT_POINTS_SYSTEM.default.join(", "))
-                    }
-                  >
-                    F1
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-light"
-                    onClick={() =>
-                      setPointsInput(DEFAULT_POINTS_SYSTEM.dtm2023.join(", "))
-                    }
-                  >
-                    DTM
-                  </Button>
-                </div>
-              </Form.Group>
-              <div className="d-flex gap-2 points-edit-actions">
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={savePoints}
-                  disabled={pointsInvalid}
-                  aria-label="Save points system"
-                >
-                  <FontAwesomeIcon icon={faFloppyDisk} />
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => setEditingPoints(false)}
-                  aria-label="Cancel"
-                >
-                  <FontAwesomeIcon icon={faRotateLeft} />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        <PointsSystemEditor
+          pointsSystem={pointsSystem}
+          onSave={(parsed) =>
+            addOrUpdate({ ...championship, pointsSystem: parsed })
+          }
+        />
       </div>
 
       {/* Driver Standings */}
@@ -1039,119 +1181,22 @@ const ResultsDatabaseDetail = () => {
         </div>
       )}
 
-      {/* Manage points penalties modal (whole championship) */}
-      <Modal
-        show={penaltyModal === "points"}
-        onHide={() => setPenaltyModal(null)}
-        centered
-        contentClassName="penalty-modal"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Manage points penalties</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Group className="mb-3" controlId="pointsPenaltyDriver">
-            <Form.Label>Driver</Form.Label>
-            <Form.Select
-              value={penPointsDriver}
-              onChange={(e) => selectPenPointsDriver(e.target.value)}
-            >
-              {driverStandings.map((standing) => (
-                <option
-                  key={`pp-driver-${standing.driver}`}
-                  value={standing.driver}
-                >
-                  {standing.driver}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+      {penaltyModal === "points" && (
+        <PointsPenaltyModal
+          drivers={driverStandings.map((s) => s.driver)}
+          penalties={championship.pointsPenalties ?? {}}
+          onSave={savePointsPenalty}
+          onHide={() => setPenaltyModal(null)}
+        />
+      )}
 
-          <Form.Group controlId="pointsPenaltyValue">
-            <Form.Label>Points penalty</Form.Label>
-            <Form.Control
-              type="number"
-              min={0}
-              value={penPointsValue}
-              onChange={(e) => setPenPointsValue(e.target.value)}
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setPenaltyModal(null)}>
-            Cancel
-          </Button>
-          <Button
-            variant="success"
-            onClick={savePointsPenalty}
-            disabled={!penPointsDriver}
-          >
-            <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Manage seconds penalties modal (per race) */}
-      <Modal
-        show={penaltyModal === "seconds"}
-        onHide={() => setPenaltyModal(null)}
-        centered
-        contentClassName="penalty-modal"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Manage seconds penalties</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Group className="mb-3" controlId="penaltyRace">
-            <Form.Label>Race</Form.Label>
-            <Form.Select
-              value={penRaceIdx}
-              onChange={(e) => selectPenRace(Number(e.target.value))}
-            >
-              {races.map((race, idx) => (
-                <option key={`pen-race-${idx}`} value={idx}>
-                  {race.trackname || "Unknown Track"}
-                  {race.timestring ? ` — ${race.timestring}` : ""}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-
-          <Form.Group className="mb-3" controlId="penaltyDriver">
-            <Form.Label>Driver</Form.Label>
-            <Form.Select
-              value={penDriver}
-              onChange={(e) => selectPenDriver(e.target.value)}
-            >
-              {getSortedRaceSlots(races[penRaceIdx]?.slots ?? []).map((slot) => (
-                <option key={`pen-driver-${slot.driver}`} value={slot.driver}>
-                  {slot.driver}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-
-          <Form.Group controlId="penaltyTime">
-            <Form.Label>Time penalty (s)</Form.Label>
-            <Form.Control
-              type="number"
-              min={0}
-              value={penTime}
-              onChange={(e) => setPenTime(e.target.value)}
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setPenaltyModal(null)}>
-            Cancel
-          </Button>
-          <Button variant="success" onClick={saveSeconds} disabled={!penDriver}>
-            <FontAwesomeIcon icon={faFloppyDisk} className="me-2" />
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {penaltyModal === "seconds" && (
+        <SecondsPenaltyModal
+          races={races}
+          onSave={saveSeconds}
+          onHide={() => setPenaltyModal(null)}
+        />
+      )}
 
       {/* Reset all penalties confirmation modal */}
       <Modal
